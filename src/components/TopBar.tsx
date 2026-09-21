@@ -342,7 +342,7 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label="Pop out chat"
+          label="Open chat on another monitor"
           desktopOnly
           tooltipAlign="end"
           onClick={() => {

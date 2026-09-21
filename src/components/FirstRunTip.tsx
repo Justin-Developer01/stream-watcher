@@ -19,7 +19,7 @@ export function FirstRunTip() {
   return (
     <div className="first-run-tip" role="status">
       <p>
-        Login for Prime and Login for chat are in the top bar. Dismiss this anytime — there is no setup wizard.
+        Prime login, chat login, and pop-out chat are separate top-bar buttons. Dismiss this anytime — there is no setup wizard.
       </p>
       <button
         type="button"

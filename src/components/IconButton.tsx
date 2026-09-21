@@ -24,7 +24,7 @@ export function IconButton({
 }: Props) {
   const desktop = isElectronApp()
   const blocked = desktopOnly && !desktop
-  const tooltip = blocked ? 'Desktop app only' : label
+  const tooltip = blocked ? `${label} — Desktop app only` : label
 
   return (
     <button
