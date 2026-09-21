@@ -10,6 +10,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -28,11 +31,17 @@ jobs:
           name: stream-watcher-windows
           path: |
             release/*.exe
-            release/*.yml
           if-no-files-found: error
       - if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: release/*.exe
-          prerelease: true
+          name: Stream Watcher ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, 'pre') || contains(github.ref_name, 'rc') }}
           generate_release_notes: true
+          files: release/*.exe
+          fail_on_unmatched_files: true
+          body: |
+            Unsigned Windows build for testing. Do not expect a signed SmartScreen reputation yet.
+
+            **Install:** `Stream Watcher Setup *.exe` (one-click NSIS) or run `Stream Watcher Portable *.exe`.
+            Open the app — no setup wizard. Use **Login for Prime** (cookie session) and **Login to send chat** (OAuth + Client ID) from the top bar.

@@ -69,7 +69,9 @@ npm run dist
 
 electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.0.exe`) and **portable** (`Stream Watcher Portable 1.0.0.exe`) files to `release/`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
 
-This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need Windows (or Wine). CI already runs `npm run dist` on `windows-latest` and uploads `stream-watcher-windows`.
+`npm run dist` uses `--publish never` so CI does not need a GitHub token for electron-builder. GitHub Actions on `windows-latest` uploads the `stream-watcher-windows` artifact; pushing a `v*` tag attaches those EXEs to a GitHub Release.
+
+This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need Windows (or Wine).
 
 ## Usage
 

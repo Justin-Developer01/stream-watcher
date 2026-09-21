@@ -13,8 +13,8 @@
     "dev:desktop": "SW_DESKTOP=1 vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "dist": "npm run build && electron-builder --win --x64",
-    "build:win": "npm run build && electron-builder --win --x64",
+    "dist": "npm run build && electron-builder --win --x64 --publish never",
+    "build:win": "npm run build && electron-builder --win --x64 --publish never",
     "postinstall": "node node_modules/electron/install.js"
   },
   "build": {
