@@ -51,4 +51,4 @@ jobs:
             **Install:** `Stream Watcher Setup *.exe` (one-click NSIS) or run `Stream Watcher Portable *.exe`.
             Open the app — no setup wizard. Use **Login to Twitch** (Prime + chat OAuth, Client ID in Settings) from the top bar.
 
-            **Updates:** the installed Setup app can **Check for Updates** against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds are not auto-updated.
+            **Updates:** the installed Setup app can **Check for Updates** in Settings against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds are not auto-updated.

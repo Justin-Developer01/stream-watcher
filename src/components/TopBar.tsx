@@ -7,7 +7,6 @@ import {
   MessageSquare,
   Minimize2,
   Pin,
-  RefreshCw,
   Settings,
   SquareArrowOutUpRight,
   X,
@@ -382,19 +381,6 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label="Check for Updates"
-          desktopOnly
-          tooltipAlign="end"
-          active={updater.state === 'available' || updater.state === 'ready'}
-          onClick={() => {
-            setOpenMenu('settings')
-            onCheckForUpdates()
-          }}
-        >
-          <RefreshCw size={16} strokeWidth={1.75} />
-        </IconButton>
-
-        <IconButton
           label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login to Twitch'}
           tooltip={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login for Prime + chat.'}
           tooltipAlign="end"
@@ -470,6 +456,7 @@ export function TopBar({
               <button
                 type="button"
                 className="secondary"
+                title="Check for Updates"
                 onClick={onCheckForUpdates}
                 disabled={updater.state === 'checking' || updater.state === 'downloading'}
               >

@@ -13,7 +13,7 @@ You do **not** need Node, Git, or `npm install`.
 3. Click the title to add Twitch channels.
 4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Paste a Twitch Client ID in Settings first (gear). Redirect URL: `http://localhost:5173/oauth/callback`.
 5. If that flow only half-works, Settings has **Reconnect chat** and **Refresh Prime session**.
-6. **Check for Updates** (top bar or Settings) looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
+6. **Check for Updates** is in **Settings** (gear). It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
 
 Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added. In-app updates use the same unsigned GitHub assets, so SmartScreen can also appear when installing an update.
 
@@ -27,7 +27,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - Per-stream chat as a slide-over drawer; pop out to another monitor (desktop)
 - Fullscreen with optional pinned / auto-hiding chrome
 - **Login to Twitch** — one top-bar control for Prime + chat OAuth
-- **Check for Updates** — GitHub Releases (pre-releases included) for the installed Setup app
+- **Check for Updates** — in Settings; GitHub Releases (pre-releases included) for the installed Setup app
 - First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login to Twitch**. Dismiss it and it does not return. No setup wizard.
 
 ## Browser vs desktop
@@ -42,7 +42,7 @@ The renderer detects Electron with `window.streamWatcher`. Desktop-only icons **
 | Chat OAuth (send messages) + Client ID | Yes | Yes |
 | Prime / ads session (same login flow) | Chat OAuth only | OAuth also sets defaultSession cookies for embeds |
 | Pop-out chat on another monitor | Visible, **Desktop app only** | Works (`chat:open-popout`) |
-| Check for Updates | Visible, **Desktop app only** | NSIS Setup vs GitHub Releases |
+| Check for Updates | Settings (gear) | NSIS Setup vs GitHub Releases |
 
 ## Developers
 
@@ -82,7 +82,7 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 - **Open chat** toggles the per-stream drawer
 - **Open chat on another monitor** pops out a dedicated Electron window (desktop). In the browser the icon stays; hover/click says **Desktop app only**.
 - **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings has **Reconnect chat** / **Refresh Prime session** if the combined flow fails.
-- **Check for Updates** queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
+- **Check for Updates** lives in Settings (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
 - **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide
 
 ## Scripts
