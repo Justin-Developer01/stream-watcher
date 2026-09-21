@@ -11,8 +11,8 @@ You do **not** need Node, Git, or `npm install`.
    - **Stream Watcher Portable 1.0.1-pre.1.exe** — no install, just run
 2. Open **Stream Watcher**. You land on the thin top-bar shell — no wizard. A one-time toast points at **Login to Twitch**; dismiss it and it does not come back.
 3. Click the title to add Twitch channels.
-4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Paste a Twitch Client ID in Settings first (gear). Redirect URL: `http://localhost:5173/oauth/callback`.
-5. If that flow only half-works, Settings has **Reconnect chat** and **Refresh Prime session**.
+4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Release builds bake in the public Client ID, so this is just the one button. Redirect URL: `http://localhost:5173/oauth/callback`.
+5. If that flow only half-works, Settings has **Reconnect chat** and **Refresh Prime session**. The Client ID field is under **Settings → Developer**.
 6. **Check for Updates** is in **Settings** (gear). It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
 
 Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added. In-app updates use the same unsigned GitHub assets, so SmartScreen can also appear when installing an update.
@@ -26,7 +26,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - Layouts always fill the window (1, 1×2, 2×2, 1+3) — no page scroll
 - Per-stream chat as a slide-over drawer; pop out to another monitor (desktop)
 - Fullscreen with optional pinned / auto-hiding chrome
-- **Login to Twitch** — one top-bar control for Prime + chat OAuth
+- **Login to Twitch** — one top-bar control for Prime + chat OAuth (no Client ID field on first run)
 - **Check for Updates** — in Settings; GitHub Releases (pre-releases included) for the installed Setup app
 - First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login to Twitch**. Dismiss it and it does not return. No setup wizard.
 
@@ -54,12 +54,20 @@ npm run build
 npm run preview       # Browser preview of the production build
 ```
 
-### Twitch Developer App (for chat login)
+### Twitch Client ID
+
+The public Twitch Client ID is inlined at **build time** from `VITE_TWITCH_CLIENT_ID` (Vite). It is public-ish (not a Client Secret) but still better via env than hardcoding.
+
+- **Release / CI:** set GitHub Actions secret `TWITCH_CLIENT_ID`. The Windows workflow passes it as `VITE_TWITCH_CLIENT_ID` to `npm run dist`. Normal users then only see **Login to Twitch**.
+- **Local / dev:** copy `.env.example` to `.env` (gitignored) and set `VITE_TWITCH_CLIENT_ID`, **or** leave it empty and paste an ID in **Settings → Developer**.
+- If no env is set, Settings auto-opens the Developer section so you can paste. An Advanced override still wins over the baked-in ID; leave the field blank to use the build-time value.
+
+To register your own app:
 
 1. Open [Twitch Developer Console](https://dev.twitch.tv/console)
 2. Create an application
 3. Set OAuth Redirect URL to `http://localhost:5173/oauth/callback`
-4. Paste the **Client ID** into Settings (gear)
+4. Paste the **Client ID** into Settings → Developer, or into `.env` as `VITE_TWITCH_CLIENT_ID`
 
 ### Package a Windows EXE
 
@@ -81,7 +89,7 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 - Click the **title** to add / switch streams
 - **Open chat** toggles the per-stream drawer
 - **Open chat on another monitor** pops out a dedicated Electron window (desktop). In the browser the icon stays; hover/click says **Desktop app only**.
-- **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings has **Reconnect chat** / **Refresh Prime session** if the combined flow fails.
+- **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Developer** (hidden when the ID is baked into the build).
 - **Check for Updates** lives in Settings (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
 - **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide
 

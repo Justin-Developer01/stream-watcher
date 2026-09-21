@@ -3,6 +3,7 @@ import { ChatPanel } from './ChatPanel'
 import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { loadState } from '../lib/storage'
+import { resolveTwitchClientId } from '../lib/env'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
 export function ChatPopoutApp() {
@@ -11,7 +12,7 @@ export function ChatPopoutApp() {
     return raw.replace(/^#/, '').trim().toLowerCase()
   }, [])
   const saved = useMemo(() => loadState(), [])
-  const clientId = saved?.clientId ?? ''
+  const clientId = resolveTwitchClientId(saved?.clientId)
   const channels = channel ? [channel] : []
 
   useEffect(() => {

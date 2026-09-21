@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
+  ChevronDown,
   Columns2,
   Focus,
   LogIn,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react'
 import type { LayoutMode, SavedStream, UpdaterStatus } from '../types'
 import { IconButton } from './IconButton'
+import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
 
 type MenuId = 'streams' | 'layout' | 'settings' | null
 
@@ -21,6 +23,7 @@ type Props = {
   title: string
   clientId: string
   onClientIdChange: (value: string) => void
+  hasBuiltInClientId: boolean
   onAddStream: (value: string) => { ok: boolean; error?: string; channel?: string }
   onSaveStream: (value: string) => { ok: boolean; error?: string; channel?: string }
   onUnsaveStream: (channel: string) => void
@@ -100,6 +103,7 @@ export function TopBar({
   title,
   clientId,
   onClientIdChange,
+  hasBuiltInClientId,
   onAddStream,
   onSaveStream,
   onUnsaveStream,
@@ -136,11 +140,25 @@ export function TopBar({
   const [channelInput, setChannelInput] = useState('')
   const [addError, setAddError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [developerOpen, setDeveloperOpen] = useState(!hasBuiltInClientId)
   const barRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     onMenuOpenChange?.(openMenu !== null)
   }, [openMenu, onMenuOpenChange])
+
+  useEffect(() => {
+    if (openMenu === 'settings' && !hasBuiltInClientId) {
+      setDeveloperOpen(true)
+    }
+  }, [openMenu, hasBuiltInClientId])
+
+  useEffect(() => {
+    if (authError === MISSING_TWITCH_CLIENT_ID_ERROR) {
+      setDeveloperOpen(true)
+      setOpenMenu('settings')
+    }
+  }, [authError])
 
   useEffect(() => {
     if (!openMenu) return
@@ -404,21 +422,40 @@ export function TopBar({
           <section className="popover-section popover-section--flush">
             <h2>Settings</h2>
             <div className="settings-block">
-              <label htmlFor="clientId">Twitch Client ID</label>
-              <input
-                id="clientId"
-                value={clientId}
-                onChange={(e) => onClientIdChange(e.target.value.trim())}
-                placeholder="from dev.twitch.tv"
-                autoComplete="off"
-              />
-              <p className="hint">
-                Create an app at{' '}
-                <a href="https://dev.twitch.tv/console" target="_blank" rel="noreferrer">
-                  Twitch Developer Console
-                </a>
-                . OAuth redirect: <code>http://localhost:5173/oauth/callback</code>
-              </p>
+              <button
+                type="button"
+                className={`developer-toggle${developerOpen ? ' is-open' : ''}`}
+                aria-expanded={developerOpen}
+                onClick={() => setDeveloperOpen((open) => !open)}
+              >
+                <span>Developer</span>
+                <ChevronDown size={14} strokeWidth={2} />
+              </button>
+              {developerOpen && (
+                <div className="developer-panel">
+                  <label htmlFor="clientId">Twitch Client ID</label>
+                  <input
+                    id="clientId"
+                    value={clientId}
+                    onChange={(e) => onClientIdChange(e.target.value.trim())}
+                    placeholder={hasBuiltInClientId ? 'leave blank to use the baked-in ID' : 'from dev.twitch.tv'}
+                    autoComplete="off"
+                  />
+                  <p className="hint">
+                    {hasBuiltInClientId
+                      ? 'Optional override. Leave blank to use the Client ID baked into this build.'
+                      : (
+                        <>
+                          Create an app at{' '}
+                          <a href="https://dev.twitch.tv/console" target="_blank" rel="noreferrer">
+                            Twitch Developer Console
+                          </a>
+                          . OAuth redirect: <code>http://localhost:5173/oauth/callback</code>
+                        </>
+                      )}
+                  </p>
+                </div>
+              )}
               <div className="settings-actions">
                 <button type="button" className="secondary" onClick={onReconnectChat} disabled={authBusy}>
                   Reconnect chat

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { clearAuth, loadAuth, saveAuth } from '../lib/storage'
 import { CHAT_SCOPES, fetchTwitchUser } from '../lib/twitch'
+import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
 import type { AuthState } from '../types'
 
 const DEFAULT_REDIRECT = 'http://localhost:5173/oauth/callback'
@@ -108,7 +109,7 @@ export function useTwitchAuth(clientId: string) {
 
   const loginToTwitch = useCallback(async () => {
     if (!clientId.trim()) {
-      setError('Add your Twitch Client ID in Settings first')
+      setError(MISSING_TWITCH_CLIENT_ID_ERROR)
       return
     }
 

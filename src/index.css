@@ -527,6 +527,41 @@ code {
   flex: 1 1 auto;
 }
 
+.developer-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 0.28rem 0.1rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.developer-toggle:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text);
+}
+
+.developer-toggle svg {
+  transition: transform 0.15s ease;
+}
+
+.developer-toggle.is-open svg {
+  transform: rotate(180deg);
+}
+
+.developer-panel {
+  display: grid;
+  gap: 0.3rem;
+}
+
 .hint,
 .muted {
   margin: 0.1rem 0 0;

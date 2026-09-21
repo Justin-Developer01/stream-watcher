@@ -20,7 +20,9 @@ function MainApp() {
     chatChannel,
     setChatChannel,
     clientId,
+    clientIdOverride,
     setClientId,
+    hasBuiltInClientId,
     savedStreams,
     chatSidebarOpen,
     setChatSidebarOpen,
@@ -216,8 +218,9 @@ function MainApp() {
       <TopBar
         hidden={chromeHidden}
         title={title}
-        clientId={clientId}
+        clientId={clientIdOverride}
         onClientIdChange={setClientId}
+        hasBuiltInClientId={hasBuiltInClientId}
         onAddStream={addStream}
         onSaveStream={saveStream}
         onUnsaveStream={unsaveStream}

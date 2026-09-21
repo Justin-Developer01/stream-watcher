@@ -8,6 +8,7 @@ import {
   normalizeChannel,
   saveState,
 } from '../lib/storage'
+import { hasBuiltInTwitchClientId, resolveTwitchClientId } from '../lib/env'
 import type { ChatDock, ChatFloatPosition, LayoutMode, SavedStream, StreamItem } from '../types'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
@@ -57,7 +58,9 @@ export function useStreams() {
   const [layout, setLayout] = useState<Layout[]>(initial.layout)
   const [focusedId, setFocusedId] = useState<string | null>(initial.focusedId)
   const [chatChannel, setChatChannel] = useState<string | null>(initial.chatChannel)
-  const [clientId, setClientId] = useState(initial.clientId)
+  const [clientIdOverride, setClientId] = useState(initial.clientId)
+  const clientId = resolveTwitchClientId(clientIdOverride)
+  const hasBuiltInClientId = hasBuiltInTwitchClientId()
   const [savedStreams, setSavedStreams] = useState<SavedStream[]>(initial.savedStreams)
   const [chatSidebarOpen, setChatSidebarOpen] = useState(initial.chatSidebarOpen)
   const [chatDock, setChatDock] = useState<ChatDock>(initial.chatDock)
@@ -72,7 +75,7 @@ export function useStreams() {
       layout,
       focusedId,
       chatChannel,
-      clientId,
+      clientId: clientIdOverride,
       savedStreams,
       leftSidebarOpen: false,
       chatSidebarOpen,
@@ -86,7 +89,7 @@ export function useStreams() {
     layout,
     focusedId,
     chatChannel,
-    clientId,
+    clientIdOverride,
     savedStreams,
     chatSidebarOpen,
     chatDock,
@@ -215,7 +218,9 @@ export function useStreams() {
     chatChannel,
     setChatChannel,
     clientId,
+    clientIdOverride,
     setClientId,
+    hasBuiltInClientId,
     savedStreams,
     chatSidebarOpen,
     setChatSidebarOpen,
