@@ -541,10 +541,17 @@ code {
 
 .workspace--chat-right {
   grid-template-columns: minmax(0, 1fr) min(320px, 40vw);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .workspace--chat-left {
   grid-template-columns: min(320px, 40vw) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.workspace--chat-bottom {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) min(260px, 34vh);
 }
 
 .workspace--chat-left .chat-panel--docked {
@@ -609,7 +616,7 @@ code {
 
 .focus-layout {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(110px, 28%);
+  grid-template-rows: minmax(0, 72fr) minmax(110px, 28fr);
   width: 100%;
   height: 100%;
   gap: 4px;
@@ -628,7 +635,7 @@ code {
 
 .focus-layout__strip {
   min-width: 0;
-  min-height: 96px;
+  min-height: 110px;
   display: flex;
   gap: 4px;
   align-items: stretch;
