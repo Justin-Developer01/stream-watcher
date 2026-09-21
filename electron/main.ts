@@ -62,7 +62,7 @@ function defaultPopoutOrigin() {
 }
 
 function resolvePreloadPath() {
-  const candidates = ['preload.mjs', 'preload.js', 'preload.cjs']
+  const candidates = ['preload.cjs', 'preload.js', 'preload.mjs']
   for (const name of candidates) {
     const full = path.join(__dirname, name)
     if (fs.existsSync(full)) return full
@@ -86,6 +86,10 @@ function createWindow() {
       sandbox: false,
       webviewTag: false,
     },
+  })
+
+  mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error('preload failed', preloadPath, error)
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -143,14 +147,22 @@ function openChatPopout(channel: string) {
     },
   })
 
+  let lastBounds = popout.getBounds()
   const persist = () => {
-    if (popout.isDestroyed()) return
-    writePopoutBounds({ ...readPopoutBounds(), [key]: popout.getBounds() })
+    if (!popout.isDestroyed()) lastBounds = popout.getBounds()
+    writePopoutBounds({ ...readPopoutBounds(), [key]: lastBounds })
   }
+
+  popout.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error('popout preload failed', preloadPath, error)
+  })
 
   chatPopouts.set(key, popout)
   notifyMain(key, 'opened')
+  // Linux fires move/resize; macOS/Windows also fire moved/resized.
+  popout.on('move', persist)
   popout.on('moved', persist)
+  popout.on('resize', persist)
   popout.on('resized', persist)
   popout.on('closed', () => {
     persist()

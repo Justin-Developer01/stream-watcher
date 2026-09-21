@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ChatPanel } from './ChatPanel'
 import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
@@ -13,6 +13,10 @@ export function ChatPopoutApp() {
   const saved = useMemo(() => loadState(), [])
   const clientId = saved?.clientId ?? ''
   const channels = channel ? [channel] : []
+
+  useEffect(() => {
+    if (channel) document.title = `#${channel}`
+  }, [channel])
 
   const { auth, isLoggedIn } = useTwitchAuth(clientId)
   const chat = useChat({
