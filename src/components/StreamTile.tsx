@@ -45,9 +45,9 @@ export function StreamTile({
     <article className={`stream-tile${focused ? ' is-focused' : ''}${promoteOnClick ? ' is-promotable' : ''}`}>
       <header className="stream-tile__bar">
         {showHandle && (
-          <button type="button" className="stream-drag-handle" data-tooltip="Drag to rearrange" aria-label="Drag to rearrange">
+          <div className="stream-drag-handle" data-tooltip="Drag to rearrange" role="button" aria-label="Drag to rearrange" tabIndex={0}>
             <DragIcon />
-          </button>
+          </div>
         )}
         <button type="button" className="stream-tile__channel" onClick={onFocus} title="Focus and unmute">
           {stream.channel}

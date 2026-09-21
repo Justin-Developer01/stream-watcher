@@ -131,7 +131,7 @@ export function StreamGrid({
           compactType="vertical"
           useCSSTransforms
           draggableHandle=".stream-drag-handle"
-          draggableCancel=".icon-btn, .stream-tile__channel, .stream-tile__actions, button, input, select"
+          draggableCancel=".icon-btn, .stream-tile__channel, .stream-tile__actions, input, select"
           isDraggable
           isResizable
           resizeHandles={['se']}
