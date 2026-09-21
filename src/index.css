@@ -132,15 +132,15 @@ code {
 
 .app-shell {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
   height: 100dvh;
-  max-height: 100vh;
   max-height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
   background: var(--bg);
+}
+
+.overflow-hidden {
+  overflow: hidden;
 }
 
 .topbar-hotzone {
@@ -158,7 +158,10 @@ code {
 }
 
 .topbar {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   height: var(--topbar-h);
   min-height: var(--topbar-h);
   display: flex;
@@ -170,16 +173,8 @@ code {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
   z-index: 50;
   transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.app-shell--fullscreen .topbar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
 }
 
 .topbar--hidden {
@@ -440,7 +435,7 @@ code {
   flex-direction: column;
   gap: 0.3rem;
   max-height: 12rem;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .saved-list__item {
@@ -522,11 +517,17 @@ code {
 }
 
 .main-stage {
+  box-sizing: border-box;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding-top: var(--topbar-h);
   min-width: 0;
-  min-height: 0;
-  flex: 1;
   overflow: hidden;
   position: relative;
+}
+
+.app-shell--chrome-hidden .main-stage {
+  padding-top: 0;
 }
 
 .fit-grid {
@@ -549,7 +550,7 @@ code {
 }
 
 .app-shell--fullscreen .main-stage {
-  height: 100%;
+  height: 100dvh;
 }
 
 .empty-grid {
@@ -768,7 +769,7 @@ code {
   border: 1px solid var(--border);
   border-radius: 8px;
   resize: both;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .app-shell--fullscreen .chat-panel--right,

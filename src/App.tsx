@@ -161,6 +161,7 @@ function MainApp() {
     <div
       className={[
         'app-shell',
+        'overflow-hidden',
         isFullscreen ? 'app-shell--fullscreen' : '',
         chromeHidden ? 'app-shell--chrome-hidden' : '',
         chatVisible ? `app-shell--chat-${chatDock === 'float' ? 'right' : chatDock}` : '',
