@@ -1,6 +1,22 @@
 # Stream Watcher
 
-Multi-stream Twitch viewer with a thin top bar, fit-to-window layouts, account login, and chat. The **core app runs in a normal browser**. Electron adds Prime/ads session login and chat pop-out windows.
+Desktop multi-stream Twitch viewer. The **primary “just works” path is the Windows EXE**: download, install, open, use. A browser/Vite mode exists for development and for watching without Electron.
+
+## For most people (Windows)
+
+You do **not** need Node, Git, or `npm install`.
+
+1. Get the unsigned installer from a GitHub Actions artifact or a Release:
+   - **Stream Watcher Setup 1.0.0.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
+   - **Stream Watcher Portable 1.0.0.exe** — no install, just run
+2. Open **Stream Watcher**.
+3. Click the title to add Twitch channels.
+4. **Login for Prime / fewer ads** (TV icon) — Twitch website cookie session, desktop only.
+5. **Login to send chat** (log-in icon) — OAuth. Paste a Twitch Client ID in Settings first (gear). Redirect URL: `http://localhost:5173/oauth/callback`.
+
+Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added.
+
+`npm install` is **for developers only**.
 
 ## Features
 
@@ -11,13 +27,12 @@ Multi-stream Twitch viewer with a thin top bar, fit-to-window layouts, account l
 - Fullscreen with optional pinned / auto-hiding chrome
 - Separate **Login for Prime / fewer ads** (desktop session) and **Login to send chat** (OAuth)
 - First run: dismissible tip only — no setup wizard
-- Windows EXE installer via electron-builder
 
 ## Browser vs desktop
 
 The renderer detects Electron with `window.streamWatcher`. Desktop-only icons **stay visible** in the browser; hover or click shows **Desktop app only**.
 
-| Capability | Browser (`npm run dev` / `npm run preview`) | Electron (`npm run dev:desktop`) |
+| Capability | Browser (`npm run dev` / `npm run preview`) | Electron (EXE / `npm run dev:desktop`) |
 |---|---|---|
 | Stream grid, layouts, thin top bar | Yes | Yes |
 | Fullscreen-in-tab | Yes | Yes (window fullscreen) |
@@ -26,10 +41,14 @@ The renderer detects Electron with `window.streamWatcher`. Desktop-only icons **
 | Prime / ads session login | Visible, **Desktop app only** | Works (`twitch.tv/login` cookies) |
 | Pop-out chat on another monitor | Visible, **Desktop app only** | Works (`chat:open-popout`) |
 
-## Setup (developers)
+## Developers
 
 ```bash
 npm install
+npm run dev           # Vite in the browser — no Electron required
+npm run dev:desktop   # Vite + Electron window
+npm run build
+npm run preview       # Browser preview of the production build
 ```
 
 ### Twitch Developer App (for chat login)
@@ -39,34 +58,26 @@ npm install
 3. Set OAuth Redirect URL to `http://localhost:5173/oauth/callback`
 4. Paste the **Client ID** into Settings (gear)
 
-## Run
+### Package a Windows EXE
 
-```bash
-npm run dev           # Vite in the browser — no Electron required
-npm run dev:desktop   # Vite + Electron window
-npm run build
-npm run preview       # Browser preview of the production build
-```
-
-Open `http://localhost:5173` for watching, layouts, the chat drawer, and chat OAuth.
-
-## Windows installer
+On a **Windows** machine (or GitHub Actions `windows-latest`):
 
 ```bash
 npm run dist
+# same as: npm run build:win
 ```
 
-Produces an unsigned NSIS installer and portable EXE under `release/`. Install, open, and you land on the thin top-bar shell — no wizard. Sign the installer later if you ship publicly.
+electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.0.exe`) and **portable** (`Stream Watcher Portable 1.0.0.exe`) files to `release/`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
 
-Normal users should install the EXE. `npm install` is for development only.
+This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need Windows (or Wine). CI already runs `npm run dist` on `windows-latest` and uploads `stream-watcher-windows`.
 
 ## Usage
 
 - Click the **title** to add / switch streams
 - **Open chat** toggles the per-stream drawer
 - **Open chat on another monitor** pops out a dedicated Electron window (desktop). In the browser the icon stays; hover/click says **Desktop app only**.
-- **Login for Prime / fewer ads** is the Twitch cookie session (`twitch.tv/login`, desktop) — not OAuth. Same **Desktop app only** tip in the browser.
-- **Login to send chat** is a separate OAuth control (`chat:read` + `chat:edit`) and works in the browser.
+- **Login for Prime / fewer ads** is the Twitch cookie session (`twitch.tv/login`, desktop) — not OAuth
+- **Login to send chat** is a separate OAuth control (`chat:read` + `chat:edit`)
 - **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide
 
 ## Scripts
@@ -78,4 +89,4 @@ Normal users should install the EXE. `npm install` is for development only.
 | `npm run dev:web` | Alias of `npm run dev` |
 | `npm run build` | Production renderer + Electron main |
 | `npm run preview` | Browser preview of the production build |
-| `npm run dist` | Windows NSIS + portable EXE |
+| `npm run dist` / `npm run build:win` | Windows NSIS installer + portable EXE |

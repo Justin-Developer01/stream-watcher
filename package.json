@@ -13,13 +13,16 @@
     "dev:desktop": "SW_DESKTOP=1 vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "dist": "npm run build && electron-builder --win",
-    "build:win": "npm run build && electron-builder --win",
+    "dist": "npm run build && electron-builder --win --x64",
+    "build:win": "npm run build && electron-builder --win --x64",
     "postinstall": "node node_modules/electron/install.js"
   },
   "build": {
     "appId": "com.justin.streamwatcher",
     "productName": "Stream Watcher",
+    "copyright": "Copyright © Justin",
+    "asar": true,
+    "forceCodeSigning": false,
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -37,7 +40,17 @@
     },
     "nsis": {
       "oneClick": true,
-      "perMachine": false
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "shortcutName": "Stream Watcher",
+      "uninstallDisplayName": "Stream Watcher",
+      "artifactName": "${productName} Setup ${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName} Portable ${version}.${ext}"
     }
   },
   "dependencies": {
