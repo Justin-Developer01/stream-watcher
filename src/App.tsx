@@ -285,8 +285,8 @@ function MainApp() {
         </main>
         {chatPushes && chatDock === 'right' && chatPanel}
         {chatPushes && chatDock === 'bottom' && chatPanel}
-        {chatVisible && chatDock === 'float' && chatPanel}
       </div>
+      {chatVisible && chatDock === 'float' && chatPanel}
       <FirstRunTip />
     </div>
   )
