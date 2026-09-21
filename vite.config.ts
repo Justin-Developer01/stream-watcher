@@ -2,6 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron/simple'
 import path from 'node:path'
+import { PUBLIC_TWITCH_CLIENT_ID } from './src/lib/twitchPublicClientId'
+
+function resolveViteTwitchClientId() {
+  const fromEnv = (process.env.VITE_TWITCH_CLIENT_ID ?? '').trim()
+  return fromEnv || PUBLIC_TWITCH_CLIENT_ID
+}
 
 export default defineConfig(({ command }) => {
   const webOnly = process.env.SW_WEB === '1'
@@ -9,6 +15,9 @@ export default defineConfig(({ command }) => {
   // Web-first: `npm run dev` / preview stay browser Vite. Electron is compiled on
   // production build and launched only for `npm run dev:desktop`.
   const useElectron = !webOnly && (command === 'build' || desktopDev)
+  // CI / .env override; otherwise bake the public Client ID into production builds
+  // and local Vite so first-run Login to Twitch works. Never a Client Secret.
+  process.env.VITE_TWITCH_CLIENT_ID = resolveViteTwitchClientId()
 
   return {
     appType: 'spa',

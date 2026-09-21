@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import type { LayoutMode, SavedStream, UpdaterStatus } from '../types'
 import { IconButton } from './IconButton'
-import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
+import { MISSING_TWITCH_CLIENT_ID_ERROR, TWITCH_OAUTH_REDIRECT } from '../lib/env'
 
 type MenuId = 'streams' | 'layout' | 'settings' | null
 
@@ -443,14 +443,19 @@ export function TopBar({
                   />
                   <p className="hint">
                     {hasBuiltInClientId
-                      ? 'Optional override. Leave blank to use the Client ID baked into this build.'
+                      ? (
+                        <>
+                          Optional override. Leave blank to use the Client ID baked into this build.
+                          OAuth redirect: <code>{TWITCH_OAUTH_REDIRECT}</code>
+                        </>
+                      )
                       : (
                         <>
                           Create an app at{' '}
                           <a href="https://dev.twitch.tv/console" target="_blank" rel="noreferrer">
                             Twitch Developer Console
                           </a>
-                          . OAuth redirect: <code>http://localhost:5173/oauth/callback</code>
+                          . OAuth redirect: <code>{TWITCH_OAUTH_REDIRECT}</code>
                         </>
                       )}
                   </p>

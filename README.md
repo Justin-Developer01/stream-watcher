@@ -7,8 +7,8 @@ Desktop multi-stream Twitch viewer. The **primary “just works” path is the W
 You do **not** need Node, Git, or `npm install`.
 
 1. Get the unsigned installer from a GitHub Actions artifact or a Release:
-   - **Stream Watcher Setup 1.0.1-pre.1.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
-   - **Stream Watcher Portable 1.0.1-pre.1.exe** — no install, just run
+   - **Stream Watcher Setup 1.0.1-pre.2.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
+   - **Stream Watcher Portable 1.0.1-pre.2.exe** — no install, just run
 2. Open **Stream Watcher**. You land on the thin top-bar shell — no wizard. A one-time toast points at **Login to Twitch**; dismiss it and it does not come back.
 3. Click the title to add Twitch channels.
 4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Release builds bake in the public Client ID, so this is just the one button. Redirect URL: `http://localhost:5173/oauth/callback`.
@@ -56,18 +56,18 @@ npm run preview       # Browser preview of the production build
 
 ### Twitch Client ID
 
-The public Twitch Client ID is inlined at **build time** from `VITE_TWITCH_CLIENT_ID` (Vite). It is public-ish (not a Client Secret) but still better via env than hardcoding.
+Production builds bake a public Twitch Client ID from `VITE_TWITCH_CLIENT_ID` (Vite). First run is just **Login to Twitch**; the field is under **Settings → Developer**. This is a public Client ID, not a Client Secret — never commit a secret.
 
-- **Release / CI:** set GitHub Actions secret `TWITCH_CLIENT_ID`. The Windows workflow passes it as `VITE_TWITCH_CLIENT_ID` to `npm run dist`. Normal users then only see **Login to Twitch**.
-- **Local / dev:** copy `.env.example` to `.env` (gitignored) and set `VITE_TWITCH_CLIENT_ID`, **or** leave it empty and paste an ID in **Settings → Developer**.
-- If no env is set, Settings auto-opens the Developer section so you can paste. An Advanced override still wins over the baked-in ID; leave the field blank to use the build-time value.
+- **Release / CI:** optional GitHub Actions secret `TWITCH_CLIENT_ID` overrides the build-time default. The Windows workflow passes it as `VITE_TWITCH_CLIENT_ID` to `npm run dist`.
+- **Local / dev:** copy `.env.example` to `.env` (gitignored) to override, or leave it empty and use the baked-in ID. Settings → Developer is still the override field.
+- OAuth Redirect URL must stay `http://localhost:5173/oauth/callback` to match the Twitch app.
 
 To register your own app:
 
 1. Open [Twitch Developer Console](https://dev.twitch.tv/console)
 2. Create an application
 3. Set OAuth Redirect URL to `http://localhost:5173/oauth/callback`
-4. Paste the **Client ID** into Settings → Developer, or into `.env` as `VITE_TWITCH_CLIENT_ID`
+4. Paste that app’s **Client ID** into Settings → Developer, or into `.env` as `VITE_TWITCH_CLIENT_ID`
 
 ### Package a Windows EXE
 
@@ -78,7 +78,7 @@ npm run dist
 # same as: npm run build:win
 ```
 
-electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.1.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.1.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
+electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.2.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.2.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
 
 `npm run dist` uses `--publish never` so CI does not need a GitHub token for electron-builder. GitHub Actions on `windows-latest` uploads the `stream-watcher-windows` artifact; pushing a `v*` tag attaches those EXEs **and** `latest.yml` to a GitHub Release so **Check for Updates** can find them. Pre-release tags (`pre` / `rc`) are marked as GitHub pre-releases; the app still checks them.
 

@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { clearAuth, loadAuth, saveAuth } from '../lib/storage'
 import { CHAT_SCOPES, fetchTwitchUser } from '../lib/twitch'
-import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
+import { MISSING_TWITCH_CLIENT_ID_ERROR, TWITCH_OAUTH_REDIRECT } from '../lib/env'
 import type { AuthState } from '../types'
-
-const DEFAULT_REDIRECT = 'http://localhost:5173/oauth/callback'
-
-function redirectUri() {
-  if (typeof window === 'undefined') return DEFAULT_REDIRECT
-  return `${window.location.origin}/oauth/callback`
-}
 
 function readTokenFromLocation() {
   if (typeof window === 'undefined') return null
@@ -35,7 +28,7 @@ async function runChatOAuth(clientId: string) {
   if (window.streamWatcher) {
     const result = await window.streamWatcher.startTwitchOAuth({
       clientId,
-      redirectUri: DEFAULT_REDIRECT,
+      redirectUri: TWITCH_OAUTH_REDIRECT,
       scopes: CHAT_SCOPES,
     })
     if (!result?.accessToken) {
@@ -46,7 +39,7 @@ async function runChatOAuth(clientId: string) {
 
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: redirectUri(),
+    redirect_uri: TWITCH_OAUTH_REDIRECT,
     response_type: 'token',
     scope: CHAT_SCOPES.join(' '),
     force_verify: 'true',
