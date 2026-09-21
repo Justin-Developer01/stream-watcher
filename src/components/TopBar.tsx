@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   Columns2,
+  Focus,
   LogIn,
   Maximize2,
   MessageSquare,
@@ -9,6 +10,7 @@ import {
   Settings,
   SquareArrowOutUpRight,
   Tv,
+  X,
 } from 'lucide-react'
 import type { LayoutMode, SavedStream } from '../types'
 import { IconButton } from './IconButton'
@@ -31,6 +33,8 @@ type Props = {
   onToggleChat: () => void
   onPopoutChat: () => void
   layoutMode: LayoutMode
+  focusMode: boolean
+  onToggleFocusMode: () => void
   onPreset: (preset: LayoutMode) => void
   isFullscreen: boolean
   onToggleFullscreen: () => void
@@ -103,6 +107,8 @@ export function TopBar({
   onToggleChat,
   onPopoutChat,
   layoutMode,
+  focusMode,
+  onToggleFocusMode,
   onPreset,
   isFullscreen,
   onToggleFullscreen,
@@ -260,11 +266,12 @@ export function TopBar({
                       </button>
                       <button
                         type="button"
-                        className="ghost danger"
+                        className="ghost danger saved-list__remove"
                         onClick={() => onUnsaveStream(item.channel)}
                         title="Remove from saved"
+                        aria-label={`Remove #${item.channel} from saved`}
                       >
-                        x
+                        <X size={14} strokeWidth={2} />
                       </button>
                     </div>
                   </li>
@@ -285,6 +292,17 @@ export function TopBar({
           }}
         >
           <MessageSquare size={16} strokeWidth={1.75} fill={chatOpen ? 'currentColor' : 'none'} />
+        </IconButton>
+
+        <IconButton
+          label="Focus mode"
+          active={focusMode}
+          onClick={() => {
+            setOpenMenu(null)
+            onToggleFocusMode()
+          }}
+        >
+          <Focus size={16} strokeWidth={1.75} />
         </IconButton>
 
         <Menu

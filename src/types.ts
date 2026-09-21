@@ -50,6 +50,7 @@ export type PersistedState = {
   chatDock: ChatDock
   chatFloat: ChatFloatPosition
   layoutMode?: LayoutMode
+  focusMode?: boolean
 }
 
 export const DEFAULT_LAYOUT_COLS = 12

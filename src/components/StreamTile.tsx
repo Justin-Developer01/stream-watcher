@@ -17,6 +17,8 @@ type Props = {
   focused: boolean
   interactive: boolean
   isSaved: boolean
+  showHandle?: boolean
+  promoteOnClick?: boolean
   onFocus: () => void
   onToggleMute: () => void
   onRemove: () => void
@@ -30,6 +32,8 @@ export function StreamTile({
   focused,
   interactive,
   isSaved,
+  showHandle = true,
+  promoteOnClick = false,
   onFocus,
   onToggleMute,
   onRemove,
@@ -38,11 +42,13 @@ export function StreamTile({
   onToggleSave,
 }: Props) {
   return (
-    <article className={`stream-tile${focused ? ' is-focused' : ''}`}>
+    <article className={`stream-tile${focused ? ' is-focused' : ''}${promoteOnClick ? ' is-promotable' : ''}`}>
       <header className="stream-tile__bar">
-        <button type="button" className="stream-drag-handle" data-tooltip="Drag to rearrange" aria-label="Drag to rearrange">
-          <DragIcon />
-        </button>
+        {showHandle && (
+          <button type="button" className="stream-drag-handle" data-tooltip="Drag to rearrange" aria-label="Drag to rearrange">
+            <DragIcon />
+          </button>
+        )}
         <button type="button" className="stream-tile__channel" onClick={onFocus} title="Focus and unmute">
           {stream.channel}
         </button>
@@ -71,7 +77,11 @@ export function StreamTile({
           </IconButton>
         </div>
       </header>
-      <div className="stream-tile__player" onDoubleClick={onFocus}>
+      <div
+        className="stream-tile__player"
+        onClick={promoteOnClick ? onFocus : undefined}
+        onDoubleClick={onFocus}
+      >
         <TwitchPlayer
           channel={stream.channel}
           muted={stream.muted}

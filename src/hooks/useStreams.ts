@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
+import { buildPresetLayout, reconcileLayout } from '../lib/layout'
 import {
   createDefaultLayout,
   loadState,
@@ -21,7 +22,11 @@ export function useStreams() {
     if (saved?.streams?.length) {
       return {
         streams: saved.streams,
-        layout: saved.layout?.length ? saved.layout : createDefaultLayout(saved.streams),
+        layout: reconcileLayout(
+          saved.streams,
+          saved.layout ?? [],
+          saved.layoutMode ?? (saved.streams.length <= 1 ? '1x1' : saved.streams.length === 2 ? '1x2' : '2x2'),
+        ),
         focusedId: saved.focusedId,
         chatChannel: saved.chatChannel ?? saved.streams[0]?.channel ?? null,
         clientId: saved.clientId ?? '',
@@ -30,6 +35,7 @@ export function useStreams() {
         chatDock: saved.chatDock ?? 'right',
         chatFloat: saved.chatFloat ?? DEFAULT_CHAT_FLOAT,
         layoutMode: saved.layoutMode ?? (saved.streams.length <= 1 ? '1x1' : saved.streams.length === 2 ? '1x2' : '2x2'),
+        focusMode: saved.focusMode ?? false,
       }
     }
     return {
@@ -43,6 +49,7 @@ export function useStreams() {
       chatDock: saved?.chatDock ?? 'right',
       chatFloat: saved?.chatFloat ?? DEFAULT_CHAT_FLOAT,
       layoutMode: saved?.layoutMode ?? '1x2',
+      focusMode: false,
     }
   }, [])
 
@@ -57,6 +64,7 @@ export function useStreams() {
   const [chatFloat, setChatFloat] = useState<ChatFloatPosition>(initial.chatFloat)
   const [isDragging, setIsDragging] = useState(false)
   const [layoutMode, setLayoutMode] = useState<LayoutMode>(initial.layoutMode)
+  const [focusMode, setFocusMode] = useState(initial.focusMode)
 
   useEffect(() => {
     saveState({
@@ -71,6 +79,7 @@ export function useStreams() {
       chatDock,
       chatFloat,
       layoutMode,
+      focusMode,
     })
   }, [
     streams,
@@ -83,6 +92,7 @@ export function useStreams() {
     chatDock,
     chatFloat,
     layoutMode,
+    focusMode,
   ])
 
   const addStream = useCallback((raw: string) => {
@@ -103,7 +113,7 @@ export function useStreams() {
         x: (prev.length * 4) % 12,
         y: Infinity,
         w: 4,
-        h: 8,
+        h: 6,
         minW: 3,
         minH: 4,
       },
@@ -155,8 +165,12 @@ export function useStreams() {
     return { ok: true as const, saved: true as const, channel }
   }, [savedStreams])
 
-  const focusStream = useCallback((id: string) => {
+  const focusStream = useCallback((id: string, options?: { enterFocusMode?: boolean }) => {
     setFocusedId(id)
+    if (options?.enterFocusMode) {
+      setFocusMode(true)
+      setIsDragging(false)
+    }
     setStreams((prev) =>
       prev.map((s) => ({
         ...s,
@@ -165,6 +179,16 @@ export function useStreams() {
     )
     const stream = streams.find((s) => s.id === id)
     if (stream) setChatChannel(stream.channel)
+  }, [streams])
+
+  const toggleFocusMode = useCallback(() => {
+    setIsDragging(false)
+    setFocusMode((current) => {
+      if (!current) {
+        setFocusedId((id) => id ?? streams[0]?.id ?? null)
+      }
+      return !current
+    })
   }, [streams])
 
   const toggleMute = useCallback((id: string) => {
@@ -176,77 +200,9 @@ export function useStreams() {
   const applyPreset = useCallback(
     (preset: LayoutMode) => {
       setLayoutMode(preset)
+      setFocusMode(false)
       if (!streams.length) return
-
-      let next: Layout[] = []
-      if (preset === '1x1') {
-        next = streams.slice(0, 1).map((s) => ({
-          i: s.id,
-          x: 0,
-          y: 0,
-          w: 12,
-          h: 16,
-          minW: 3,
-          minH: 4,
-        }))
-      } else if (preset === '1x2') {
-        next = streams.slice(0, 2).map((s, i) => ({
-          i: s.id,
-          x: i * 6,
-          y: 0,
-          w: 6,
-          h: 14,
-          minW: 3,
-          minH: 4,
-        }))
-      } else if (preset === '2x2') {
-        next = streams.slice(0, 4).map((s, i) => ({
-          i: s.id,
-          x: (i % 2) * 6,
-          y: Math.floor(i / 2) * 8,
-          w: 6,
-          h: 8,
-          minW: 3,
-          minH: 4,
-        }))
-      } else {
-        const [main, ...rest] = streams
-        next = [
-          {
-            i: main.id,
-            x: 0,
-            y: 0,
-            w: 8,
-            h: 16,
-            minW: 4,
-            minH: 6,
-          },
-          ...rest.slice(0, 3).map((s, i) => ({
-            i: s.id,
-            x: 8,
-            y: i * 5,
-            w: 4,
-            h: 5,
-            minW: 3,
-            minH: 4,
-          })),
-        ]
-      }
-
-      const placed = new Set(next.map((n) => n.i))
-      const extras = streams
-        .filter((s) => !placed.has(s.id))
-        .map((s, i) => ({
-          i: s.id,
-          x: 0,
-          y: 20 + i * 6,
-          w: 4,
-          h: 6,
-          minW: 3,
-          minH: 4,
-        }))
-
-      setLayout([...next, ...extras])
+      setLayout(buildPresetLayout(streams, preset))
     },
     [streams],
   )
@@ -270,6 +226,8 @@ export function useStreams() {
     isDragging,
     setIsDragging,
     layoutMode,
+    focusMode,
+    toggleFocusMode,
     addStream,
     removeStream,
     saveStream,

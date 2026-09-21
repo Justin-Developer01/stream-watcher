@@ -114,7 +114,7 @@ export function ChatPanel({
 
   const panelClass = [
     'chat-panel',
-    compact ? 'chat-panel--popout' : 'chat-panel--overlay',
+    compact ? 'chat-panel--popout' : dock === 'float' ? 'chat-panel--overlay' : 'chat-panel--docked',
     !compact ? `chat-panel--${dock}` : '',
   ]
     .filter(Boolean)

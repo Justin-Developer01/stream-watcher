@@ -27,7 +27,13 @@ function MainApp() {
     setChatDock,
     chatFloat,
     setChatFloat,
+    layout,
+    setLayout,
+    isDragging,
+    setIsDragging,
     layoutMode,
+    focusMode,
+    toggleFocusMode,
     addStream,
     removeStream,
     saveStream,
@@ -165,11 +171,12 @@ function MainApp() {
   }, [chatSidebarOpen, isFullscreen, setChatSidebarOpen, setFullscreen, toggleFullscreen])
 
   const chatVisible = chatSidebarOpen
-  const overlayChat = chatVisible ? (
+  const chatPushes = chatVisible && chatDock !== 'float'
+  const chatPanel = chatVisible ? (
     <ChatPanel
       collapsed={false}
       onToggleCollapsed={() => setChatSidebarOpen(false)}
-      dock={chatDock === 'float' ? 'right' : chatDock}
+      dock={chatDock}
       onDockChange={(dock) => {
         setChatDock(dock)
         setChatSidebarOpen(true)
@@ -199,7 +206,6 @@ function MainApp() {
         'overflow-hidden',
         isFullscreen ? 'app-shell--fullscreen' : '',
         chromeHidden ? 'app-shell--chrome-hidden' : '',
-        chatVisible ? `app-shell--chat-${chatDock === 'float' ? 'right' : chatDock}` : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -228,6 +234,8 @@ function MainApp() {
           if (target) void popoutChat(target)
         }}
         layoutMode={layoutMode}
+        focusMode={focusMode}
+        onToggleFocusMode={toggleFocusMode}
         onPreset={applyPreset}
         isFullscreen={isFullscreen}
         onToggleFullscreen={() => void toggleFullscreen()}
@@ -243,27 +251,42 @@ function MainApp() {
         onMenuOpenChange={setMenuOpen}
       />
 
-      <main className="main-stage">
-        <StreamGrid
-          streams={streams}
-          layoutMode={layoutMode}
-          focusedId={focusedId}
-          onFocus={focusStream}
-          onToggleMute={toggleMute}
-          onRemove={removeStream}
-          onOpenChat={(channel) => {
-            openChatFor(channel)
-            if (chatDock === 'float') setChatDock('right')
-          }}
-          onPopoutChat={(channel) => {
-            void popoutChat(channel)
-          }}
-          onToggleSave={toggleSaveStream}
-          savedChannels={savedStreams.map((s) => s.channel)}
-        />
-      </main>
-
-      {overlayChat}
+      <div
+        className={[
+          'workspace',
+          chatPushes ? `workspace--chat-open workspace--chat-${chatDock}` : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        {chatPushes && chatDock === 'left' && chatPanel}
+        <main className="main-stage">
+          <StreamGrid
+            streams={streams}
+            layout={layout}
+            onLayoutChange={setLayout}
+            focusedId={focusedId}
+            focusMode={focusMode}
+            isDragging={isDragging}
+            onDraggingChange={setIsDragging}
+            onFocus={(id) => focusStream(id, { enterFocusMode: true })}
+            onToggleMute={toggleMute}
+            onRemove={removeStream}
+            onOpenChat={(channel) => {
+              openChatFor(channel)
+              if (chatDock === 'float') setChatDock('right')
+            }}
+            onPopoutChat={(channel) => {
+              void popoutChat(channel)
+            }}
+            onToggleSave={toggleSaveStream}
+            savedChannels={savedStreams.map((s) => s.channel)}
+          />
+        </main>
+        {chatPushes && chatDock === 'right' && chatPanel}
+        {chatPushes && chatDock === 'bottom' && chatPanel}
+        {chatVisible && chatDock === 'float' && chatPanel}
+      </div>
       <FirstRunTip />
     </div>
   )

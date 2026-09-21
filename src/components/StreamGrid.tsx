@@ -1,11 +1,19 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import GridLayout from 'react-grid-layout'
+import type { Layout } from 'react-grid-layout'
+import { layoutRows } from '../lib/layout'
+import { DEFAULT_LAYOUT_COLS } from '../types'
+import type { StreamItem } from '../types'
 import { StreamTile } from './StreamTile'
-import type { LayoutMode, StreamItem } from '../types'
 
 type Props = {
   streams: StreamItem[]
-  layoutMode: LayoutMode
+  layout: Layout[]
+  onLayoutChange: (layout: Layout[]) => void
   focusedId: string | null
+  focusMode: boolean
+  isDragging: boolean
+  onDraggingChange: (dragging: boolean) => void
   savedChannels: string[]
   onFocus: (id: string) => void
   onToggleMute: (id: string) => void
@@ -15,45 +23,26 @@ type Props = {
   onToggleSave: (channel: string) => void
 }
 
-function orderedStreams(streams: StreamItem[], focusedId: string | null) {
-  if (!streams.length) return []
-  const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
-  return [focused, ...streams.filter((s) => s.id !== focused.id)]
-}
+const MARGIN: [number, number] = [4, 4]
+const PADDING: [number, number] = [4, 4]
 
-function fitGridStyle(mode: LayoutMode, count: number): CSSProperties {
-  if (count <= 1 || mode === '1x1') {
-    return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' }
-  }
-
-  if (mode === '1x2') {
-    const rows = Math.ceil(count / 2)
-    return {
-      gridTemplateColumns: '1fr 1fr',
-      gridTemplateRows: `repeat(${rows}, 1fr)`,
-    }
-  }
-
-  if (mode === '1+3') {
-    const side = Math.max(count - 1, 1)
-    return {
-      gridTemplateColumns: '2fr 1fr',
-      gridTemplateRows: `repeat(${side}, 1fr)`,
-    }
-  }
-
-  const cols = count <= 4 ? 2 : 3
-  const rows = Math.ceil(count / cols)
-  return {
-    gridTemplateColumns: `repeat(${cols}, 1fr)`,
-    gridTemplateRows: `repeat(${rows}, 1fr)`,
-  }
+function EmptyGrid() {
+  return (
+    <div className="empty-grid">
+      <h2>No streams yet</h2>
+      <p>Click the title in the top bar to add a Twitch channel.</p>
+    </div>
+  )
 }
 
 export function StreamGrid({
   streams,
-  layoutMode,
+  layout,
+  onLayoutChange,
   focusedId,
+  focusMode,
+  isDragging,
+  onDraggingChange,
   savedChannels,
   onFocus,
   onToggleMute,
@@ -62,42 +51,103 @@ export function StreamGrid({
   onPopoutChat,
   onToggleSave,
 }: Props) {
-  if (!streams.length) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const measure = () => {
+      setSize({ width: Math.floor(el.clientWidth), height: Math.floor(el.clientHeight) })
+    }
+    measure()
+
+    const observer = new ResizeObserver(() => measure())
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [focusMode, streams.length])
+
+  const rows = useMemo(() => layoutRows(layout), [layout])
+  const rowHeight = useMemo(() => {
+    if (size.height <= 0) return 24
+    const available = size.height - PADDING[1] * 2 - MARGIN[1] * (rows + 1)
+    return Math.max(12, Math.floor(available / rows))
+  }, [rows, size.height])
+
+  if (!streams.length) return <EmptyGrid />
+
+  const renderTile = (stream: StreamItem, options?: { promoteOnClick?: boolean; showHandle?: boolean }) => (
+    <StreamTile
+      stream={stream}
+      focused={focusedId === stream.id}
+      interactive={!isDragging && !options?.promoteOnClick}
+      showHandle={options?.showHandle ?? !focusMode}
+      isSaved={savedChannels.includes(stream.channel)}
+      promoteOnClick={options?.promoteOnClick}
+      onFocus={() => onFocus(stream.id)}
+      onToggleMute={() => onToggleMute(stream.id)}
+      onRemove={() => onRemove(stream.id)}
+      onOpenChat={() => onOpenChat(stream.channel)}
+      onPopoutChat={() => onPopoutChat(stream.channel)}
+      onToggleSave={() => onToggleSave(stream.channel)}
+    />
+  )
+
+  if (focusMode) {
+    const hero = streams.find((stream) => stream.id === focusedId) ?? streams[0]
+    const others = streams.filter((stream) => stream.id !== hero.id)
     return (
-      <div className="empty-grid">
-        <h2>No streams yet</h2>
-        <p>Click the title in the top bar to add a Twitch channel.</p>
+      <div className="focus-layout" ref={containerRef}>
+        <div className="focus-layout__hero">{renderTile(hero, { showHandle: false })}</div>
+        {others.length > 0 && (
+          <div className="focus-layout__strip" aria-label="Other streams">
+            {others.map((stream) => (
+              <div key={stream.id} className="focus-layout__strip-item">
+                {renderTile(stream, { promoteOnClick: true, showHandle: false })}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     )
   }
 
-  const tiles = layoutMode === '1x1'
-    ? orderedStreams(streams, focusedId).slice(0, 1)
-    : orderedStreams(streams, focusedId)
-
-  const plus = layoutMode === '1+3' && tiles.length > 1
-
   return (
     <div
-      className={`fit-grid${plus ? ' fit-grid--plus' : ''}`}
-      style={fitGridStyle(layoutMode, tiles.length)}
+      className={`stream-grid${isDragging ? ' is-interacting' : ''}`}
+      ref={containerRef}
     >
-      {tiles.map((stream) => (
-        <div key={stream.id} className="fit-grid__item">
-          <StreamTile
-            stream={stream}
-            focused={focusedId === stream.id}
-            interactive
-            isSaved={savedChannels.includes(stream.channel)}
-            onFocus={() => onFocus(stream.id)}
-            onToggleMute={() => onToggleMute(stream.id)}
-            onRemove={() => onRemove(stream.id)}
-            onOpenChat={() => onOpenChat(stream.channel)}
-            onPopoutChat={() => onPopoutChat(stream.channel)}
-            onToggleSave={() => onToggleSave(stream.channel)}
-          />
-        </div>
-      ))}
+      {size.width > 0 && size.height > 0 && (
+        <GridLayout
+          className="stream-grid__layout"
+          layout={layout}
+          cols={DEFAULT_LAYOUT_COLS}
+          rowHeight={rowHeight}
+          width={size.width}
+          margin={MARGIN}
+          containerPadding={PADDING}
+          autoSize={false}
+          compactType="vertical"
+          useCSSTransforms
+          draggableHandle=".stream-drag-handle"
+          draggableCancel=".icon-btn, .stream-tile__channel, .stream-tile__actions, button, input, select"
+          isDraggable
+          isResizable
+          resizeHandles={['se']}
+          onLayoutChange={onLayoutChange}
+          onDragStart={() => onDraggingChange(true)}
+          onDragStop={() => onDraggingChange(false)}
+          onResizeStart={() => onDraggingChange(true)}
+          onResizeStop={() => onDraggingChange(false)}
+        >
+          {streams.map((stream) => (
+            <div key={stream.id} className="stream-grid__item">
+              {renderTile(stream)}
+            </div>
+          ))}
+        </GridLayout>
+      )}
     </div>
   )
 }
