@@ -1,4 +1,15 @@
 import { TwitchPlayer } from './TwitchPlayer'
+import { IconButton } from './IconButton'
+import {
+  ChatIcon,
+  CloseIcon,
+  DragIcon,
+  MuteIcon,
+  PopoutIcon,
+  StarFilledIcon,
+  StarIcon,
+  UnmuteIcon,
+} from './icons'
 import type { StreamItem } from '../types'
 
 type Props = {
@@ -29,43 +40,35 @@ export function StreamTile({
   return (
     <article className={`stream-tile${focused ? ' is-focused' : ''}`}>
       <header className="stream-tile__bar">
-        <button type="button" className="stream-drag-handle" title="Drag">
-          ⋮⋮
+        <button type="button" className="stream-drag-handle" data-tooltip="Drag to rearrange" aria-label="Drag to rearrange">
+          <DragIcon />
         </button>
-        <button type="button" className="stream-tile__channel" onClick={onFocus}>
+        <button type="button" className="stream-tile__channel" onClick={onFocus} title="Focus and unmute">
           {stream.channel}
         </button>
         <div className="stream-tile__actions">
-          <button
-            type="button"
-            className="tool-btn"
-            onClick={onPopoutChat}
-            title="Pop out chat"
-          >
-            Chat
-          </button>
-          <button
-            type="button"
-            className={`tool-btn${isSaved ? ' is-saved' : ''}`}
+          <IconButton label={`Open #${stream.channel} chat`} onClick={onOpenChat}>
+            <ChatIcon />
+          </IconButton>
+          <IconButton label="Pop out chat" onClick={onPopoutChat}>
+            <PopoutIcon />
+          </IconButton>
+          <IconButton
+            label={isSaved ? 'Unsave stream' : 'Save stream'}
+            active={isSaved}
             onClick={onToggleSave}
-            title={isSaved ? 'Unsave' : 'Save'}
           >
-            {isSaved ? '★' : '☆'}
-          </button>
-          <button
-            type="button"
-            className="tool-btn"
+            {isSaved ? <StarFilledIcon /> : <StarIcon />}
+          </IconButton>
+          <IconButton
+            label={stream.muted ? 'Unmute stream' : 'Mute stream'}
             onClick={onToggleMute}
-            title={stream.muted ? 'Unmute' : 'Mute'}
           >
-            {stream.muted ? 'M' : 'U'}
-          </button>
-          <button type="button" className="tool-btn" onClick={onOpenChat} title="Focus chat panel">
-            #
-          </button>
-          <button type="button" className="tool-btn danger" onClick={onRemove} title="Remove">
-            ✕
-          </button>
+            {stream.muted ? <MuteIcon /> : <UnmuteIcon />}
+          </IconButton>
+          <IconButton label="Remove stream" danger onClick={onRemove}>
+            <CloseIcon />
+          </IconButton>
         </div>
       </header>
       <div className="stream-tile__player" onDoubleClick={onFocus}>

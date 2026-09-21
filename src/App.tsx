@@ -1,10 +1,14 @@
+import { useCallback, useEffect, useState } from 'react'
 import { ChatPanel } from './components/ChatPanel'
 import { ChatPopoutApp } from './components/ChatPopoutApp'
-import { Sidebar } from './components/Sidebar'
 import { StreamGrid } from './components/StreamGrid'
+import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
+import { useFullscreen } from './hooks/useFullscreen'
 import { useStreams } from './hooks/useStreams'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
+
+const FULLSCREEN_IDLE_MS = 2400
 
 function MainApp() {
   const {
@@ -17,8 +21,6 @@ function MainApp() {
     clientId,
     setClientId,
     savedStreams,
-    leftSidebarOpen,
-    setLeftSidebarOpen,
     chatSidebarOpen,
     setChatSidebarOpen,
     chatDock,
@@ -39,6 +41,11 @@ function MainApp() {
 
   const { auth, busy, error, loginForChat, loginForPrime, logout, isLoggedIn } =
     useTwitchAuth(clientId)
+  const { isFullscreen, toggleFullscreen, setFullscreen } = useFullscreen()
+
+  const [chromeHidden, setChromeHidden] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [barHovered, setBarHovered] = useState(false)
 
   const channels = streams.map((s) => s.channel)
   const chat = useChat({
@@ -48,114 +55,155 @@ function MainApp() {
     accessToken: auth.accessToken,
   })
 
-  const popoutChat = async (channel: string) => {
-    setChatChannel(channel)
-    if (window.streamWatcher?.openChatPopout) {
-      await window.streamWatcher.openChatPopout(channel)
+  const openChatFor = useCallback(
+    (channel: string) => {
+      setChatChannel(channel)
+      setChatSidebarOpen(true)
+    },
+    [setChatChannel, setChatSidebarOpen],
+  )
+
+  const popoutChat = useCallback(
+    async (channel: string) => {
+      setChatChannel(channel)
+      if (window.streamWatcher?.openChatPopout) {
+        await window.streamWatcher.openChatPopout(channel)
+        return
+      }
+      setChatDock('float')
+      setChatSidebarOpen(true)
+    },
+    [setChatChannel, setChatDock, setChatSidebarOpen],
+  )
+
+  useEffect(() => {
+    if (!isFullscreen || menuOpen || barHovered || chatSidebarOpen) {
+      setChromeHidden(false)
       return
     }
-    // Browser fallback: float the in-app chat
-    setChatDock('float')
-    setChatSidebarOpen(true)
-  }
 
-  const chatVisible = chatSidebarOpen || chatDock === 'float'
-  const dockedChat =
-    chatVisible && chatDock !== 'float' ? (
-      <ChatPanel
-        collapsed={!chatSidebarOpen}
-        onToggleCollapsed={() => setChatSidebarOpen((open) => !open)}
-        dock={chatDock}
-        onDockChange={(dock) => {
-          setChatDock(dock)
-          setChatSidebarOpen(true)
-        }}
-        float={chatFloat}
-        onFloatChange={setChatFloat}
-        channels={channels}
-        activeChannel={chatChannel}
-        onChannelChange={setChatChannel}
-        messages={chat.messages}
-        status={chat.status}
-        error={chat.error}
-        canSend={isLoggedIn}
-        username={auth.username}
-        onSend={chat.sendMessage}
-        onPopout={() => {
-          if (chatChannel) void popoutChat(chatChannel)
-        }}
-      />
-    ) : null
+    let timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
+    const bump = () => {
+      setChromeHidden(false)
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
+    }
+
+    window.addEventListener('mousemove', bump)
+    window.addEventListener('keydown', bump)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('mousemove', bump)
+      window.removeEventListener('keydown', bump)
+    }
+  }, [isFullscreen, menuOpen, barHovered, chatSidebarOpen])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'F11') {
+        event.preventDefault()
+        void toggleFullscreen()
+      }
+      if (event.key === 'Escape') {
+        if (isFullscreen) {
+          event.preventDefault()
+          void setFullscreen(false)
+          return
+        }
+        if (chatSidebarOpen) {
+          setChatSidebarOpen(false)
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [chatSidebarOpen, isFullscreen, setChatSidebarOpen, setFullscreen, toggleFullscreen])
+
+  const chatVisible = chatSidebarOpen
+  const overlayChat = chatVisible ? (
+    <ChatPanel
+      collapsed={false}
+      onToggleCollapsed={() => setChatSidebarOpen(false)}
+      dock={chatDock}
+      onDockChange={(dock) => {
+        setChatDock(dock)
+        setChatSidebarOpen(true)
+      }}
+      float={chatFloat}
+      onFloatChange={setChatFloat}
+      channels={channels}
+      activeChannel={chatChannel}
+      onChannelChange={setChatChannel}
+      messages={chat.messages}
+      status={chat.status}
+      error={chat.error}
+      canSend={isLoggedIn}
+      username={auth.username}
+      onSend={chat.sendMessage}
+      onPopout={() => {
+        if (chatChannel) void popoutChat(chatChannel)
+      }}
+    />
+  ) : null
 
   return (
     <div
       className={[
         'app-shell',
-        'app-shell--thin',
-        leftSidebarOpen ? '' : 'app-shell--left-collapsed',
-        chatSidebarOpen && chatDock === 'right' ? '' : '',
-        !chatSidebarOpen && chatDock !== 'float' ? 'app-shell--chat-collapsed' : '',
-        `app-shell--chat-${chatDock}`,
-        chatDock === 'float' || !chatSidebarOpen ? 'app-shell--no-chat-column' : '',
+        isFullscreen ? 'app-shell--fullscreen' : '',
+        chromeHidden ? 'app-shell--chrome-hidden' : '',
+        chatVisible && chatDock !== 'float' ? `app-shell--chat-${chatDock}` : '',
+        chatDock === 'float' && chatVisible ? 'app-shell--chat-float' : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      {chatDock === 'left' && dockedChat}
-
-      <Sidebar
-        collapsed={!leftSidebarOpen}
-        onToggleCollapsed={() => setLeftSidebarOpen((open) => !open)}
-        clientId={clientId}
-        onClientIdChange={setClientId}
-        onAddStream={addStream}
-        onSaveStream={saveStream}
-        onUnsaveStream={unsaveStream}
-        savedStreams={savedStreams}
-        openChannels={channels}
-        onPreset={applyPreset}
-        isLoggedIn={isLoggedIn}
-        displayName={auth.displayName}
-        authBusy={busy}
-        authError={error}
-        onLoginChat={loginForChat}
-        onLoginPrime={loginForPrime}
-        onLogout={logout}
-      />
+      <div
+        onMouseEnter={() => setBarHovered(true)}
+        onMouseLeave={() => setBarHovered(false)}
+      >
+        <div className="topbar-hotzone" aria-hidden />
+        <TopBar
+          hidden={chromeHidden}
+          clientId={clientId}
+          onClientIdChange={setClientId}
+          onAddStream={addStream}
+          onSaveStream={saveStream}
+          onUnsaveStream={unsaveStream}
+          savedStreams={savedStreams}
+          openChannels={channels}
+          chatChannel={chatChannel}
+          onChatChannelChange={openChatFor}
+          chatOpen={chatSidebarOpen}
+          onToggleChat={() => setChatSidebarOpen((open) => !open)}
+          onPreset={applyPreset}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => void toggleFullscreen()}
+          isLoggedIn={isLoggedIn}
+          displayName={auth.displayName}
+          authBusy={busy}
+          authError={error}
+          onLoginChat={loginForChat}
+          onLoginPrime={loginForPrime}
+          onLogout={logout}
+          onMenuOpenChange={setMenuOpen}
+        />
+      </div>
 
       <main className="main-stage">
-        <div className="stage-toolbar">
-          {!leftSidebarOpen && (
-            <button type="button" className="tool-btn" onClick={() => setLeftSidebarOpen(true)}>
-              Sidebar
-            </button>
-          )}
-          {(!chatSidebarOpen || chatDock === 'float') && (
-            <button
-              type="button"
-              className="tool-btn"
-              onClick={() => {
-                setChatDock((d) => (d === 'float' ? 'right' : d))
-                setChatSidebarOpen(true)
-              }}
-            >
-              Chat{chatChannel ? ` #${chatChannel}` : ''}
-            </button>
-          )}
-        </div>
         <StreamGrid
           streams={streams}
           layout={layout}
           focusedId={focusedId}
           isDragging={isDragging}
+          compact={isFullscreen}
           onLayoutChange={setLayout}
           onDragState={setIsDragging}
           onFocus={focusStream}
           onToggleMute={toggleMute}
           onRemove={removeStream}
           onOpenChat={(channel) => {
-            setChatChannel(channel)
-            setChatSidebarOpen(true)
+            openChatFor(channel)
             if (chatDock === 'float') setChatDock('right')
           }}
           onPopoutChat={(channel) => {
@@ -166,34 +214,7 @@ function MainApp() {
         />
       </main>
 
-      {chatDock === 'right' && dockedChat}
-      {chatDock === 'bottom' && dockedChat}
-
-      {chatDock === 'float' && chatSidebarOpen && (
-        <ChatPanel
-          collapsed={false}
-          onToggleCollapsed={() => setChatSidebarOpen(false)}
-          dock={chatDock}
-          onDockChange={(dock) => {
-            setChatDock(dock)
-            setChatSidebarOpen(true)
-          }}
-          float={chatFloat}
-          onFloatChange={setChatFloat}
-          channels={channels}
-          activeChannel={chatChannel}
-          onChannelChange={setChatChannel}
-          messages={chat.messages}
-          status={chat.status}
-          error={chat.error}
-          canSend={isLoggedIn}
-          username={auth.username}
-          onSend={chat.sendMessage}
-          onPopout={() => {
-            if (chatChannel) void popoutChat(chatChannel)
-          }}
-        />
-      )}
+      {overlayChat}
     </div>
   )
 }

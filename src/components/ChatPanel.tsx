@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from 'react'
 import type { ChatDock, ChatFloatPosition, ChatMessage } from '../types'
+import { IconButton } from './IconButton'
+import { CloseIcon, PopoutIcon } from './icons'
 
 type Props = {
   collapsed: boolean
@@ -108,29 +110,12 @@ export function ChatPanel({
     }
   }
 
-  if (collapsed && !compact) {
-    return (
-      <aside className="chat-panel chat-panel--collapsed" aria-label="Chat collapsed">
-        <button
-          type="button"
-          className="panel-toggle panel-toggle--expand"
-          onClick={onToggleCollapsed}
-          title="Expand chat"
-          aria-label="Expand chat"
-        >
-          ‹
-        </button>
-        <span className="collapsed-label">Chat</span>
-        {activeChannel && <span className="collapsed-channel">#{activeChannel}</span>}
-      </aside>
-    )
-  }
+  if (collapsed && !compact) return null
 
   const panelClass = [
     'chat-panel',
-    'chat-panel--thin',
-    compact ? 'chat-panel--popout' : '',
-    dock === 'float' && !compact ? 'chat-panel--float' : '',
+    compact ? 'chat-panel--popout' : 'chat-panel--overlay',
+    !compact ? `chat-panel--${dock}` : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -146,7 +131,7 @@ export function ChatPanel({
       : undefined
 
   return (
-    <aside className={panelClass} style={style}>
+    <aside className={panelClass} style={style} aria-label="Stream chat">
       <header className="chat-panel__header">
         <div
           className={`chat-panel__heading${dock === 'float' && !compact ? ' is-draggable' : ''}`}
@@ -164,34 +149,29 @@ export function ChatPanel({
                   className="dock-select"
                   value={dock}
                   onChange={(e) => onDockChange(e.target.value as ChatDock)}
-                  title="Move chat"
+                  data-tooltip="Move chat"
                   aria-label="Move chat"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  <option value="right">Right</option>
-                  <option value="left">Left</option>
-                  <option value="bottom">Bottom</option>
+                  <option value="right">Slide right</option>
+                  <option value="left">Slide left</option>
+                  <option value="bottom">Dock bottom</option>
                   <option value="float">Float</option>
                 </select>
-                <button
-                  type="button"
-                  className="tool-btn"
+                <IconButton
+                  label="Pop out chat"
                   onClick={onPopout}
-                  title="Pop out chat"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  ↗
-                </button>
-                <button
-                  type="button"
-                  className="panel-toggle"
+                  <PopoutIcon />
+                </IconButton>
+                <IconButton
+                  label="Close chat"
                   onClick={onToggleCollapsed}
-                  title="Collapse chat"
-                  aria-label="Collapse chat"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  ›
-                </button>
+                  <CloseIcon />
+                </IconButton>
               </>
             )}
           </div>

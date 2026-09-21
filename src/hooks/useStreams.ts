@@ -26,8 +26,7 @@ export function useStreams() {
         chatChannel: saved.chatChannel ?? saved.streams[0]?.channel ?? null,
         clientId: saved.clientId ?? '',
         savedStreams: saved.savedStreams ?? [],
-        leftSidebarOpen: saved.leftSidebarOpen ?? true,
-        chatSidebarOpen: saved.chatSidebarOpen ?? true,
+        chatSidebarOpen: saved.chatSidebarOpen ?? false,
         chatDock: saved.chatDock ?? 'right',
         chatFloat: saved.chatFloat ?? DEFAULT_CHAT_FLOAT,
       }
@@ -39,8 +38,7 @@ export function useStreams() {
       chatChannel: DEFAULT_STREAMS[0]?.channel ?? null,
       clientId: saved?.clientId ?? '',
       savedStreams: saved?.savedStreams ?? [],
-      leftSidebarOpen: saved?.leftSidebarOpen ?? true,
-      chatSidebarOpen: saved?.chatSidebarOpen ?? true,
+      chatSidebarOpen: saved?.chatSidebarOpen ?? false,
       chatDock: saved?.chatDock ?? 'right',
       chatFloat: saved?.chatFloat ?? DEFAULT_CHAT_FLOAT,
     }
@@ -52,7 +50,6 @@ export function useStreams() {
   const [chatChannel, setChatChannel] = useState<string | null>(initial.chatChannel)
   const [clientId, setClientId] = useState(initial.clientId)
   const [savedStreams, setSavedStreams] = useState<SavedStream[]>(initial.savedStreams)
-  const [leftSidebarOpen, setLeftSidebarOpen] = useState(initial.leftSidebarOpen)
   const [chatSidebarOpen, setChatSidebarOpen] = useState(initial.chatSidebarOpen)
   const [chatDock, setChatDock] = useState<ChatDock>(initial.chatDock)
   const [chatFloat, setChatFloat] = useState<ChatFloatPosition>(initial.chatFloat)
@@ -66,7 +63,7 @@ export function useStreams() {
       chatChannel,
       clientId,
       savedStreams,
-      leftSidebarOpen,
+      leftSidebarOpen: false,
       chatSidebarOpen,
       chatDock,
       chatFloat,
@@ -78,7 +75,6 @@ export function useStreams() {
     chatChannel,
     clientId,
     savedStreams,
-    leftSidebarOpen,
     chatSidebarOpen,
     chatDock,
     chatFloat,
@@ -94,7 +90,7 @@ export function useStreams() {
     const id = newStreamId()
     const item: StreamItem = { id, channel, muted: streams.length > 0 }
 
-    setStreams([...streams, item])
+    setStreams((prev) => [...prev, item])
     setLayout((prev) => [
       ...prev,
       {
@@ -259,8 +255,6 @@ export function useStreams() {
     clientId,
     setClientId,
     savedStreams,
-    leftSidebarOpen,
-    setLeftSidebarOpen,
     chatSidebarOpen,
     setChatSidebarOpen,
     chatDock,

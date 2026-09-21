@@ -13,6 +13,7 @@ type Props = {
   focusedId: string | null
   isDragging: boolean
   savedChannels: string[]
+  compact?: boolean
   onLayoutChange: (layout: Layout[]) => void
   onDragState: (active: boolean) => void
   onFocus: (id: string) => void
@@ -29,6 +30,7 @@ export function StreamGrid({
   focusedId,
   isDragging,
   savedChannels,
+  compact = false,
   onLayoutChange,
   onDragState,
   onFocus,
@@ -42,7 +44,7 @@ export function StreamGrid({
     return (
       <div className="empty-grid">
         <h2>No streams yet</h2>
-        <p>Add a Twitch channel from the sidebar to start building your layout.</p>
+        <p>Add a Twitch channel from the top bar to start building your layout.</p>
       </div>
     )
   }
@@ -52,9 +54,9 @@ export function StreamGrid({
       className="stream-grid"
       layout={layout}
       cols={12}
-      rowHeight={48}
-      margin={[10, 10]}
-      containerPadding={[10, 10]}
+      rowHeight={compact ? 52 : 48}
+      margin={compact ? [4, 4] : [8, 8]}
+      containerPadding={compact ? [4, 4] : [8, 8]}
       draggableHandle=".stream-drag-handle"
       onLayoutChange={onLayoutChange}
       onDragStart={() => onDragState(true)}

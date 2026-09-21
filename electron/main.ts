@@ -30,6 +30,7 @@ function createWindow() {
     minHeight: 640,
     title: 'Stream Watcher',
     backgroundColor: '#0b0f14',
+    autoHideMenuBar: true,
     webPreferences: {
       preload: resolvePreloadPath(),
       contextIsolation: true,
@@ -43,6 +44,14 @@ function createWindow() {
     shell.openExternal(url)
     return { action: 'deny' }
   })
+
+  const sendFullscreen = (value: boolean) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    mainWindow.webContents.send('window:fullscreen-changed', value)
+  }
+
+  mainWindow.on('enter-full-screen', () => sendFullscreen(true))
+  mainWindow.on('leave-full-screen', () => sendFullscreen(false))
 
   if (VITE_DEV_SERVER_URL) {
     void mainWindow.loadURL(VITE_DEV_SERVER_URL)
@@ -195,11 +204,18 @@ app.whenReady().then(() => {
   )
 
   ipcMain.handle('twitch:clear-session', async () => {
+    // Cookies only — never wipe renderer localStorage (layout / client id).
     await session.defaultSession.clearStorageData({
-      storages: ['cookies', 'localstorage'],
+      storages: ['cookies'],
     })
     mainWindow?.webContents.send('twitch-session-updated')
   })
+
+  ipcMain.handle('window:set-fullscreen', (_event, value: boolean) => {
+    mainWindow?.setFullScreen(Boolean(value))
+  })
+
+  ipcMain.handle('window:is-fullscreen', () => mainWindow?.isFullScreen() ?? false)
 
   ipcMain.handle('chat:open-popout', (_event, channel: string) => {
     if (typeof channel === 'string' && channel.trim()) {
