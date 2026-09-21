@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell, ipcMain, session, screen } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { registerUpdater } from './updater'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -339,6 +340,8 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('chat:list-popouts', () => [...chatPopouts.keys()])
+
+  registerUpdater(() => mainWindow)
 
   createWindow()
 

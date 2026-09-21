@@ -8,6 +8,7 @@ import { useChat } from './hooks/useChat'
 import { useChatPopouts } from './hooks/useChatPopouts'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useStreams } from './hooks/useStreams'
+import { useAppUpdater } from './hooks/useAppUpdater'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
 
 const FULLSCREEN_IDLE_MS = 2400
@@ -46,6 +47,7 @@ function MainApp() {
 
   const { auth, busy, error, loginToTwitch, reconnectChat, refreshPrimeSession, logout, isLoggedIn } =
     useTwitchAuth(clientId)
+  const updater = useAppUpdater()
   const { isFullscreen, toggleFullscreen, setFullscreen } = useFullscreen()
   const { isPopped, markPopped } = useChatPopouts()
 
@@ -249,6 +251,10 @@ function MainApp() {
         onReconnectChat={reconnectChat}
         onRefreshPrime={refreshPrimeSession}
         onLogout={logout}
+        updater={updater.status}
+        onCheckForUpdates={() => void updater.check()}
+        onDownloadUpdate={() => void updater.download()}
+        onInstallUpdate={() => void updater.install()}
         onMenuOpenChange={setMenuOpen}
       />
 

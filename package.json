@@ -1,6 +1,6 @@
 {
   "name": "stream-watcher",
-  "version": "1.0.0",
+  "version": "1.0.1-pre.1",
   "description": "Multi-stream Twitch desktop viewer with custom layouts and chat",
   "main": "dist-electron/main.js",
   "author": "Justin",
@@ -23,6 +23,13 @@
     "copyright": "Copyright © Justin",
     "asar": true,
     "forceCodeSigning": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Justin-Developer01",
+        "repo": "stream-watcher"
+      }
+    ],
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -34,8 +41,18 @@
     "win": {
       "signAndEditExecutable": false,
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
@@ -54,6 +71,7 @@
     }
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.47.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

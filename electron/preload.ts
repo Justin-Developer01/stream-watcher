@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+import type { UpdaterStatus } from '../src/types'
+
 export type TwitchOAuthResult = {
   accessToken: string
   scope: string
@@ -16,6 +18,17 @@ const api = {
   openChatPopout: (channel: string) =>
     ipcRenderer.invoke('chat:open-popout', channel) as Promise<void>,
   listChatPopouts: () => ipcRenderer.invoke('chat:list-popouts') as Promise<string[]>,
+  checkForUpdates: () => ipcRenderer.invoke('updater:check') as Promise<UpdaterStatus>,
+  downloadUpdate: () => ipcRenderer.invoke('updater:download') as Promise<UpdaterStatus>,
+  installUpdate: () => ipcRenderer.invoke('updater:install') as Promise<void>,
+  getUpdaterStatus: () => ipcRenderer.invoke('updater:status') as Promise<UpdaterStatus>,
+  onUpdaterStatus: (callback: (status: UpdaterStatus) => void) => {
+    const handler = (_event: unknown, status: UpdaterStatus) => callback(status)
+    ipcRenderer.on('updater:status', handler)
+    return () => {
+      ipcRenderer.removeListener('updater:status', handler)
+    }
+  },
   onChatPopoutOpened: (callback: (channel: string) => void) => {
     const handler = (_event: unknown, channel: string) => callback(channel)
     ipcRenderer.on('chat:popout-opened', handler)

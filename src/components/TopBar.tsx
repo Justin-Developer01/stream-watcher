@@ -7,11 +7,12 @@ import {
   MessageSquare,
   Minimize2,
   Pin,
+  RefreshCw,
   Settings,
   SquareArrowOutUpRight,
   X,
 } from 'lucide-react'
-import type { LayoutMode, SavedStream } from '../types'
+import type { LayoutMode, SavedStream, UpdaterStatus } from '../types'
 import { IconButton } from './IconButton'
 
 type MenuId = 'streams' | 'layout' | 'settings' | null
@@ -47,6 +48,10 @@ type Props = {
   onReconnectChat: () => void
   onRefreshPrime: () => void
   onLogout: () => void
+  updater: UpdaterStatus
+  onCheckForUpdates: () => void
+  onDownloadUpdate: () => void
+  onInstallUpdate: () => void
   onMenuOpenChange?: (open: boolean) => void
 }
 
@@ -122,6 +127,10 @@ export function TopBar({
   onReconnectChat,
   onRefreshPrime,
   onLogout,
+  updater,
+  onCheckForUpdates,
+  onDownloadUpdate,
+  onInstallUpdate,
   onMenuOpenChange,
 }: Props) {
   const [openMenu, setOpenMenu] = useState<MenuId>(null)
@@ -373,6 +382,19 @@ export function TopBar({
         </IconButton>
 
         <IconButton
+          label="Check for Updates"
+          desktopOnly
+          tooltipAlign="end"
+          active={updater.state === 'available' || updater.state === 'ready'}
+          onClick={() => {
+            setOpenMenu('settings')
+            onCheckForUpdates()
+          }}
+        >
+          <RefreshCw size={16} strokeWidth={1.75} />
+        </IconButton>
+
+        <IconButton
           label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login to Twitch'}
           tooltip={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login for Prime + chat.'}
           tooltipAlign="end"
@@ -427,6 +449,47 @@ export function TopBar({
               )}
               {authError && <p className="field-error">{authError}</p>}
             </div>
+          </section>
+          <section className="popover-section">
+            <h2>Updates</h2>
+            <p className="hint">
+              App version {updater.currentVersion || 'dev'}. Checks GitHub Releases, including pre-releases.
+            </p>
+            {updater.message && <p className="hint">{updater.message}</p>}
+            {updater.state === 'available' && updater.availableVersion && (
+              <p>Version {updater.availableVersion} is available.</p>
+            )}
+            {updater.state === 'downloading' && (
+              <p className="hint">Downloading… {Math.round(updater.percent ?? 0)}%</p>
+            )}
+            {updater.state === 'ready' && updater.availableVersion && (
+              <p>Version {updater.availableVersion} is ready. Install restarts the app.</p>
+            )}
+            {updater.error && <p className="field-error">{updater.error}</p>}
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="secondary"
+                onClick={onCheckForUpdates}
+                disabled={updater.state === 'checking' || updater.state === 'downloading'}
+              >
+                Check for Updates
+              </button>
+              {updater.state === 'available' && (
+                <button type="button" onClick={onDownloadUpdate}>
+                  Download
+                </button>
+              )}
+              {updater.state === 'ready' && (
+                <button type="button" onClick={onInstallUpdate}>
+                  Install and restart
+                </button>
+              )}
+            </div>
+            <p className="hint">
+              Unsigned builds still update from GitHub. Windows SmartScreen may warn — More info → Run anyway.
+              Portable EXEs are not auto-updated; download a new file from the Release.
+            </p>
           </section>
         </Menu>
       </div>

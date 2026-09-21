@@ -22,6 +22,25 @@ export type ChatFloatPosition = {
   height: number
 }
 
+export type UpdaterState =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'ready'
+  | 'error'
+  | 'unsupported'
+
+export type UpdaterStatus = {
+  state: UpdaterState
+  currentVersion: string
+  availableVersion?: string
+  percent?: number
+  error?: string
+  message?: string
+}
+
 export type ChatMessage = {
   id: string
   channel: string
