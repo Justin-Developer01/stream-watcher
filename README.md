@@ -1,6 +1,6 @@
 # Stream Watcher
 
-Desktop multi-stream Twitch viewer with a thin top bar, fit-to-window layouts, account login, and chat. Also runs in a regular browser for core watching and chat.
+Multi-stream Twitch viewer with a thin top bar, fit-to-window layouts, account login, and chat. The **core app runs in a normal browser**. Electron adds Prime/ads session login and chat pop-out windows.
 
 ## Features
 
@@ -15,13 +15,16 @@ Desktop multi-stream Twitch viewer with a thin top bar, fit-to-window layouts, a
 
 ## Browser vs desktop
 
-| Capability | Browser (`npm run dev:web` / preview) | Electron desktop |
+The renderer detects Electron with `window.streamWatcher`. Desktop-only icons **stay visible** in the browser; hover or click shows **Desktop app only**.
+
+| Capability | Browser (`npm run dev` / `npm run preview`) | Electron (`npm run dev:desktop`) |
 |---|---|---|
-| Stream grid, layouts, fullscreen-in-tab | Yes | Yes |
+| Stream grid, layouts, thin top bar | Yes | Yes |
+| Fullscreen-in-tab | Yes | Yes (window fullscreen) |
 | Chat drawer + tmi.js | Yes | Yes |
-| Chat OAuth (send messages) | Yes (Client ID + redirect) | Yes |
-| Prime / ads session login | Visible, **Desktop app only** | Works |
-| Pop-out chat on another monitor | Visible, **Desktop app only** | Works |
+| Chat OAuth (send messages) + Client ID | Yes | Yes |
+| Prime / ads session login | Visible, **Desktop app only** | Works (`twitch.tv/login` cookies) |
+| Pop-out chat on another monitor | Visible, **Desktop app only** | Works (`chat:open-popout`) |
 
 ## Setup (developers)
 
@@ -39,11 +42,13 @@ npm install
 ## Run
 
 ```bash
-npm run dev        # Vite + Electron window
-npm run dev:web    # Browser only
+npm run dev           # Vite in the browser — no Electron required
+npm run dev:desktop   # Vite + Electron window
 npm run build
-npm run preview    # Browser preview of the production build
+npm run preview       # Browser preview of the production build
 ```
+
+Open `http://localhost:5173` for watching, layouts, the chat drawer, and chat OAuth.
 
 ## Windows installer
 
@@ -59,16 +64,18 @@ Normal users should install the EXE. `npm install` is for development only.
 
 - Click the **title** to add / switch streams
 - **Open chat** toggles the per-stream drawer
-- **Open chat on another monitor** pops out a dedicated Electron window (desktop)
-- **Login for Prime / fewer ads** is the Twitch cookie session (`twitch.tv/login`, desktop) — not OAuth
-- **Login to send chat** is a separate OAuth control (`chat:read` + `chat:edit`)
+- **Open chat on another monitor** pops out a dedicated Electron window (desktop). In the browser the icon stays; hover/click says **Desktop app only**.
+- **Login for Prime / fewer ads** is the Twitch cookie session (`twitch.tv/login`, desktop) — not OAuth. Same **Desktop app only** tip in the browser.
+- **Login to send chat** is a separate OAuth control (`chat:read` + `chat:edit`) and works in the browser.
 - **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide
 
 ## Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Dev server + Electron |
-| `npm run dev:web` | Dev server in the browser |
+| `npm run dev` | Vite dev server in the browser |
+| `npm run dev:desktop` | Dev server + Electron |
+| `npm run dev:web` | Alias of `npm run dev` |
 | `npm run build` | Production renderer + Electron main |
+| `npm run preview` | Browser preview of the production build |
 | `npm run dist` | Windows NSIS + portable EXE |

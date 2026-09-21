@@ -1,5 +1,7 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { isElectronApp } from '../lib/env'
+
+const DESKTOP_ONLY_TIP = 'Desktop app only'
 
 type Props = {
   label: string
@@ -24,12 +26,24 @@ export function IconButton({
 }: Props) {
   const desktop = isElectronApp()
   const blocked = desktopOnly && !desktop
-  const tooltip = blocked ? `${label} — Desktop app only` : label
+  const tooltip = blocked ? DESKTOP_ONLY_TIP : label
+  const [showTip, setShowTip] = useState(false)
+  const tipTimer = useRef<number>(0)
+
+  useEffect(() => {
+    return () => window.clearTimeout(tipTimer.current)
+  }, [])
 
   return (
     <button
       type={type}
-      className={['icon-btn', active ? 'is-active' : '', danger ? 'is-danger' : '', className]
+      className={[
+        'icon-btn',
+        active ? 'is-active' : '',
+        danger ? 'is-danger' : '',
+        showTip ? 'is-tip' : '',
+        className,
+      ]
         .filter(Boolean)
         .join(' ')}
       title={tooltip}
@@ -40,6 +54,9 @@ export function IconButton({
       onClick={(event) => {
         if (blocked) {
           event.preventDefault()
+          setShowTip(true)
+          window.clearTimeout(tipTimer.current)
+          tipTimer.current = window.setTimeout(() => setShowTip(false), 1600)
           return
         }
         onClick?.(event)

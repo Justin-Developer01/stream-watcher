@@ -9,9 +9,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:web": "SW_WEB=1 vite",
+    "dev:web": "vite",
+    "dev:desktop": "SW_DESKTOP=1 vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "SW_WEB=1 vite preview",
+    "preview": "vite preview",
     "dist": "npm run build && electron-builder --win",
     "build:win": "npm run build && electron-builder --win",
     "postinstall": "node node_modules/electron/install.js"
