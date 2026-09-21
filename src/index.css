@@ -37,9 +37,13 @@ html,
 body,
 #root {
   width: 100%;
+  height: 100vh;
   height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -130,9 +134,12 @@ code {
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100vh;
   height: 100dvh;
+  max-height: 100vh;
   max-height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--bg);
 }
 
@@ -529,26 +536,6 @@ code {
   gap: 4px;
   padding: 4px;
   overflow: hidden;
-}
-
-.fit-grid--1x1 {
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-}
-
-.fit-grid--1x2 {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-}
-
-.fit-grid--2x2 {
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: 1fr;
-}
-
-.fit-grid--plus {
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
 }
 
 .fit-grid--plus > .fit-grid__item:first-child {

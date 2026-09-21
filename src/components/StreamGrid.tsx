@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { StreamTile } from './StreamTile'
 import type { LayoutMode, StreamItem } from '../types'
 
@@ -14,14 +15,39 @@ type Props = {
   onToggleSave: (channel: string) => void
 }
 
-function visibleStreams(streams: StreamItem[], mode: LayoutMode, focusedId: string | null) {
+function orderedStreams(streams: StreamItem[], focusedId: string | null) {
   if (!streams.length) return []
   const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
-  const rest = streams.filter((s) => s.id !== focused.id)
+  return [focused, ...streams.filter((s) => s.id !== focused.id)]
+}
 
-  if (mode === '1x1') return [focused]
-  if (mode === '1x2') return [focused, ...rest].slice(0, 2)
-  return [focused, ...rest].slice(0, 4)
+function fitGridStyle(mode: LayoutMode, count: number): CSSProperties {
+  if (count <= 1 || mode === '1x1') {
+    return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' }
+  }
+
+  if (mode === '1x2') {
+    const rows = Math.ceil(count / 2)
+    return {
+      gridTemplateColumns: '1fr 1fr',
+      gridTemplateRows: `repeat(${rows}, 1fr)`,
+    }
+  }
+
+  if (mode === '1+3') {
+    const side = Math.max(count - 1, 1)
+    return {
+      gridTemplateColumns: '2fr 1fr',
+      gridTemplateRows: `repeat(${side}, 1fr)`,
+    }
+  }
+
+  const cols = count <= 4 ? 2 : 3
+  const rows = Math.ceil(count / cols)
+  return {
+    gridTemplateColumns: `repeat(${cols}, 1fr)`,
+    gridTemplateRows: `repeat(${rows}, 1fr)`,
+  }
 }
 
 export function StreamGrid({
@@ -45,12 +71,17 @@ export function StreamGrid({
     )
   }
 
-  const tiles = visibleStreams(streams, layoutMode, focusedId)
-  const modeClass =
-    layoutMode === '1+3' ? 'fit-grid--plus' : `fit-grid--${layoutMode.replace('+', 'p')}`
+  const tiles = layoutMode === '1x1'
+    ? orderedStreams(streams, focusedId).slice(0, 1)
+    : orderedStreams(streams, focusedId)
+
+  const plus = layoutMode === '1+3' && tiles.length > 1
 
   return (
-    <div className={`fit-grid ${modeClass}`}>
+    <div
+      className={`fit-grid${plus ? ' fit-grid--plus' : ''}`}
+      style={fitGridStyle(layoutMode, tiles.length)}
+    >
       {tiles.map((stream) => (
         <div key={stream.id} className="fit-grid__item">
           <StreamTile
