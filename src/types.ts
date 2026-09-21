@@ -13,6 +13,8 @@ export type SavedStream = {
 
 export type ChatDock = 'right' | 'left' | 'bottom' | 'float'
 
+export type LayoutMode = '1x1' | '1x2' | '2x2' | '1+3'
+
 export type ChatFloatPosition = {
   x: number
   y: number
@@ -47,6 +49,7 @@ export type PersistedState = {
   chatSidebarOpen: boolean
   chatDock: ChatDock
   chatFloat: ChatFloatPosition
+  layoutMode?: LayoutMode
 }
 
 export const DEFAULT_LAYOUT_COLS = 12

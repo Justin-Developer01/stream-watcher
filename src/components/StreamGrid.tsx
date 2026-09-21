@@ -1,21 +1,11 @@
-import GridLayout, { WidthProvider } from 'react-grid-layout'
-import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
-import type { StreamItem } from '../types'
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
-
-const ResponsiveGrid = WidthProvider(GridLayout)
+import type { LayoutMode, StreamItem } from '../types'
 
 type Props = {
   streams: StreamItem[]
-  layout: Layout[]
+  layoutMode: LayoutMode
   focusedId: string | null
-  isDragging: boolean
   savedChannels: string[]
-  compact?: boolean
-  onLayoutChange: (layout: Layout[]) => void
-  onDragState: (active: boolean) => void
   onFocus: (id: string) => void
   onToggleMute: (id: string) => void
   onRemove: (id: string) => void
@@ -24,15 +14,21 @@ type Props = {
   onToggleSave: (channel: string) => void
 }
 
+function visibleStreams(streams: StreamItem[], mode: LayoutMode, focusedId: string | null) {
+  if (!streams.length) return []
+  const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
+  const rest = streams.filter((s) => s.id !== focused.id)
+
+  if (mode === '1x1') return [focused]
+  if (mode === '1x2') return [focused, ...rest].slice(0, 2)
+  return [focused, ...rest].slice(0, 4)
+}
+
 export function StreamGrid({
   streams,
-  layout,
+  layoutMode,
   focusedId,
-  isDragging,
   savedChannels,
-  compact = false,
-  onLayoutChange,
-  onDragState,
   onFocus,
   onToggleMute,
   onRemove,
@@ -44,34 +40,23 @@ export function StreamGrid({
     return (
       <div className="empty-grid">
         <h2>No streams yet</h2>
-        <p>Add a Twitch channel from the top bar to start building your layout.</p>
+        <p>Click the title in the top bar to add a Twitch channel.</p>
       </div>
     )
   }
 
+  const tiles = visibleStreams(streams, layoutMode, focusedId)
+  const modeClass =
+    layoutMode === '1+3' ? 'fit-grid--plus' : `fit-grid--${layoutMode.replace('+', 'p')}`
+
   return (
-    <ResponsiveGrid
-      className="stream-grid"
-      layout={layout}
-      cols={12}
-      rowHeight={compact ? 52 : 48}
-      margin={compact ? [4, 4] : [8, 8]}
-      containerPadding={compact ? [4, 4] : [8, 8]}
-      draggableHandle=".stream-drag-handle"
-      onLayoutChange={onLayoutChange}
-      onDragStart={() => onDragState(true)}
-      onDragStop={() => onDragState(false)}
-      onResizeStart={() => onDragState(true)}
-      onResizeStop={() => onDragState(false)}
-      compactType="vertical"
-      useCSSTransforms
-    >
-      {streams.map((stream) => (
-        <div key={stream.id} className="stream-grid__item">
+    <div className={`fit-grid ${modeClass}`}>
+      {tiles.map((stream) => (
+        <div key={stream.id} className="fit-grid__item">
           <StreamTile
             stream={stream}
             focused={focusedId === stream.id}
-            interactive={!isDragging}
+            interactive
             isSaved={savedChannels.includes(stream.channel)}
             onFocus={() => onFocus(stream.id)}
             onToggleMute={() => onToggleMute(stream.id)}
@@ -82,6 +67,6 @@ export function StreamGrid({
           />
         </div>
       ))}
-    </ResponsiveGrid>
+    </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChatPanel } from './components/ChatPanel'
 import { ChatPopoutApp } from './components/ChatPopoutApp'
+import { FirstRunTip } from './components/FirstRunTip'
 import { StreamGrid } from './components/StreamGrid'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
@@ -13,8 +14,6 @@ const FULLSCREEN_IDLE_MS = 2400
 function MainApp() {
   const {
     streams,
-    layout,
-    setLayout,
     focusedId,
     chatChannel,
     setChatChannel,
@@ -27,8 +26,7 @@ function MainApp() {
     setChatDock,
     chatFloat,
     setChatFloat,
-    isDragging,
-    setIsDragging,
+    layoutMode,
     addStream,
     removeStream,
     saveStream,
@@ -45,8 +43,11 @@ function MainApp() {
 
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [chromePinned, setChromePinned] = useState(false)
 
   const channels = streams.map((s) => s.channel)
+  const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
+  const title = focused?.channel ?? chatChannel ?? 'Stream Watcher'
   const chat = useChat({
     channels,
     activeChannel: chatChannel,
@@ -67,6 +68,7 @@ function MainApp() {
       setChatChannel(channel)
       if (window.streamWatcher?.openChatPopout) {
         await window.streamWatcher.openChatPopout(channel)
+        setChatSidebarOpen(false)
         return
       }
       setChatDock('float')
@@ -76,7 +78,7 @@ function MainApp() {
   )
 
   useEffect(() => {
-    if (!isFullscreen || menuOpen || chatSidebarOpen) {
+    if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned) {
       setChromeHidden(false)
       return
     }
@@ -105,7 +107,7 @@ function MainApp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('keydown', onKey)
     }
-  }, [isFullscreen, menuOpen, chatSidebarOpen])
+  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -133,7 +135,7 @@ function MainApp() {
     <ChatPanel
       collapsed={false}
       onToggleCollapsed={() => setChatSidebarOpen(false)}
-      dock={chatDock}
+      dock={chatDock === 'float' ? 'right' : chatDock}
       onDockChange={(dock) => {
         setChatDock(dock)
         setChatSidebarOpen(true)
@@ -161,8 +163,7 @@ function MainApp() {
         'app-shell',
         isFullscreen ? 'app-shell--fullscreen' : '',
         chromeHidden ? 'app-shell--chrome-hidden' : '',
-        chatVisible && chatDock !== 'float' ? `app-shell--chat-${chatDock}` : '',
-        chatDock === 'float' && chatVisible ? 'app-shell--chat-float' : '',
+        chatVisible ? `app-shell--chat-${chatDock === 'float' ? 'right' : chatDock}` : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -170,6 +171,7 @@ function MainApp() {
       <div className="topbar-hotzone" aria-hidden />
       <TopBar
         hidden={chromeHidden}
+        title={title}
         clientId={clientId}
         onClientIdChange={setClientId}
         onAddStream={addStream}
@@ -178,12 +180,22 @@ function MainApp() {
         savedStreams={savedStreams}
         openChannels={channels}
         chatChannel={chatChannel}
-        onChatChannelChange={openChatFor}
+        onChatChannelChange={(channel) => {
+          const stream = streams.find((s) => s.channel === channel)
+          if (stream) focusStream(stream.id)
+          else openChatFor(channel)
+        }}
         chatOpen={chatSidebarOpen}
         onToggleChat={() => setChatSidebarOpen((open) => !open)}
+        onPopoutChat={() => {
+          if (chatChannel) void popoutChat(chatChannel)
+        }}
+        layoutMode={layoutMode}
         onPreset={applyPreset}
         isFullscreen={isFullscreen}
         onToggleFullscreen={() => void toggleFullscreen()}
+        chromePinned={chromePinned}
+        onTogglePin={() => setChromePinned((value) => !value)}
         isLoggedIn={isLoggedIn}
         displayName={auth.displayName}
         authBusy={busy}
@@ -197,12 +209,8 @@ function MainApp() {
       <main className="main-stage">
         <StreamGrid
           streams={streams}
-          layout={layout}
+          layoutMode={layoutMode}
           focusedId={focusedId}
-          isDragging={isDragging}
-          compact={isFullscreen}
-          onLayoutChange={setLayout}
-          onDragState={setIsDragging}
           onFocus={focusStream}
           onToggleMute={toggleMute}
           onRemove={removeStream}
@@ -219,6 +227,7 @@ function MainApp() {
       </main>
 
       {overlayChat}
+      <FirstRunTip />
     </div>
   )
 }

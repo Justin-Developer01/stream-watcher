@@ -1,20 +1,23 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import type { SavedStream } from '../types'
-import { IconButton } from './IconButton'
 import {
-  ChatIcon,
-  ExitFullscreenIcon,
-  FullscreenIcon,
-  LayoutIcon,
-  PlusIcon,
-  SettingsIcon,
-  UserIcon,
-} from './icons'
+  Columns2,
+  LogIn,
+  Maximize2,
+  MessageSquare,
+  Minimize2,
+  Pin,
+  Settings,
+  SquareArrowOutUpRight,
+  Tv,
+} from 'lucide-react'
+import type { LayoutMode, SavedStream } from '../types'
+import { IconButton } from './IconButton'
 
-type MenuId = 'add' | 'layout' | 'settings' | 'auth' | null
+type MenuId = 'streams' | 'layout' | 'settings' | null
 
 type Props = {
   hidden?: boolean
+  title: string
   clientId: string
   onClientIdChange: (value: string) => void
   onAddStream: (value: string) => { ok: boolean; error?: string; channel?: string }
@@ -26,9 +29,13 @@ type Props = {
   onChatChannelChange: (channel: string) => void
   chatOpen: boolean
   onToggleChat: () => void
-  onPreset: (preset: '1x1' | '1x2' | '2x2' | '1+3') => void
+  onPopoutChat: () => void
+  layoutMode: LayoutMode
+  onPreset: (preset: LayoutMode) => void
   isFullscreen: boolean
   onToggleFullscreen: () => void
+  chromePinned: boolean
+  onTogglePin: () => void
   isLoggedIn: boolean
   displayName: string | null
   authBusy: boolean
@@ -45,8 +52,7 @@ function Menu({
   setOpenId,
   label,
   icon,
-  align = 'start',
-  tooltipAlign,
+  align = 'end',
   active,
   children,
 }: {
@@ -56,7 +62,6 @@ function Menu({
   label: string
   icon: ReactNode
   align?: 'start' | 'end'
-  tooltipAlign?: 'start' | 'center' | 'end'
   active?: boolean
   children: ReactNode
 }) {
@@ -65,7 +70,7 @@ function Menu({
     <div className={`topbar-menu topbar-menu--${align}`}>
       <IconButton
         label={label}
-        tooltipAlign={tooltipAlign}
+        tooltipAlign={align === 'end' ? 'end' : 'center'}
         active={active || open}
         onClick={() => setOpenId(open ? null : id)}
         aria-expanded={open}
@@ -84,6 +89,7 @@ function Menu({
 
 export function TopBar({
   hidden = false,
+  title,
   clientId,
   onClientIdChange,
   onAddStream,
@@ -95,9 +101,13 @@ export function TopBar({
   onChatChannelChange,
   chatOpen,
   onToggleChat,
+  onPopoutChat,
+  layoutMode,
   onPreset,
   isFullscreen,
   onToggleFullscreen,
+  chromePinned,
+  onTogglePin,
   isLoggedIn,
   displayName,
   authBusy,
@@ -167,18 +177,16 @@ export function TopBar({
       className={`topbar${hidden ? ' topbar--hidden' : ''}`}
       aria-label="Stream Watcher toolbar"
     >
-      <div className="topbar__cluster">
-        <span className="brand__mark brand__mark--bar" title="Stream Watcher">
-          SW
-        </span>
-
-        <Menu
-          id="add"
-          openId={openMenu}
-          setOpenId={setOpenMenu}
-          label="Add stream"
-          icon={<PlusIcon />}
-        >
+      <button
+        type="button"
+        className="topbar__title"
+        title={title}
+        onClick={() => setOpenMenu(openMenu === 'streams' ? null : 'streams')}
+      >
+        <span className="topbar__title-text">{title}</span>
+      </button>
+      {openMenu === 'streams' && (
+        <div className="popover popover--title" role="dialog" aria-label="Streams">
           <form className="add-form" onSubmit={handleAdd}>
             <label htmlFor="channel">Add a Twitch channel</label>
             <div className="add-form__row">
@@ -205,6 +213,27 @@ export function TopBar({
             {addError && <p className="field-error">{addError}</p>}
             {saveMessage && <p className="field-success">{saveMessage}</p>}
           </form>
+
+          {openChannels.length > 0 && (
+            <section className="popover-section">
+              <h2>Open streams</h2>
+              <div className="channel-list">
+                {openChannels.map((channel) => (
+                  <button
+                    key={channel}
+                    type="button"
+                    className={channel === chatChannel ? 'is-active' : ''}
+                    onClick={() => {
+                      onChatChannelChange(channel)
+                      setOpenMenu(null)
+                    }}
+                  >
+                    #{channel}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="popover-section">
             <h2>Saved streams</h2>
@@ -243,104 +272,110 @@ export function TopBar({
               })}
             </ul>
           </section>
-        </Menu>
+        </div>
+      )}
 
-        <Menu
-          id="layout"
-          openId={openMenu}
-          setOpenId={setOpenMenu}
-          label="Layouts"
-          icon={<LayoutIcon />}
-        >
-          <section className="popover-section popover-section--flush">
-            <h2>Layouts</h2>
-            <div className="preset-row">
-              <button
-                type="button"
-                onClick={() => {
-                  onPreset('1x1')
-                  setOpenMenu(null)
-                }}
-              >
-                1
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onPreset('1x2')
-                  setOpenMenu(null)
-                }}
-              >
-                1x2
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onPreset('2x2')
-                  setOpenMenu(null)
-                }}
-              >
-                2x2
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onPreset('1+3')
-                  setOpenMenu(null)
-                }}
-              >
-                1+3
-              </button>
-            </div>
-            <p className="hint">Drag the handle on any tile to rearrange.</p>
-          </section>
-        </Menu>
-
+      <div className="topbar__controls">
         <IconButton
-          label={chatOpen ? 'Hide chat' : 'Show chat'}
+          label={chatOpen ? 'Hide chat' : 'Open chat'}
           active={chatOpen}
           onClick={() => {
             setOpenMenu(null)
             onToggleChat()
           }}
         >
-          <ChatIcon />
+          <MessageSquare size={16} strokeWidth={1.75} fill={chatOpen ? 'currentColor' : 'none'} />
         </IconButton>
 
-        {openChannels.length > 0 && (
-          <label className="stream-switcher" data-tooltip="Switch chat channel">
-            <span className="sr-only">Active chat channel</span>
-            <select
-              value={chatChannel ?? ''}
-              aria-label="Switch chat to a stream"
-              onChange={(event) => {
-                const channel = event.target.value
-                if (!channel) return
-                onChatChannelChange(channel)
-              }}
-            >
-              {!chatChannel && <option value="">Chat channel</option>}
-              {openChannels.map((channel) => (
-                <option key={channel} value={channel}>
-                  #{channel}
-                </option>
+        <Menu
+          id="layout"
+          openId={openMenu}
+          setOpenId={setOpenMenu}
+          label="Change layout"
+          icon={<Columns2 size={16} strokeWidth={1.75} />}
+        >
+          <section className="popover-section popover-section--flush">
+            <h2>Layouts</h2>
+            <div className="preset-row">
+              {(['1x1', '1x2', '2x2', '1+3'] as const).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  className={layoutMode === preset ? 'is-active' : ''}
+                  onClick={() => {
+                    onPreset(preset)
+                    setOpenMenu(null)
+                  }}
+                >
+                  {preset === '1x1' ? '1' : preset}
+                </button>
               ))}
-            </select>
-          </label>
-        )}
-      </div>
+            </div>
+            <p className="hint">Tiles always fill the window. No page scroll.</p>
+          </section>
+        </Menu>
 
-      <div className="topbar__cluster topbar__cluster--end">
         <IconButton
           label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          tooltipAlign="end"
           active={isFullscreen}
           onClick={() => {
             setOpenMenu(null)
             onToggleFullscreen()
           }}
         >
-          {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+          {isFullscreen ? (
+            <Minimize2 size={16} strokeWidth={1.75} />
+          ) : (
+            <Maximize2 size={16} strokeWidth={1.75} />
+          )}
+        </IconButton>
+
+        <IconButton
+          label={chromePinned ? 'Unpin toolbar' : 'Pin toolbar'}
+          active={chromePinned}
+          onClick={() => {
+            setOpenMenu(null)
+            onTogglePin()
+          }}
+        >
+          <Pin size={16} strokeWidth={1.75} fill={chromePinned ? 'currentColor' : 'none'} />
+        </IconButton>
+
+        <IconButton
+          label="Open chat on another monitor"
+          desktopOnly
+          tooltipAlign="end"
+          onClick={() => {
+            setOpenMenu(null)
+            onPopoutChat()
+          }}
+        >
+          <SquareArrowOutUpRight size={16} strokeWidth={1.75} />
+        </IconButton>
+
+        <IconButton
+          label="Login for Prime / fewer ads"
+          desktopOnly
+          tooltipAlign="end"
+          onClick={() => {
+            setOpenMenu(null)
+            onLoginPrime()
+          }}
+        >
+          <Tv size={16} strokeWidth={1.75} />
+        </IconButton>
+
+        <IconButton
+          label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login to send chat'}
+          tooltipAlign="end"
+          active={isLoggedIn}
+          disabled={authBusy}
+          onClick={() => {
+            setOpenMenu(null)
+            onLoginChat()
+          }}
+        >
+          <LogIn size={16} strokeWidth={1.75} fill={isLoggedIn ? 'currentColor' : 'none'} />
         </IconButton>
 
         <Menu
@@ -348,9 +383,7 @@ export function TopBar({
           openId={openMenu}
           setOpenId={setOpenMenu}
           label="Settings"
-          icon={<SettingsIcon />}
-          align="end"
-          tooltipAlign="end"
+          icon={<Settings size={16} strokeWidth={1.75} />}
         >
           <section className="popover-section popover-section--flush">
             <h2>Settings</h2>
@@ -370,43 +403,13 @@ export function TopBar({
                 </a>
                 . OAuth redirect: <code>http://localhost:5173/oauth/callback</code>
               </p>
-            </div>
-          </section>
-        </Menu>
-
-        <Menu
-          id="auth"
-          openId={openMenu}
-          setOpenId={setOpenMenu}
-          label={isLoggedIn ? `Account (${displayName ?? 'signed in'})` : 'Twitch login'}
-          icon={<UserIcon />}
-          align="end"
-          tooltipAlign="end"
-          active={isLoggedIn}
-        >
-          <section className="popover-section popover-section--flush">
-            <h2>Twitch account</h2>
-            {isLoggedIn ? (
-              <p className="auth-status">
-                Signed in as <strong>{displayName}</strong>
-              </p>
-            ) : (
-              <p className="hint">Log in to chat and use Prime/Turbo benefits in embeds.</p>
-            )}
-            <div className="stack-buttons">
-              <button type="button" onClick={onLoginChat} disabled={authBusy}>
-                {isLoggedIn ? 'Re-auth for chat' : 'Login for chat'}
-              </button>
-              <button type="button" className="secondary" onClick={onLoginPrime}>
-                Login for Prime / ads
-              </button>
               {isLoggedIn && (
                 <button type="button" className="ghost" onClick={onLogout}>
                   Log out
                 </button>
               )}
+              {authError && <p className="field-error">{authError}</p>}
             </div>
-            {authError && <p className="field-error">{authError}</p>}
           </section>
         </Menu>
       </div>

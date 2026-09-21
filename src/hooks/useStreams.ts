@@ -7,7 +7,7 @@ import {
   normalizeChannel,
   saveState,
 } from '../lib/storage'
-import type { ChatDock, ChatFloatPosition, SavedStream, StreamItem } from '../types'
+import type { ChatDock, ChatFloatPosition, LayoutMode, SavedStream, StreamItem } from '../types'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
 const DEFAULT_STREAMS: StreamItem[] = [
@@ -29,6 +29,7 @@ export function useStreams() {
         chatSidebarOpen: saved.chatSidebarOpen ?? false,
         chatDock: saved.chatDock ?? 'right',
         chatFloat: saved.chatFloat ?? DEFAULT_CHAT_FLOAT,
+        layoutMode: saved.layoutMode ?? (saved.streams.length <= 1 ? '1x1' : saved.streams.length === 2 ? '1x2' : '2x2'),
       }
     }
     return {
@@ -41,6 +42,7 @@ export function useStreams() {
       chatSidebarOpen: saved?.chatSidebarOpen ?? false,
       chatDock: saved?.chatDock ?? 'right',
       chatFloat: saved?.chatFloat ?? DEFAULT_CHAT_FLOAT,
+      layoutMode: saved?.layoutMode ?? '1x2',
     }
   }, [])
 
@@ -54,6 +56,7 @@ export function useStreams() {
   const [chatDock, setChatDock] = useState<ChatDock>(initial.chatDock)
   const [chatFloat, setChatFloat] = useState<ChatFloatPosition>(initial.chatFloat)
   const [isDragging, setIsDragging] = useState(false)
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(initial.layoutMode)
 
   useEffect(() => {
     saveState({
@@ -67,6 +70,7 @@ export function useStreams() {
       chatSidebarOpen,
       chatDock,
       chatFloat,
+      layoutMode,
     })
   }, [
     streams,
@@ -78,6 +82,7 @@ export function useStreams() {
     chatSidebarOpen,
     chatDock,
     chatFloat,
+    layoutMode,
   ])
 
   const addStream = useCallback((raw: string) => {
@@ -169,7 +174,8 @@ export function useStreams() {
   }, [])
 
   const applyPreset = useCallback(
-    (preset: '1x1' | '1x2' | '2x2' | '1+3') => {
+    (preset: LayoutMode) => {
+      setLayoutMode(preset)
       if (!streams.length) return
 
       let next: Layout[] = []
@@ -263,6 +269,7 @@ export function useStreams() {
     setChatFloat,
     isDragging,
     setIsDragging,
+    layoutMode,
     addStream,
     removeStream,
     saveStream,

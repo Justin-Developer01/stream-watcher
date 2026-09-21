@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron/simple'
 import path from 'node:path'
 
+const webOnly = process.env.SW_WEB === '1'
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -11,17 +13,22 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    electron({
-      main: {
-        entry: 'electron/main.ts',
-      },
-      preload: {
-        input: 'electron/preload.ts',
-      },
-      renderer: {},
-    }),
-  ],
+    !webOnly &&
+      electron({
+        main: {
+          entry: 'electron/main.ts',
+        },
+        preload: {
+          input: 'electron/preload.ts',
+        },
+        renderer: {},
+      }),
+  ].filter(Boolean),
   server: {
+    port: 5173,
+    strictPort: true,
+  },
+  preview: {
     port: 5173,
     strictPort: true,
   },
