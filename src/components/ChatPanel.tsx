@@ -160,6 +160,7 @@ export function ChatPanel({
                 </select>
                 <IconButton
                   label="Pop out chat"
+                  desktopOnly
                   onClick={onPopout}
                   onMouseDown={(e) => e.stopPropagation()}
                 >

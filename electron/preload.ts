@@ -15,6 +15,17 @@ const api = {
   clearTwitchSession: () => ipcRenderer.invoke('twitch:clear-session') as Promise<void>,
   openChatPopout: (channel: string) =>
     ipcRenderer.invoke('chat:open-popout', channel) as Promise<void>,
+  listChatPopouts: () => ipcRenderer.invoke('chat:list-popouts') as Promise<string[]>,
+  onChatPopoutOpened: (callback: (channel: string) => void) => {
+    const handler = (_event: unknown, channel: string) => callback(channel)
+    ipcRenderer.on('chat:popout-opened', handler)
+    return () => ipcRenderer.removeListener('chat:popout-opened', handler)
+  },
+  onChatPopoutClosed: (callback: (channel: string) => void) => {
+    const handler = (_event: unknown, channel: string) => callback(channel)
+    ipcRenderer.on('chat:popout-closed', handler)
+    return () => ipcRenderer.removeListener('chat:popout-closed', handler)
+  },
   setFullscreen: (value: boolean) =>
     ipcRenderer.invoke('window:set-fullscreen', value) as Promise<void>,
   isFullscreen: () => ipcRenderer.invoke('window:is-fullscreen') as Promise<boolean>,

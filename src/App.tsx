@@ -5,6 +5,7 @@ import { FirstRunTip } from './components/FirstRunTip'
 import { StreamGrid } from './components/StreamGrid'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
+import { useChatPopouts } from './hooks/useChatPopouts'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useStreams } from './hooks/useStreams'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
@@ -40,6 +41,7 @@ function MainApp() {
   const { auth, busy, error, loginForChat, loginForPrime, logout, isLoggedIn } =
     useTwitchAuth(clientId)
   const { isFullscreen, toggleFullscreen, setFullscreen } = useFullscreen()
+  const { isPopped, markPopped } = useChatPopouts()
 
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -48,25 +50,19 @@ function MainApp() {
   const channels = streams.map((s) => s.channel)
   const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
   const title = focused?.channel ?? chatChannel ?? 'Stream Watcher'
+  const drawerChannels = channels.filter((channel) => !isPopped(channel))
   const chat = useChat({
-    channels,
-    activeChannel: chatChannel,
+    channels: drawerChannels,
+    activeChannel: chatChannel && !isPopped(chatChannel) ? chatChannel : drawerChannels[0] ?? null,
     username: auth.username,
     accessToken: auth.accessToken,
   })
-
-  const openChatFor = useCallback(
-    (channel: string) => {
-      setChatChannel(channel)
-      setChatSidebarOpen(true)
-    },
-    [setChatChannel, setChatSidebarOpen],
-  )
 
   const popoutChat = useCallback(
     async (channel: string) => {
       setChatChannel(channel)
       if (window.streamWatcher?.openChatPopout) {
+        markPopped(channel)
         await window.streamWatcher.openChatPopout(channel)
         setChatSidebarOpen(false)
         return
@@ -74,8 +70,46 @@ function MainApp() {
       setChatDock('float')
       setChatSidebarOpen(true)
     },
-    [setChatChannel, setChatDock, setChatSidebarOpen],
+    [markPopped, setChatChannel, setChatDock, setChatSidebarOpen],
   )
+
+  const openChatFor = useCallback(
+    (channel: string) => {
+      if (isPopped(channel) && window.streamWatcher?.openChatPopout) {
+        void popoutChat(channel)
+        return
+      }
+      setChatChannel(channel)
+      setChatSidebarOpen(true)
+    },
+    [isPopped, popoutChat, setChatChannel, setChatSidebarOpen],
+  )
+
+  const toggleChatDrawer = useCallback(() => {
+    if (chatSidebarOpen) {
+      setChatSidebarOpen(false)
+      return
+    }
+    if (chatChannel && isPopped(chatChannel)) {
+      const next = drawerChannels[0]
+      if (!next) {
+        void popoutChat(chatChannel)
+        return
+      }
+      setChatChannel(next)
+    } else if (!chatChannel && drawerChannels[0]) {
+      setChatChannel(drawerChannels[0])
+    }
+    setChatSidebarOpen(true)
+  }, [
+    chatChannel,
+    chatSidebarOpen,
+    drawerChannels,
+    isPopped,
+    popoutChat,
+    setChatChannel,
+    setChatSidebarOpen,
+  ])
 
   useEffect(() => {
     if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned) {
@@ -142,8 +176,8 @@ function MainApp() {
       }}
       float={chatFloat}
       onFloatChange={setChatFloat}
-      channels={channels}
-      activeChannel={chatChannel}
+      channels={drawerChannels}
+      activeChannel={chatChannel && !isPopped(chatChannel) ? chatChannel : drawerChannels[0] ?? null}
       onChannelChange={setChatChannel}
       messages={chat.messages}
       status={chat.status}
@@ -152,7 +186,8 @@ function MainApp() {
       username={auth.username}
       onSend={chat.sendMessage}
       onPopout={() => {
-        if (chatChannel) void popoutChat(chatChannel)
+        const target = chatChannel && !isPopped(chatChannel) ? chatChannel : drawerChannels[0]
+        if (target) void popoutChat(target)
       }}
     />
   ) : null
@@ -187,9 +222,10 @@ function MainApp() {
           else openChatFor(channel)
         }}
         chatOpen={chatSidebarOpen}
-        onToggleChat={() => setChatSidebarOpen((open) => !open)}
+        onToggleChat={toggleChatDrawer}
         onPopoutChat={() => {
-          if (chatChannel) void popoutChat(chatChannel)
+          const target = chatChannel ?? focused?.channel
+          if (target) void popoutChat(target)
         }}
         layoutMode={layoutMode}
         onPreset={applyPreset}

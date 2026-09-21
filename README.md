@@ -59,7 +59,7 @@ Normal users should install the EXE. `npm install` is for development only.
 
 - Click the **title** to add / switch streams
 - **Open chat** toggles the per-stream drawer
-- **Open chat on another monitor** pops out an Electron window (desktop)
+- **Pop out chat** opens (or focuses) a dedicated Electron window you can drag to another monitor; the main drawer closes for that channel so IRC is not duplicated. Size and position are remembered.
 - **Login for Prime / fewer ads** is the Twitch cookie session (desktop)
 - **Login to send chat** is OAuth (`chat:read` + `chat:edit`)
 - **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide

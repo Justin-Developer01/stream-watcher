@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, session } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, session, screen } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,6 +12,54 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 let mainWindow: BrowserWindow | null = null
 const chatPopouts = new Map<string, BrowserWindow>()
+
+type PopoutBounds = { x: number; y: number; width: number; height: number }
+
+function popoutBoundsPath() {
+  return path.join(app.getPath('userData'), 'chat-popout-bounds.json')
+}
+
+function readPopoutBounds(): Record<string, PopoutBounds> {
+  try {
+    return JSON.parse(fs.readFileSync(popoutBoundsPath(), 'utf8')) as Record<string, PopoutBounds>
+  } catch {
+    return {}
+  }
+}
+
+function writePopoutBounds(next: Record<string, PopoutBounds>) {
+  try {
+    fs.writeFileSync(popoutBoundsPath(), JSON.stringify(next))
+  } catch {
+    // ignore disk errors
+  }
+}
+
+function boundsOnADisplay(bounds: PopoutBounds) {
+  return screen.getAllDisplays().some((display) => {
+    const area = display.workArea
+    return (
+      bounds.x < area.x + area.width &&
+      bounds.x + 48 > area.x &&
+      bounds.y < area.y + area.height &&
+      bounds.y + 48 > area.y
+    )
+  })
+}
+
+function notifyMain(channel: string, event: 'opened' | 'closed') {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send(`chat:popout-${event}`, channel)
+}
+
+function defaultPopoutOrigin() {
+  if (!mainWindow || mainWindow.isDestroyed()) return undefined
+  const bounds = mainWindow.getBounds()
+  return {
+    x: bounds.x + Math.max(48, bounds.width - 360),
+    y: bounds.y + 72,
+  }
+}
 
 function resolvePreloadPath() {
   const candidates = ['preload.mjs', 'preload.js', 'preload.cjs']
@@ -64,18 +112,29 @@ function openChatPopout(channel: string) {
   const key = channel.toLowerCase()
   const existing = chatPopouts.get(key)
   if (existing && !existing.isDestroyed()) {
+    existing.show()
     existing.focus()
+    notifyMain(key, 'opened')
     return
   }
 
+  const saved = readPopoutBounds()[key]
+  const restore = saved && boundsOnADisplay(saved) ? saved : null
+  const fallback = defaultPopoutOrigin()
   const popout = new BrowserWindow({
-    width: 320,
-    height: 520,
+    width: restore?.width ?? 320,
+    height: restore?.height ?? 520,
+    x: restore?.x ?? fallback?.x,
+    y: restore?.y ?? fallback?.y,
     minWidth: 260,
     minHeight: 320,
     title: `#${key}`,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,
+    parent: undefined,
+    modal: false,
+    skipTaskbar: false,
+    fullscreenable: false,
     webPreferences: {
       preload: resolvePreloadPath(),
       contextIsolation: true,
@@ -84,9 +143,19 @@ function openChatPopout(channel: string) {
     },
   })
 
+  const persist = () => {
+    if (popout.isDestroyed()) return
+    writePopoutBounds({ ...readPopoutBounds(), [key]: popout.getBounds() })
+  }
+
   chatPopouts.set(key, popout)
+  notifyMain(key, 'opened')
+  popout.on('moved', persist)
+  popout.on('resized', persist)
   popout.on('closed', () => {
+    persist()
     chatPopouts.delete(key)
+    notifyMain(key, 'closed')
   })
 
   const query = `mode=chat&channel=${encodeURIComponent(key)}`
@@ -94,7 +163,7 @@ function openChatPopout(channel: string) {
     void popout.loadURL(`${VITE_DEV_SERVER_URL}?${query}`)
   } else {
     void popout.loadFile(path.join(RENDERER_DIST, 'index.html'), {
-      search: query,
+      query: { mode: 'chat', channel: key },
     })
   }
 }
@@ -222,6 +291,8 @@ app.whenReady().then(() => {
       openChatPopout(channel.trim().toLowerCase())
     }
   })
+
+  ipcMain.handle('chat:list-popouts', () => [...chatPopouts.keys()])
 
   createWindow()
 

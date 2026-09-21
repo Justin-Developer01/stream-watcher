@@ -1,31 +1,22 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ChatPanel } from './ChatPanel'
 import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { loadState } from '../lib/storage'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
-function getQuery() {
-  return new URLSearchParams(window.location.search)
-}
-
 export function ChatPopoutApp() {
-  const query = useMemo(() => getQuery(), [])
-  const initialChannel = (query.get('channel') || '').toLowerCase()
+  const channel = useMemo(() => {
+    const raw = new URLSearchParams(window.location.search).get('channel') || ''
+    return raw.replace(/^#/, '').trim().toLowerCase()
+  }, [])
   const saved = useMemo(() => loadState(), [])
-  const [channel, setChannel] = useState(initialChannel || saved?.chatChannel || '')
   const clientId = saved?.clientId ?? ''
-
-  const channels = useMemo(() => {
-    const fromStreams = (saved?.streams ?? []).map((s) => s.channel)
-    const set = new Set(fromStreams)
-    if (channel) set.add(channel)
-    return [...set]
-  }, [saved, channel])
+  const channels = channel ? [channel] : []
 
   const { auth, isLoggedIn } = useTwitchAuth(clientId)
   const chat = useChat({
-    channels: channel ? [channel] : channels,
+    channels,
     activeChannel: channel || null,
     username: auth.username,
     accessToken: auth.accessToken,
@@ -40,9 +31,9 @@ export function ChatPopoutApp() {
         onDockChange={() => undefined}
         float={DEFAULT_CHAT_FLOAT}
         onFloatChange={() => undefined}
-        channels={channels.length ? channels : channel ? [channel] : []}
+        channels={channels}
         activeChannel={channel || null}
-        onChannelChange={setChannel}
+        onChannelChange={() => undefined}
         messages={chat.messages}
         status={chat.status}
         error={chat.error}

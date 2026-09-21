@@ -50,7 +50,7 @@ export function StreamTile({
           <IconButton label={`Open #${stream.channel} chat`} onClick={onOpenChat}>
             <ChatIcon />
           </IconButton>
-          <IconButton label="Pop out chat" onClick={onPopoutChat}>
+          <IconButton label="Pop out chat" desktopOnly onClick={onPopoutChat}>
             <PopoutIcon />
           </IconButton>
           <IconButton
