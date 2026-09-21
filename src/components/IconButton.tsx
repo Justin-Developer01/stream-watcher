@@ -5,6 +5,7 @@ const DESKTOP_ONLY_TIP = 'Desktop app only'
 
 type Props = {
   label: string
+  tooltip?: string
   active?: boolean
   danger?: boolean
   tooltipAlign?: 'start' | 'center' | 'end'
@@ -14,6 +15,7 @@ type Props = {
 
 export function IconButton({
   label,
+  tooltip,
   active = false,
   danger = false,
   tooltipAlign = 'center',
@@ -26,7 +28,7 @@ export function IconButton({
 }: Props) {
   const desktop = isElectronApp()
   const blocked = desktopOnly && !desktop
-  const tooltip = blocked ? DESKTOP_ONLY_TIP : label
+  const tip = blocked ? DESKTOP_ONLY_TIP : (tooltip ?? label)
   const [showTip, setShowTip] = useState(false)
   const tipTimer = useRef<number>(0)
 
@@ -46,10 +48,10 @@ export function IconButton({
       ]
         .filter(Boolean)
         .join(' ')}
-      title={tooltip}
-      data-tooltip={tooltip}
+      title={tip}
+      data-tooltip={tip}
       data-tooltip-align={tooltipAlign}
-      aria-label={tooltip}
+      aria-label={blocked ? DESKTOP_ONLY_TIP : label}
       aria-pressed={active}
       onClick={(event) => {
         if (blocked) {

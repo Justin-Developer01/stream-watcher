@@ -186,9 +186,10 @@ function openTwitchLogin() {
     height: 720,
     parent: mainWindow ?? undefined,
     modal: false,
-    title: 'Twitch Login',
+    title: 'Refresh Prime session',
     backgroundColor: '#0b0f14',
     webPreferences: {
+      session: session.defaultSession,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -203,6 +204,31 @@ function openTwitchLogin() {
       mainWindow?.webContents.send('twitch-session-updated')
       setTimeout(() => loginWin.close(), 400)
     }
+  })
+}
+
+function warmTwitchCookies() {
+  return new Promise<void>((resolve) => {
+    const warm = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        session: session.defaultSession,
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+      },
+    })
+    let finished = false
+    const done = () => {
+      if (finished) return
+      finished = true
+      if (!warm.isDestroyed()) warm.destroy()
+      resolve()
+    }
+    setTimeout(done, 5000)
+    warm.webContents.once('did-finish-load', done)
+    warm.webContents.once('did-fail-load', done)
+    void warm.loadURL('https://www.twitch.tv/')
   })
 }
 
@@ -223,9 +249,10 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
       height: 720,
       parent: mainWindow ?? undefined,
       modal: true,
-      title: 'Authorize Stream Watcher',
+      title: 'Login to Twitch',
       backgroundColor: '#0b0f14',
       webPreferences: {
+        session: session.defaultSession,
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
@@ -238,7 +265,14 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
       if (settled) return
       settled = true
       if (!authWin.isDestroyed()) authWin.close()
-      resolve(result)
+      if (!result) {
+        resolve(null)
+        return
+      }
+      void warmTwitchCookies().finally(() => {
+        mainWindow?.webContents.send('twitch-session-updated')
+        resolve(result)
+      })
     }
 
     authWin.on('closed', () => finish(null))

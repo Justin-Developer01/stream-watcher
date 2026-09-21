@@ -44,7 +44,7 @@ function MainApp() {
     applyPreset,
   } = useStreams()
 
-  const { auth, busy, error, loginForChat, loginForPrime, logout, isLoggedIn } =
+  const { auth, busy, error, loginToTwitch, reconnectChat, refreshPrimeSession, logout, isLoggedIn } =
     useTwitchAuth(clientId)
   const { isFullscreen, toggleFullscreen, setFullscreen } = useFullscreen()
   const { isPopped, markPopped } = useChatPopouts()
@@ -245,8 +245,9 @@ function MainApp() {
         displayName={auth.displayName}
         authBusy={busy}
         authError={error}
-        onLoginChat={loginForChat}
-        onLoginPrime={loginForPrime}
+        onLoginTwitch={loginToTwitch}
+        onReconnectChat={reconnectChat}
+        onRefreshPrime={refreshPrimeSession}
         onLogout={logout}
         onMenuOpenChange={setMenuOpen}
       />

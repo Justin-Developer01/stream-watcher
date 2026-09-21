@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const TIP_KEY = 'stream-watcher:onboarding-tip:v2'
+const TIP_KEY = 'stream-watcher:onboarding-tip:v3'
 
 function readDismissed() {
   try {
@@ -30,7 +30,7 @@ export function FirstRunTip() {
 
   return (
     <div className="first-run-tip" role="status">
-      <p>Login for Prime and Login for chat are in the top bar.</p>
+      <p>Login to Twitch is in the top bar — Prime and chat together.</p>
       <button type="button" className="ghost" onClick={dismiss}>
         Dismiss
       </button>

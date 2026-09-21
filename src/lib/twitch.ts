@@ -1,6 +1,6 @@
 const HELIX = 'https://api.twitch.tv/helix'
 
-export const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:read:email']
+export const CHAT_SCOPES = ['chat:read', 'chat:edit']
 
 export async function fetchTwitchUser(clientId: string, accessToken: string) {
   const res = await fetch(`${HELIX}/users`, {

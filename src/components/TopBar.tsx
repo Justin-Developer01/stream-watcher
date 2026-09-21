@@ -9,7 +9,6 @@ import {
   Pin,
   Settings,
   SquareArrowOutUpRight,
-  Tv,
   X,
 } from 'lucide-react'
 import type { LayoutMode, SavedStream } from '../types'
@@ -44,8 +43,9 @@ type Props = {
   displayName: string | null
   authBusy: boolean
   authError: string | null
-  onLoginChat: () => void
-  onLoginPrime: () => void
+  onLoginTwitch: () => void
+  onReconnectChat: () => void
+  onRefreshPrime: () => void
   onLogout: () => void
   onMenuOpenChange?: (open: boolean) => void
 }
@@ -118,8 +118,9 @@ export function TopBar({
   displayName,
   authBusy,
   authError,
-  onLoginChat,
-  onLoginPrime,
+  onLoginTwitch,
+  onReconnectChat,
+  onRefreshPrime,
   onLogout,
   onMenuOpenChange,
 }: Props) {
@@ -372,25 +373,14 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label="Login for Prime / fewer ads"
-          desktopOnly
-          tooltipAlign="end"
-          onClick={() => {
-            setOpenMenu(null)
-            onLoginPrime()
-          }}
-        >
-          <Tv size={16} strokeWidth={1.75} />
-        </IconButton>
-
-        <IconButton
-          label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login to send chat'}
+          label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login to Twitch'}
+          tooltip={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login for Prime + chat.'}
           tooltipAlign="end"
           active={isLoggedIn}
           disabled={authBusy}
           onClick={() => {
             setOpenMenu(null)
-            onLoginChat()
+            if (!isLoggedIn) onLoginTwitch()
           }}
         >
           <LogIn size={16} strokeWidth={1.75} fill={isLoggedIn ? 'currentColor' : 'none'} />
@@ -421,6 +411,15 @@ export function TopBar({
                 </a>
                 . OAuth redirect: <code>http://localhost:5173/oauth/callback</code>
               </p>
+              <div className="settings-actions">
+                <button type="button" className="secondary" onClick={onReconnectChat} disabled={authBusy}>
+                  Reconnect chat
+                </button>
+                <button type="button" className="secondary" onClick={onRefreshPrime} disabled={authBusy}>
+                  Refresh Prime session
+                </button>
+              </div>
+              <p className="hint">Use these if the top-bar login only half-worked (chat token vs Prime/ads).</p>
               {isLoggedIn && (
                 <button type="button" className="ghost" onClick={onLogout}>
                   Log out

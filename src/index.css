@@ -516,6 +516,17 @@ code {
   gap: 0.3rem;
 }
 
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+
+.settings-actions button {
+  flex: 1 1 auto;
+}
+
 .hint,
 .muted {
   margin: 0.1rem 0 0;

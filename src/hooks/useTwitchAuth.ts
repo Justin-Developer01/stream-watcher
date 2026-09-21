@@ -30,6 +30,30 @@ function clearOAuthLocation() {
   window.history.replaceState({}, document.title, url.pathname + url.search)
 }
 
+async function runChatOAuth(clientId: string) {
+  if (window.streamWatcher) {
+    const result = await window.streamWatcher.startTwitchOAuth({
+      clientId,
+      redirectUri: DEFAULT_REDIRECT,
+      scopes: CHAT_SCOPES,
+    })
+    if (!result?.accessToken) {
+      throw new Error('Login was cancelled')
+    }
+    return result
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri(),
+    response_type: 'token',
+    scope: CHAT_SCOPES.join(' '),
+    force_verify: 'true',
+  })
+  window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`)
+  return null
+}
+
 export function useTwitchAuth(clientId: string) {
   const [auth, setAuth] = useState<AuthState>(() => loadAuth())
   const [busy, setBusy] = useState(false)
@@ -37,7 +61,7 @@ export function useTwitchAuth(clientId: string) {
 
   useEffect(() => {
     const unsubscribe = window.streamWatcher?.onTwitchSessionUpdated(() => {
-      // Session cookies updated for embeds (Prime/Turbo path)
+      // Electron defaultSession cookies now apply to player embeds (Prime/ads).
     })
     return () => {
       unsubscribe?.()
@@ -82,7 +106,7 @@ export function useTwitchAuth(clientId: string) {
     }
   }, [clientId, finishLogin])
 
-  const loginForChat = useCallback(async () => {
+  const loginToTwitch = useCallback(async () => {
     if (!clientId.trim()) {
       setError('Add your Twitch Client ID in Settings first')
       return
@@ -91,30 +115,9 @@ export function useTwitchAuth(clientId: string) {
     setBusy(true)
     setError(null)
     try {
-      if (window.streamWatcher) {
-        const result = await window.streamWatcher.startTwitchOAuth({
-          clientId: clientId.trim(),
-          redirectUri: DEFAULT_REDIRECT,
-          scopes: CHAT_SCOPES,
-        })
-
-        if (!result?.accessToken) {
-          setError('Login was cancelled')
-          return
-        }
-
-        await finishLogin(result.accessToken, result.scope)
-        return
-      }
-
-      const params = new URLSearchParams({
-        client_id: clientId.trim(),
-        redirect_uri: redirectUri(),
-        response_type: 'token',
-        scope: CHAT_SCOPES.join(' '),
-        force_verify: 'true',
-      })
-      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`)
+      const result = await runChatOAuth(clientId.trim())
+      if (!result) return
+      await finishLogin(result.accessToken, result.scope)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -122,7 +125,11 @@ export function useTwitchAuth(clientId: string) {
     }
   }, [clientId, finishLogin])
 
-  const loginForPrime = useCallback(async () => {
+  const reconnectChat = useCallback(async () => {
+    await loginToTwitch()
+  }, [loginToTwitch])
+
+  const refreshPrimeSession = useCallback(async () => {
     if (!window.streamWatcher) {
       setError('Desktop app only')
       return
@@ -141,8 +148,9 @@ export function useTwitchAuth(clientId: string) {
     auth,
     busy,
     error,
-    loginForChat,
-    loginForPrime,
+    loginToTwitch,
+    reconnectChat,
+    refreshPrimeSession,
     logout,
     isLoggedIn: Boolean(auth.accessToken && auth.username),
   }
