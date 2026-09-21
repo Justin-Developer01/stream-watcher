@@ -9,7 +9,7 @@ You do **not** need Node, Git, or `npm install`.
 1. Get the unsigned installer from a GitHub Actions artifact or a Release:
    - **Stream Watcher Setup 1.0.0.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
    - **Stream Watcher Portable 1.0.0.exe** — no install, just run
-2. Open **Stream Watcher**.
+2. Open **Stream Watcher**. You land on the thin top-bar shell — no wizard. A one-time toast points at **Login for Prime** and **Login for chat**; dismiss it and it does not come back.
 3. Click the title to add Twitch channels.
 4. **Login for Prime / fewer ads** (TV icon) — Twitch website cookie session, desktop only.
 5. **Login to send chat** (log-in icon) — OAuth. Paste a Twitch Client ID in Settings first (gear). Redirect URL: `http://localhost:5173/oauth/callback`.
@@ -26,7 +26,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - Per-stream chat as a slide-over drawer; pop out to another monitor (desktop)
 - Fullscreen with optional pinned / auto-hiding chrome
 - Separate **Login for Prime / fewer ads** (desktop session) and **Login to send chat** (OAuth)
-- First run: dismissible tip only — no setup wizard
+- First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login for Prime** and **Login for chat**. Dismiss it and it does not return. No setup wizard.
 
 ## Browser vs desktop
 
