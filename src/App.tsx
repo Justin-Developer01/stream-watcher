@@ -45,7 +45,6 @@ function MainApp() {
 
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [barHovered, setBarHovered] = useState(false)
 
   const channels = streams.map((s) => s.channel)
   const chat = useChat({
@@ -77,26 +76,36 @@ function MainApp() {
   )
 
   useEffect(() => {
-    if (!isFullscreen || menuOpen || barHovered || chatSidebarOpen) {
+    if (!isFullscreen || menuOpen || chatSidebarOpen) {
       setChromeHidden(false)
       return
     }
 
     let timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
-    const bump = () => {
+    const onMove = (event: MouseEvent) => {
+      if (event.clientY <= 52) {
+        setChromeHidden(false)
+        window.clearTimeout(timer)
+        return
+      }
+      setChromeHidden(false)
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
+    }
+    const onKey = () => {
       setChromeHidden(false)
       window.clearTimeout(timer)
       timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
     }
 
-    window.addEventListener('mousemove', bump)
-    window.addEventListener('keydown', bump)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('keydown', onKey)
     return () => {
       window.clearTimeout(timer)
-      window.removeEventListener('mousemove', bump)
-      window.removeEventListener('keydown', bump)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('keydown', onKey)
     }
-  }, [isFullscreen, menuOpen, barHovered, chatSidebarOpen])
+  }, [isFullscreen, menuOpen, chatSidebarOpen])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -158,37 +167,32 @@ function MainApp() {
         .filter(Boolean)
         .join(' ')}
     >
-      <div
-        onMouseEnter={() => setBarHovered(true)}
-        onMouseLeave={() => setBarHovered(false)}
-      >
-        <div className="topbar-hotzone" aria-hidden />
-        <TopBar
-          hidden={chromeHidden}
-          clientId={clientId}
-          onClientIdChange={setClientId}
-          onAddStream={addStream}
-          onSaveStream={saveStream}
-          onUnsaveStream={unsaveStream}
-          savedStreams={savedStreams}
-          openChannels={channels}
-          chatChannel={chatChannel}
-          onChatChannelChange={openChatFor}
-          chatOpen={chatSidebarOpen}
-          onToggleChat={() => setChatSidebarOpen((open) => !open)}
-          onPreset={applyPreset}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={() => void toggleFullscreen()}
-          isLoggedIn={isLoggedIn}
-          displayName={auth.displayName}
-          authBusy={busy}
-          authError={error}
-          onLoginChat={loginForChat}
-          onLoginPrime={loginForPrime}
-          onLogout={logout}
-          onMenuOpenChange={setMenuOpen}
-        />
-      </div>
+      <div className="topbar-hotzone" aria-hidden />
+      <TopBar
+        hidden={chromeHidden}
+        clientId={clientId}
+        onClientIdChange={setClientId}
+        onAddStream={addStream}
+        onSaveStream={saveStream}
+        onUnsaveStream={unsaveStream}
+        savedStreams={savedStreams}
+        openChannels={channels}
+        chatChannel={chatChannel}
+        onChatChannelChange={openChatFor}
+        chatOpen={chatSidebarOpen}
+        onToggleChat={() => setChatSidebarOpen((open) => !open)}
+        onPreset={applyPreset}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() => void toggleFullscreen()}
+        isLoggedIn={isLoggedIn}
+        displayName={auth.displayName}
+        authBusy={busy}
+        authError={error}
+        onLoginChat={loginForChat}
+        onLoginPrime={loginForPrime}
+        onLogout={logout}
+        onMenuOpenChange={setMenuOpen}
+      />
 
       <main className="main-stage">
         <StreamGrid
