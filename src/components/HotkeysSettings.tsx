@@ -63,7 +63,7 @@ export function HotkeysSettings({ hotkeys, onChange }: Props) {
           </div>
         ))}
       </div>
-      <p className="hint">{listening ? 'Click to rebind — press a key, Esc cancels.' : 'Click a keychip to rebind.'}</p>
+      <p className="hint">{listening ? 'Press a key, Esc cancels.' : 'Click to rebind'}</p>
       {conflict && <p className="field-error">{conflict}</p>}
       <button
         type="button"
