@@ -1,4 +1,5 @@
 import type { Layout } from 'react-grid-layout'
+import type { HotkeyChord, HotkeyId } from './lib/hotkeys'
 import type { AppearanceTheme } from './lib/theme'
 
 export type { AppearanceTheme }
@@ -74,6 +75,8 @@ export type PersistedState = {
   layoutMode?: LayoutMode
   focusMode?: boolean
   appearance?: AppearanceTheme
+  windowLocked?: boolean
+  hotkeys?: Partial<Record<HotkeyId, HotkeyChord>>
 }
 
 export const DEFAULT_LAYOUT_COLS = 12

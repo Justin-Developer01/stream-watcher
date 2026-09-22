@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
-  ChevronDown,
   Columns2,
   Focus,
+  Lock,
   LogIn,
   Maximize2,
   MessageSquare,
@@ -10,21 +10,18 @@ import {
   Pin,
   Settings,
   SquareArrowOutUpRight,
+  Unlock,
   X,
 } from 'lucide-react'
-import type { AppearanceTheme, LayoutMode, SavedStream, UpdaterStatus } from '../types'
-import { AppearanceSettings } from './AppearanceSettings'
+import type { LayoutMode, SavedStream } from '../types'
 import { IconButton } from './IconButton'
-import { MISSING_TWITCH_CLIENT_ID_ERROR, TWITCH_OAUTH_REDIRECT } from '../lib/env'
+import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
 
-type MenuId = 'streams' | 'layout' | 'settings' | null
+type MenuId = 'streams' | 'layout' | null
 
 type Props = {
   hidden?: boolean
   title: string
-  clientId: string
-  onClientIdChange: (value: string) => void
-  hasBuiltInClientId: boolean
   onAddStream: (value: string) => { ok: boolean; error?: string; channel?: string }
   onSaveStream: (value: string) => { ok: boolean; error?: string; channel?: string }
   onUnsaveStream: (channel: string) => void
@@ -48,15 +45,12 @@ type Props = {
   authBusy: boolean
   authError: string | null
   onLoginTwitch: () => void
-  onReconnectChat: () => void
-  onRefreshPrime: () => void
-  onLogout: () => void
-  updater: UpdaterStatus
-  onCheckForUpdates: () => void
-  onDownloadUpdate: () => void
-  onInstallUpdate: () => void
-  appearance: AppearanceTheme
-  onAppearanceChange: (theme: AppearanceTheme) => void
+  seeDesktop: boolean
+  windowLocked: boolean
+  onToggleWindowLock: () => void
+  settingsOpen: boolean
+  onOpenSettings: () => void
+  openStreamsRequest?: number
   onMenuOpenChange?: (open: boolean) => void
 }
 
@@ -93,7 +87,7 @@ function Menu({
         {icon}
       </IconButton>
       {open && (
-        <div className="popover" role="dialog" aria-label={label}>
+        <div className="popover" role="dialog" aria-label={label} data-hit>
           {children}
         </div>
       )}
@@ -104,9 +98,6 @@ function Menu({
 export function TopBar({
   hidden = false,
   title,
-  clientId,
-  onClientIdChange,
-  hasBuiltInClientId,
   onAddStream,
   onSaveStream,
   onUnsaveStream,
@@ -130,40 +121,33 @@ export function TopBar({
   authBusy,
   authError,
   onLoginTwitch,
-  onReconnectChat,
-  onRefreshPrime,
-  onLogout,
-  updater,
-  onCheckForUpdates,
-  onDownloadUpdate,
-  onInstallUpdate,
-  appearance,
-  onAppearanceChange,
+  seeDesktop,
+  windowLocked,
+  onToggleWindowLock,
+  settingsOpen,
+  onOpenSettings,
+  openStreamsRequest = 0,
   onMenuOpenChange,
 }: Props) {
   const [openMenu, setOpenMenu] = useState<MenuId>(null)
   const [channelInput, setChannelInput] = useState('')
   const [addError, setAddError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
-  const [developerOpen, setDeveloperOpen] = useState(!hasBuiltInClientId)
   const barRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    onMenuOpenChange?.(openMenu !== null)
-  }, [openMenu, onMenuOpenChange])
-
-  useEffect(() => {
-    if (openMenu === 'settings' && !hasBuiltInClientId) {
-      setDeveloperOpen(true)
-    }
-  }, [openMenu, hasBuiltInClientId])
+    onMenuOpenChange?.(openMenu !== null || settingsOpen)
+  }, [openMenu, onMenuOpenChange, settingsOpen])
 
   useEffect(() => {
     if (authError === MISSING_TWITCH_CLIENT_ID_ERROR) {
-      setDeveloperOpen(true)
-      setOpenMenu('settings')
+      onOpenSettings()
     }
-  }, [authError])
+  }, [authError, onOpenSettings])
+
+  useEffect(() => {
+    if (openStreamsRequest) setOpenMenu('streams')
+  }, [openStreamsRequest])
 
   useEffect(() => {
     if (!openMenu) return
@@ -214,6 +198,7 @@ export function TopBar({
       ref={barRef}
       className={`topbar${hidden ? ' topbar--hidden' : ''}`}
       aria-label="Stream Watcher toolbar"
+      data-hit
     >
       <button
         type="button"
@@ -224,7 +209,7 @@ export function TopBar({
         <span className="topbar__title-text">{title}</span>
       </button>
       {openMenu === 'streams' && (
-        <div className="popover popover--title" role="dialog" aria-label="Streams">
+        <div className="popover popover--title" role="dialog" aria-label="Streams" data-hit>
           <form className="add-form" onSubmit={handleAdd}>
             <label htmlFor="channel">Add a Twitch channel</label>
             <div className="add-form__row">
@@ -392,6 +377,26 @@ export function TopBar({
         </IconButton>
 
         <IconButton
+          label={windowLocked ? 'Unlock click-through' : 'Lock window (disable click-through)'}
+          tooltip={
+            !seeDesktop
+              ? 'Lock window (enable See desktop behind app first)'
+              : windowLocked
+                ? 'Unlock click-through'
+                : 'Lock window (disable click-through)'
+          }
+          tooltipAlign="end"
+          active={windowLocked}
+          disabled={!seeDesktop}
+          onClick={() => {
+            setOpenMenu(null)
+            onToggleWindowLock()
+          }}
+        >
+          {windowLocked ? <Lock size={16} strokeWidth={1.75} /> : <Unlock size={16} strokeWidth={1.75} />}
+        </IconButton>
+
+        <IconButton
           label="Open chat on another monitor"
           desktopOnly
           tooltipAlign="end"
@@ -417,116 +422,17 @@ export function TopBar({
           <LogIn size={16} strokeWidth={1.75} fill={isLoggedIn ? 'currentColor' : 'none'} />
         </IconButton>
 
-        <Menu
-          id="settings"
-          openId={openMenu}
-          setOpenId={setOpenMenu}
+        <IconButton
           label="Settings"
-          icon={<Settings size={16} strokeWidth={1.75} />}
+          tooltipAlign="end"
+          active={settingsOpen}
+          onClick={() => {
+            setOpenMenu(null)
+            onOpenSettings()
+          }}
         >
-          <section className="popover-section popover-section--flush">
-            <h2>Settings</h2>
-            <div className="settings-block">
-              <button
-                type="button"
-                className={`developer-toggle${developerOpen ? ' is-open' : ''}`}
-                aria-expanded={developerOpen}
-                onClick={() => setDeveloperOpen((open) => !open)}
-              >
-                <span>Developer</span>
-                <ChevronDown size={14} strokeWidth={2} />
-              </button>
-              {developerOpen && (
-                <div className="developer-panel">
-                  <label htmlFor="clientId">Twitch Client ID</label>
-                  <input
-                    id="clientId"
-                    value={clientId}
-                    onChange={(e) => onClientIdChange(e.target.value.trim())}
-                    placeholder={hasBuiltInClientId ? 'leave blank to use the baked-in ID' : 'from dev.twitch.tv'}
-                    autoComplete="off"
-                  />
-                  <p className="hint">
-                    {hasBuiltInClientId
-                      ? (
-                        <>
-                          Optional override. Leave blank to use the Client ID baked into this build.
-                          OAuth redirect: <code>{TWITCH_OAUTH_REDIRECT}</code>
-                        </>
-                      )
-                      : (
-                        <>
-                          Create an app at{' '}
-                          <a href="https://dev.twitch.tv/console" target="_blank" rel="noreferrer">
-                            Twitch Developer Console
-                          </a>
-                          . OAuth redirect: <code>{TWITCH_OAUTH_REDIRECT}</code>
-                        </>
-                      )}
-                  </p>
-                </div>
-              )}
-              <div className="settings-actions">
-                <button type="button" className="secondary" onClick={onReconnectChat} disabled={authBusy}>
-                  Reconnect chat
-                </button>
-                <button type="button" className="secondary" onClick={onRefreshPrime} disabled={authBusy}>
-                  Refresh Prime session
-                </button>
-              </div>
-              <p className="hint">Use these if the top-bar login only half-worked (chat token vs Prime/ads).</p>
-              {isLoggedIn && (
-                <button type="button" className="ghost" onClick={onLogout}>
-                  Log out
-                </button>
-              )}
-              {authError && <p className="field-error">{authError}</p>}
-            </div>
-          </section>
-          <AppearanceSettings appearance={appearance} onChange={onAppearanceChange} />
-          <section className="popover-section">
-            <h2>Updates</h2>
-            <p className="hint">
-              App version {updater.currentVersion || 'dev'}. Checks GitHub Releases, including pre-releases.
-            </p>
-            {updater.message && <p className="hint">{updater.message}</p>}
-            {updater.state === 'available' && updater.availableVersion && (
-              <p>Version {updater.availableVersion} is available.</p>
-            )}
-            {updater.state === 'downloading' && (
-              <p className="hint">Downloading… {Math.round(updater.percent ?? 0)}%</p>
-            )}
-            {updater.state === 'ready' && updater.availableVersion && (
-              <p>Version {updater.availableVersion} is ready. Install restarts the app.</p>
-            )}
-            {updater.error && <p className="field-error">{updater.error}</p>}
-            <div className="settings-actions">
-              <button
-                type="button"
-                className="secondary"
-                title="Check for Updates"
-                onClick={onCheckForUpdates}
-                disabled={updater.state === 'checking' || updater.state === 'downloading'}
-              >
-                Check for Updates
-              </button>
-              {updater.state === 'available' && (
-                <button type="button" onClick={onDownloadUpdate}>
-                  Download
-                </button>
-              )}
-              {updater.state === 'ready' && (
-                <button type="button" onClick={onInstallUpdate}>
-                  Install and restart
-                </button>
-              )}
-            </div>
-            <p className="hint">
-              Unsigned builds still update from GitHub. Windows SmartScreen may warn — More info → Run anyway.
-              Portable EXEs are not auto-updated; download a new file from the Release.
-            </p>
-          </section>
-        </Menu>
+          <Settings size={16} strokeWidth={1.75} />
+        </IconButton>
       </div>
     </header>
   )

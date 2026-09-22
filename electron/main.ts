@@ -78,6 +78,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     title: 'Stream Watcher',
+    transparent: true,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,
     webPreferences: {
@@ -332,6 +333,21 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('window:is-fullscreen', () => mainWindow?.isFullScreen() ?? false)
+
+  ipcMain.handle('window:set-transparent', (_event, enabled: boolean, color?: string) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    const opaque = typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color) ? color : '#0b0f14'
+    mainWindow.setBackgroundColor(enabled ? '#00000000' : opaque)
+  })
+
+  ipcMain.handle('window:set-ignore-mouse', (_event, ignore: boolean) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    if (ignore) {
+      mainWindow.setIgnoreMouseEvents(true, { forward: true })
+      return
+    }
+    mainWindow.setIgnoreMouseEvents(false)
+  })
 
   ipcMain.handle('chat:open-popout', (_event, channel: string) => {
     if (typeof channel === 'string' && channel.trim()) {

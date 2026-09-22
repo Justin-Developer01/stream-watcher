@@ -12,9 +12,10 @@ You do **not** need Node, Git, or `npm install`.
 2. Open **Stream Watcher**. You land on the thin top-bar shell — no wizard. A one-time toast points at **Login to Twitch**; dismiss it and it does not come back.
 3. Click the title to add Twitch channels.
 4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Release builds bake in the public Client ID, so this is just the one button. Redirect URL: `http://localhost:5173/oauth/callback`.
-5. If that flow only half-works, Settings has **Reconnect chat** and **Refresh Prime session**. The Client ID field is under **Settings → Developer**.
-6. **Check for Updates** is in **Settings** (gear). It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
-7. **Appearance** is in Settings (above Updates): Dark / Dim / Light chips, Accent / Surface / Text, Color or Image background, and Chat Font (System / IBM Plex Sans / Inter / Mono) + Size (12 / 13 / 14 / 16, default 13). Reset restores Dark. Defaults stay the current dark look.
+5. If that flow only half-works, Settings → **Advanced** has **Reconnect chat** and **Refresh Prime session**. The Client ID field is under **Settings → Advanced → Developer**.
+6. **Check for Updates** is in **Settings → Updates**. It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
+7. The gear opens a **Settings modal** (Esc / X to close) with left tabs: **Appearance · Chat · Hotkeys · Updates · Advanced**.
+8. **Appearance** has Dark / Dim / Light, Accent / Surface / Text, Color or Image background, and **Window → See desktop behind app.** Chat **Font** (System / IBM Plex Sans / Inter / Mono) + **Size** (12 / 13 / 14 / 16, default 13) live under the **Chat** tab.
 
 Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added. In-app updates use the same unsigned GitHub assets, so SmartScreen can also appear when installing an update.
 
@@ -28,8 +29,12 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - Per-stream chat as a slide-over drawer; pop out to another monitor (desktop)
 - Fullscreen with optional pinned / auto-hiding chrome
 - **Login to Twitch** — one top-bar control for Prime + chat OAuth (no Client ID field on first run)
-- **Check for Updates** — in Settings; GitHub Releases (pre-releases included) for the installed Setup app
-- **Appearance** — Settings → Appearance. Dark / Dim / Light, Accent / Surface / Text, Color or Image background, and Chat Font (System / IBM Plex Sans / Inter / Mono) + Size (12 / 13 / 14 / 16, default 13) on `.chat-line` and the composer only. Preview is the frosted top bar and empty stage; an open chat drawer live-updates. Twitch players are not rethemed.
+- **Check for Updates** — Settings → Updates; GitHub Releases (pre-releases included) for the installed Setup app
+- **Settings modal** — top-bar gear opens a frosted ~560×480 modal with left nav: Appearance · Chat · Hotkeys · Updates · Advanced
+- **Appearance** — Dark / Dim / Light, Accent / Surface / Text, Color or Image background, and **See desktop behind app.** Empty stage can show the desktop; top bar, tiles, and chat stay solid. Twitch players are not rethemed.
+- **Chat type** — Settings → Chat. Font chips System / IBM Plex Sans / Inter / Mono and Size 12 / 13 / 14 / 16 (default 13) apply only to `.chat-line` and the composer. An open drawer live-updates.
+- **Click-through** — with See desktop on, empty stage clicks pass through to the desktop. **Lock window** on the top bar freezes that. Unlock to pass through again.
+- **Hotkeys** — remappable chords for Focus Mode, Fullscreen, Toggle chat, Lock window, Open Settings, Add stream, Mute focus. Click a keychip to rebind; Reset defaults.
 - First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login to Twitch**. Dismiss it and it does not return. No setup wizard.
 
 ## Browser vs desktop
@@ -44,7 +49,9 @@ The renderer detects Electron with `window.streamWatcher`. Desktop-only icons **
 | Chat OAuth (send messages) + Client ID | Yes | Yes |
 | Prime / ads session (same login flow) | Chat OAuth only | OAuth also sets defaultSession cookies for embeds |
 | Pop-out chat on another monitor | Visible, **Desktop app only** | Works (`chat:open-popout`) |
-| Check for Updates | Settings (gear) | NSIS Setup vs GitHub Releases |
+| Check for Updates | Settings → Updates | NSIS Setup vs GitHub Releases |
+| See desktop behind app | Stage can look transparent | Transparent Electron window; empty stage click-through |
+| Lock window | Icon present, no desktop pass-through | Disables click-through while locked |
 
 ## Developers
 
@@ -91,10 +98,10 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 - Click the **title** to add / switch streams
 - **Open chat** toggles the per-stream drawer
 - **Open chat on another monitor** pops out a dedicated Electron window (desktop). In the browser the icon stays; hover/click says **Desktop app only**.
-- **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Developer** (hidden when the ID is baked into the build).
-- **Check for Updates** lives in Settings (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
-- **Appearance** is Settings → Appearance (above Updates). Dark / Dim / Light chips, Accent / Surface / Text, Color | Image background, Chat Font (System / IBM Plex Sans / Inter / Mono) + Size (12 / 13 / 14 / 16), and Reset.
-- **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide
+- **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings → Advanced has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Advanced → Developer**.
+- **Check for Updates** lives in Settings → Updates (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
+- **Settings** (gear) opens the modal. Appearance includes **See desktop behind app.** Chat tab has Font + Size. Hotkeys are remappable. Lock window on the top bar disables click-through.
+- **F11** fullscreen (remappable), **Escape** closes Settings then exits fullscreen / chat; pin the bar if you do not want it to auto-hide
 
 ## Scripts
 

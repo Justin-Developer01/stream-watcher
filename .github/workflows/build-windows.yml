@@ -52,6 +52,6 @@ jobs:
             Unsigned Windows build for testing. Do not expect a signed SmartScreen reputation yet.
 
             **Install:** `Stream Watcher Setup *.exe` (one-click NSIS) or run `Stream Watcher Portable *.exe`.
-            Open the app — no setup wizard. Use **Login to Twitch** (Prime + chat OAuth) from the top bar. OAuth redirect: `http://localhost:5173/oauth/callback`. Focus Mode, Settings updates, unified login, and Settings → Appearance (including Chat Font System / IBM Plex Sans / Inter / Mono and Size 12 / 13 / 14 / 16) are in this build.
+            Open the app — no setup wizard. Use **Login to Twitch** (Prime + chat OAuth) from the top bar. OAuth redirect: `http://localhost:5173/oauth/callback`. Focus Mode, unified login, Settings modal (Appearance / Chat / Hotkeys / Updates / Advanced), See desktop behind app, Lock window, and Chat Font System / IBM Plex Sans / Inter / Mono with Size 12 / 13 / 14 / 16 are in this build.
 
             **Updates:** the installed Setup app can **Check for Updates** in Settings against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds are not auto-updated.

@@ -29,7 +29,7 @@ export function FirstRunTip() {
   }
 
   return (
-    <div className="first-run-tip" role="status">
+    <div className="first-run-tip" role="status" data-hit>
       <p>Login to Twitch is in the top bar — Prime and chat together.</p>
       <button type="button" className="ghost" onClick={dismiss}>
         Dismiss

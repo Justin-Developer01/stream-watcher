@@ -51,6 +51,12 @@ body,
   overscroll-behavior: none;
 }
 
+html.see-desktop,
+html.see-desktop body,
+html.see-desktop #root {
+  background: transparent;
+}
+
 body {
   min-width: 320px;
   background: var(--bg);
@@ -142,6 +148,18 @@ code {
   overflow: hidden;
   overscroll-behavior: none;
   background-color: var(--bg);
+}
+
+.app-shell--see-desktop,
+html.see-desktop .app-shell {
+  background-color: transparent;
+}
+
+.app-shell--see-desktop::before,
+.app-shell--see-desktop::after,
+html.see-desktop .app-shell::before,
+html.see-desktop .app-shell::after {
+  display: none;
 }
 
 .app-shell::before,
@@ -652,6 +670,126 @@ code {
   accent-color: var(--accent);
 }
 
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.theme-toggle input {
+  width: auto;
+  accent-color: var(--accent);
+}
+
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, #000 36%, transparent);
+}
+
+.settings-modal {
+  width: min(560px, calc(100vw - 24px));
+  height: min(480px, calc(100dvh - 24px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-panel) 78%, var(--bar-scrim));
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: var(--shadow);
+}
+
+.settings-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-modal__header h1 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.settings-modal__body {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+}
+
+.settings-modal__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.4rem;
+  border-right: 1px solid var(--border);
+  overflow: auto;
+}
+
+.settings-modal__nav button {
+  justify-content: flex-start;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.settings-modal__nav button.is-active,
+.settings-modal__nav button:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: transparent;
+}
+
+.settings-modal__panel {
+  min-width: 0;
+  overflow: auto;
+  padding: 0.2rem 0.7rem 0.8rem;
+}
+
+.settings-modal__panel .popover-section {
+  padding: 0.45rem 0 0;
+}
+
+.settings-modal__panel .popover-section h2 {
+  display: none;
+}
+
+.hotkey-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.hotkey-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.hotkey-chip {
+  min-width: 7.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hotkey-chip.is-listening {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .hint,
 .muted {
   margin: 0.1rem 0 0;
@@ -728,6 +866,12 @@ code {
   min-height: 0;
   overflow: hidden;
   position: relative;
+}
+
+.app-shell--see-desktop .workspace,
+.app-shell--see-desktop .main-stage,
+.app-shell--see-desktop .stream-grid {
+  background: transparent;
 }
 
 .app-shell--fullscreen .main-stage {

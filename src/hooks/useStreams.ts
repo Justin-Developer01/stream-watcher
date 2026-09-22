@@ -10,6 +10,7 @@ import {
 } from '../lib/storage'
 import { hasBuiltInTwitchClientId, resolveTwitchClientId } from '../lib/env'
 import { applyAppearance, normalizeAppearance, type AppearanceTheme } from '../lib/theme'
+import { normalizeHotkeys, type HotkeyChord, type HotkeyId } from '../lib/hotkeys'
 import type { ChatDock, ChatFloatPosition, LayoutMode, SavedStream, StreamItem } from '../types'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
@@ -39,6 +40,8 @@ export function useStreams() {
         layoutMode: saved.layoutMode ?? (saved.streams.length <= 1 ? '1x1' : saved.streams.length === 2 ? '1x2' : '2x2'),
         focusMode: saved.focusMode ?? false,
         appearance: normalizeAppearance(saved.appearance),
+        windowLocked: saved.windowLocked === true,
+        hotkeys: normalizeHotkeys(saved.hotkeys),
       }
     }
     return {
@@ -54,6 +57,8 @@ export function useStreams() {
       layoutMode: saved?.layoutMode ?? '1x2',
       focusMode: false,
       appearance: normalizeAppearance(saved?.appearance),
+      windowLocked: saved?.windowLocked === true,
+      hotkeys: normalizeHotkeys(saved?.hotkeys),
     }
   }, [])
 
@@ -75,6 +80,8 @@ export function useStreams() {
     applyAppearance(initial.appearance)
     return initial.appearance
   })
+  const [windowLocked, setWindowLocked] = useState(initial.windowLocked)
+  const [hotkeys, setHotkeys] = useState<Record<HotkeyId, HotkeyChord>>(initial.hotkeys)
 
   useEffect(() => {
     const ok = saveState({
@@ -91,6 +98,8 @@ export function useStreams() {
       layoutMode,
       focusMode,
       appearance,
+      windowLocked,
+      hotkeys,
     })
     if (!ok && appearance.backgroundImage) {
       const next = { ...appearance, backgroundImage: null }
@@ -110,6 +119,8 @@ export function useStreams() {
     layoutMode,
     focusMode,
     appearance,
+    windowLocked,
+    hotkeys,
   ])
 
   useEffect(() => {
@@ -267,5 +278,9 @@ export function useStreams() {
     applyPreset,
     appearance,
     setAppearance,
+    windowLocked,
+    setWindowLocked,
+    hotkeys,
+    setHotkeys,
   }
 }

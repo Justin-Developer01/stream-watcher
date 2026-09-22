@@ -11,6 +11,7 @@ export type AppearanceTheme = {
   backgroundColor: string
   backgroundImage: string | null
   overlayOpacity: number
+  seeDesktop: boolean
   chatFont: ChatFont
   chatFontSize: number
 }
@@ -69,6 +70,7 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   backgroundMode: 'color',
   backgroundImage: null,
   overlayOpacity: 40,
+  seeDesktop: false,
   chatFont: 'system',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
 }
@@ -140,6 +142,7 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     backgroundMode: current?.backgroundMode ?? 'color',
     backgroundImage: current?.backgroundImage ?? null,
     overlayOpacity: current?.overlayOpacity ?? DEFAULT_APPEARANCE.overlayOpacity,
+    seeDesktop: current?.seeDesktop ?? DEFAULT_APPEARANCE.seeDesktop,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
     ...APPEARANCE_PRESETS[preset],
@@ -168,6 +171,7 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     backgroundMode,
     backgroundImage,
     overlayOpacity: clampOpacity(raw?.overlayOpacity),
+    seeDesktop: raw?.seeDesktop === true,
     chatFont: normalizeChatFont(raw?.chatFont),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
     preset: presetKey,
@@ -186,12 +190,14 @@ function isLightChrome(theme: AppearanceTheme) {
   return (r * 299 + g * 587 + b * 114) / 1000 < 140
 }
 
-export function applyAppearance(theme: AppearanceTheme) {
+export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome?: boolean }) {
   const root = document.documentElement
   const light = isLightChrome(theme)
   const muted = light ? '#5c6b7a' : '#7d8b9c'
   const border = light ? '#d5dde6' : '#1b2430'
   const scrim = light ? 'rgba(255, 255, 255, 0.58)' : 'rgba(0, 0, 0, 0.48)'
+  const windowChrome = options?.windowChrome !== false
+  const seeDesktop = windowChrome && theme.seeDesktop
 
   root.style.colorScheme = light ? 'light' : 'dark'
   root.style.setProperty('--accent', theme.accent)
@@ -201,15 +207,21 @@ export function applyAppearance(theme: AppearanceTheme) {
   root.style.setProperty('--text', theme.text)
   root.style.setProperty('--muted', muted)
   root.style.setProperty('--border', border)
-  root.style.setProperty('--bg', theme.backgroundColor)
+  root.classList.toggle('see-desktop', seeDesktop)
+  root.style.setProperty('--bg', seeDesktop ? 'transparent' : theme.backgroundColor)
   root.style.setProperty('--bar-scrim', scrim)
   root.style.setProperty(
     '--bg-image',
-    theme.backgroundMode === 'image' && theme.backgroundImage ? `url("${theme.backgroundImage}")` : 'none',
+    !seeDesktop && theme.backgroundMode === 'image' && theme.backgroundImage
+      ? `url("${theme.backgroundImage}")`
+      : 'none',
   )
-  root.style.setProperty('--bg-overlay', String(theme.overlayOpacity))
+  root.style.setProperty('--bg-overlay', String(seeDesktop ? 0 : theme.overlayOpacity))
   root.style.setProperty('--chat-font', CHAT_FONTS[theme.chatFont].stack)
   root.style.setProperty('--chat-font-size', `${theme.chatFontSize}px`)
+  if (windowChrome) {
+    void window.streamWatcher?.setWindowTransparent?.(theme.seeDesktop, theme.backgroundColor)
+  }
 }
 
 export async function imageFileToDataUrl(file: File): Promise<string> {

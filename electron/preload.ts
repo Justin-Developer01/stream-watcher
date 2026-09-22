@@ -42,6 +42,10 @@ const api = {
   setFullscreen: (value: boolean) =>
     ipcRenderer.invoke('window:set-fullscreen', value) as Promise<void>,
   isFullscreen: () => ipcRenderer.invoke('window:is-fullscreen') as Promise<boolean>,
+  setWindowTransparent: (enabled: boolean, color?: string) =>
+    ipcRenderer.invoke('window:set-transparent', enabled, color) as Promise<void>,
+  setIgnoreMouseEvents: (ignore: boolean) =>
+    ipcRenderer.invoke('window:set-ignore-mouse', ignore) as Promise<void>,
   onFullscreenChange: (callback: (value: boolean) => void) => {
     const handler = (_event: unknown, value: boolean) => callback(value)
     ipcRenderer.on('window:fullscreen-changed', handler)

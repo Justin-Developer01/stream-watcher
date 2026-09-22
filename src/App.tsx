@@ -1,15 +1,19 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChatPanel } from './components/ChatPanel'
 import { ChatPopoutApp } from './components/ChatPopoutApp'
 import { FirstRunTip } from './components/FirstRunTip'
+import { SettingsModal, type SettingsTab } from './components/SettingsModal'
 import { StreamGrid } from './components/StreamGrid'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
 import { useChatPopouts } from './hooks/useChatPopouts'
+import { useClickThrough } from './hooks/useClickThrough'
 import { useFullscreen } from './hooks/useFullscreen'
+import { useHotkeys } from './hooks/useHotkeys'
 import { useStreams } from './hooks/useStreams'
 import { useAppUpdater } from './hooks/useAppUpdater'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
+import { MISSING_TWITCH_CLIENT_ID_ERROR } from './lib/env'
 
 const FULLSCREEN_IDLE_MS = 2400
 
@@ -47,6 +51,10 @@ function MainApp() {
     applyPreset,
     appearance,
     setAppearance,
+    windowLocked,
+    setWindowLocked,
+    hotkeys,
+    setHotkeys,
   } = useStreams()
 
   const { auth, busy, error, loginToTwitch, reconnectChat, refreshPrimeSession, logout, isLoggedIn } =
@@ -58,6 +66,9 @@ function MainApp() {
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [chromePinned, setChromePinned] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('appearance')
+  const [openStreamsRequest, setOpenStreamsRequest] = useState(0)
 
   const channels = streams.map((s) => s.channel)
   const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
@@ -123,8 +134,41 @@ function MainApp() {
     setChatSidebarOpen,
   ])
 
+  useClickThrough(appearance.seeDesktop && !windowLocked)
+
+  const openSettings = useCallback((tab: SettingsTab = 'appearance') => {
+    setSettingsTab(tab)
+    setSettingsOpen(true)
+  }, [])
+
   useEffect(() => {
-    if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned) {
+    if (error === MISSING_TWITCH_CLIENT_ID_ERROR) {
+      openSettings('advanced')
+    }
+  }, [error, openSettings])
+
+  const hotkeyActions = useMemo(
+    () => ({
+      focusMode: toggleFocusMode,
+      fullscreen: () => void toggleFullscreen(),
+      toggleChat: toggleChatDrawer,
+      lockWindow: () => {
+        if (!appearance.seeDesktop) return
+        setWindowLocked((value) => !value)
+      },
+      openSettings: () => setSettingsOpen((open) => !open),
+      addStream: () => setOpenStreamsRequest((value) => value + 1),
+      muteFocus: () => {
+        if (focusedId) toggleMute(focusedId)
+      },
+    }),
+    [appearance.seeDesktop, focusedId, setWindowLocked, toggleChatDrawer, toggleFocusMode, toggleFullscreen, toggleMute],
+  )
+
+  useHotkeys(hotkeys, hotkeyActions, settingsOpen && settingsTab === 'hotkeys')
+
+  useEffect(() => {
+    if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned || settingsOpen) {
       setChromeHidden(false)
       return
     }
@@ -153,28 +197,28 @@ function MainApp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('keydown', onKey)
     }
-  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen])
+  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen, settingsOpen])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'F11') {
+      if (event.key !== 'Escape') return
+      if (settingsOpen) {
         event.preventDefault()
-        void toggleFullscreen()
+        setSettingsOpen(false)
+        return
       }
-      if (event.key === 'Escape') {
-        if (isFullscreen) {
-          event.preventDefault()
-          void setFullscreen(false)
-          return
-        }
-        if (chatSidebarOpen) {
-          setChatSidebarOpen(false)
-        }
+      if (isFullscreen) {
+        event.preventDefault()
+        void setFullscreen(false)
+        return
+      }
+      if (chatSidebarOpen) {
+        setChatSidebarOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [chatSidebarOpen, isFullscreen, setChatSidebarOpen, setFullscreen, toggleFullscreen])
+  }, [chatSidebarOpen, isFullscreen, setChatSidebarOpen, setFullscreen, settingsOpen])
 
   const chatVisible = chatSidebarOpen
   const chatPushes = chatVisible && chatDock !== 'float'
@@ -212,17 +256,15 @@ function MainApp() {
         'overflow-hidden',
         isFullscreen ? 'app-shell--fullscreen' : '',
         chromeHidden ? 'app-shell--chrome-hidden' : '',
+        appearance.seeDesktop ? 'app-shell--see-desktop' : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="topbar-hotzone" aria-hidden />
+      <div className="topbar-hotzone" aria-hidden data-hit />
       <TopBar
         hidden={chromeHidden}
         title={title}
-        clientId={clientIdOverride}
-        onClientIdChange={setClientId}
-        hasBuiltInClientId={hasBuiltInClientId}
         onAddStream={addStream}
         onSaveStream={saveStream}
         onUnsaveStream={unsaveStream}
@@ -253,15 +295,12 @@ function MainApp() {
         authBusy={busy}
         authError={error}
         onLoginTwitch={loginToTwitch}
-        onReconnectChat={reconnectChat}
-        onRefreshPrime={refreshPrimeSession}
-        onLogout={logout}
-        updater={updater.status}
-        onCheckForUpdates={() => void updater.check()}
-        onDownloadUpdate={() => void updater.download()}
-        onInstallUpdate={() => void updater.install()}
-        appearance={appearance}
-        onAppearanceChange={setAppearance}
+        seeDesktop={appearance.seeDesktop}
+        windowLocked={windowLocked}
+        onToggleWindowLock={() => setWindowLocked((value) => !value)}
+        settingsOpen={settingsOpen}
+        onOpenSettings={() => openSettings(error === MISSING_TWITCH_CLIENT_ID_ERROR ? 'advanced' : 'appearance')}
+        openStreamsRequest={openStreamsRequest}
         onMenuOpenChange={setMenuOpen}
       />
 
@@ -301,6 +340,30 @@ function MainApp() {
         {chatPushes && chatDock === 'bottom' && chatPanel}
       </div>
       {chatVisible && chatDock === 'float' && chatPanel}
+      {settingsOpen && (
+        <SettingsModal
+          tab={settingsTab}
+          onTabChange={setSettingsTab}
+          onClose={() => setSettingsOpen(false)}
+          appearance={appearance}
+          onAppearanceChange={setAppearance}
+          hotkeys={hotkeys}
+          onHotkeysChange={setHotkeys}
+          clientId={clientIdOverride}
+          onClientIdChange={setClientId}
+          hasBuiltInClientId={hasBuiltInClientId}
+          isLoggedIn={isLoggedIn}
+          authBusy={busy}
+          authError={error}
+          onReconnectChat={reconnectChat}
+          onRefreshPrime={refreshPrimeSession}
+          onLogout={logout}
+          updater={updater.status}
+          onCheckForUpdates={() => void updater.check()}
+          onDownloadUpdate={() => void updater.download()}
+          onInstallUpdate={() => void updater.install()}
+        />
+      )}
       <FirstRunTip />
     </div>
   )

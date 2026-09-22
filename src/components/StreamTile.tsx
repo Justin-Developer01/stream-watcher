@@ -42,7 +42,7 @@ export function StreamTile({
   onToggleSave,
 }: Props) {
   return (
-    <article className={`stream-tile${focused ? ' is-focused' : ''}${promoteOnClick ? ' is-promotable' : ''}`}>
+    <article className={`stream-tile${focused ? ' is-focused' : ''}${promoteOnClick ? ' is-promotable' : ''}`} data-hit>
       <header className="stream-tile__bar">
         {showHandle && (
           <div className="stream-drag-handle" data-tooltip="Drag to rearrange" role="button" aria-label="Drag to rearrange" tabIndex={0}>

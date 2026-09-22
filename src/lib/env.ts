@@ -4,7 +4,7 @@ export function isElectronApp() {
   return Boolean(typeof window !== 'undefined' && window.streamWatcher)
 }
 
-export const MISSING_TWITCH_CLIENT_ID_ERROR = 'Add a Twitch Client ID in Settings → Developer'
+export const MISSING_TWITCH_CLIENT_ID_ERROR = 'Add a Twitch Client ID in Settings → Advanced'
 
 export const TWITCH_OAUTH_REDIRECT = 'http://localhost:5173/oauth/callback'
 

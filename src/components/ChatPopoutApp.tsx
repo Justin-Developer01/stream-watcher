@@ -16,7 +16,7 @@ export function ChatPopoutApp() {
   const clientId = resolveTwitchClientId(saved?.clientId)
 
   useEffect(() => {
-    applyAppearance(normalizeAppearance(saved?.appearance))
+    applyAppearance(normalizeAppearance(saved?.appearance), { windowChrome: false })
   }, [saved])
   const channels = channel ? [channel] : []
 

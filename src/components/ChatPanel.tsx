@@ -131,7 +131,7 @@ export function ChatPanel({
       : undefined
 
   return (
-    <aside className={panelClass} style={style} aria-label="Stream chat">
+    <aside className={panelClass} style={style} aria-label="Stream chat" data-hit>
       <header className="chat-panel__header">
         <div
           className={`chat-panel__heading${dock === 'float' && !compact ? ' is-draggable' : ''}`}

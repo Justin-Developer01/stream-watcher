@@ -216,7 +216,52 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
           </div>
         )}
 
-        <p className="theme-label">Chat</p>
+        <p className="theme-label">Window</p>
+        <label className="theme-toggle">
+          <input
+            type="checkbox"
+            checked={appearance.seeDesktop}
+            onChange={(event) => {
+              const seeDesktop = event.target.checked
+              patch({
+                seeDesktop,
+                overlayOpacity: seeDesktop ? 0 : appearance.overlayOpacity === 0 ? 40 : appearance.overlayOpacity,
+              })
+            }}
+          />
+          See desktop behind app.
+        </label>
+        <p className="hint">
+          Empty stage shows the desktop. The frosted top bar, stream tiles, and chat stay solid. Windows may need a
+          relaunch if the desktop does not show through after toggling.
+        </p>
+
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            setImageError(null)
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
+            setPreviewUrl(null)
+            onChange(DEFAULT_APPEARANCE)
+          }}
+        >
+          Reset
+        </button>
+      </div>
+    </section>
+  )
+}
+
+export function ChatTypographySettings({ appearance, onChange }: Props) {
+  const patch = (partial: Partial<AppearanceTheme>) => {
+    onChange({ ...appearance, ...partial })
+  }
+
+  return (
+    <section className="popover-section">
+      <h2>Chat</h2>
+      <div className="appearance-panel">
         <p className="theme-label">Font</p>
         <div className="preset-row" role="group" aria-label="Font">
           {(Object.keys(CHAT_FONTS) as ChatFont[]).map((font) => (
@@ -243,19 +288,7 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
             </button>
           ))}
         </div>
-
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => {
-            setImageError(null)
-            if (previewUrl) URL.revokeObjectURL(previewUrl)
-            setPreviewUrl(null)
-            onChange(DEFAULT_APPEARANCE)
-          }}
-        >
-          Reset
-        </button>
+        <p className="hint">Applies to chat lines and the composer. An open chat drawer updates live.</p>
       </div>
     </section>
   )
