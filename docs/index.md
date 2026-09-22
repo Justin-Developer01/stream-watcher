@@ -13,7 +13,7 @@ Windows desktop app for watching several Twitch streams at once. Download the EX
 1. Open the latest [GitHub Release](https://github.com/Justin-Developer01/stream-watcher/releases).
 2. Download **Stream Watcher Setup** (installer) or **Portable** (just run).
 3. Windows SmartScreen may warn because the build is unsigned. **More info → Run anyway**.
-4. You land on a thin chrome bar. Four short tips appear once (Focus mode, chat, Lock, Dock back).
+4. You land on a thin chrome bar. The main window is frameless (no OS title bar) — drag the bar to move. Four short tips appear once (Focus mode, chat, Lock, Dock back).
 
 In the app, **Settings → Help** is the short guide. Full docs links sit on that tab and under Advanced.
 
@@ -41,6 +41,8 @@ Then, for another monitor: park on another monitor → **Lock window (click-thro
 | Lock the UI | **Lock window (click-through)** after See desktop, when you need to click the desk. |
 | Settings / Help | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc / X closes. |
 | Chrome side | Settings → Appearance → **Chrome: Top \| Left** (Top default). |
+| Ghost overlay | Settings → Appearance → **Ghost overlay**. Auto-hides the thin bar until the edge or Pin. |
+| Quit | Settings footer **Exit**, or **Quit application** (Ctrl+Q). |
 | Check for Updates | Settings → **Updates** |
 | See the desktop | Settings → Appearance → **See desktop behind app.** |
 | Save CPU | Performance gauge on the thin bar. Other tiles show **paused / low**. |

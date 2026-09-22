@@ -20,4 +20,10 @@ export const UI = {
   onAnotherMonitor: 'On another monitor',
   dockAllPopouts: 'Dock all pop-outs back',
   layoutTemplates: 'Layout templates',
+  ghostOverlay: 'Ghost overlay',
+  ghostHint:
+    'Auto-hide the thin bar until you move to the edge (or use Pin). Works with See desktop and Lock window.',
+  toggleChrome: 'Toggle chrome',
+  quitApplication: 'Quit application',
+  exit: 'Exit',
 } as const

@@ -18,7 +18,7 @@ import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { MISSING_TWITCH_CLIENT_ID_ERROR } from './lib/env'
 
 const FULLSCREEN_IDLE_MS = 2400
-const SETTINGS_ALLOWED_HOTKEYS = ['openSettings'] as const
+const SETTINGS_ALLOWED_HOTKEYS = ['openSettings', 'quitApp'] as const
 
 function MainApp() {
   const {
@@ -203,6 +203,14 @@ function MainApp() {
     setSettingsOpen(true)
   }, [])
 
+  const quitApp = useCallback(() => {
+    if (window.streamWatcher?.quitApp) {
+      void window.streamWatcher.quitApp()
+      return
+    }
+    window.close()
+  }, [])
+
   useEffect(() => {
     if (error === MISSING_TWITCH_CLIENT_ID_ERROR) {
       openSettings('advanced')
@@ -226,10 +234,13 @@ function MainApp() {
       cycleFocus,
       switchFocus,
       muteAll,
+      toggleChrome: () => setChromePinned((value) => !value),
+      quitApp,
     }),
     [
       appearance.seeDesktop,
       focusedId,
+      quitApp,
       setWindowLocked,
       toggleChatDrawer,
       toggleFocusMode,
@@ -247,7 +258,8 @@ function MainApp() {
   })
 
   useEffect(() => {
-    if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned || settingsOpen) {
+    const autoHideChrome = isFullscreen || appearance.ghostOverlay
+    if (!autoHideChrome || menuOpen || chatSidebarOpen || chromePinned || settingsOpen) {
       setChromeHidden(false)
       return
     }
@@ -277,7 +289,15 @@ function MainApp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('keydown', onKey)
     }
-  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen, settingsOpen, appearance.chrome])
+  }, [
+    appearance.chrome,
+    appearance.ghostOverlay,
+    chromePinned,
+    isFullscreen,
+    menuOpen,
+    chatSidebarOpen,
+    settingsOpen,
+  ])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -458,6 +478,7 @@ function MainApp() {
           onCheckForUpdates={() => void updater.check()}
           onDownloadUpdate={() => void updater.download()}
           onInstallUpdate={() => void updater.install()}
+          onQuit={quitApp}
         />
       )}
       <FirstRunTips hidden={settingsOpen} />

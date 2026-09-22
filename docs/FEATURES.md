@@ -10,7 +10,7 @@ Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 - Save channels from a tile star for later.
 - **Focus mode** — hero ~72% / bottom strip ~28%. Click a strip tile to promote it. **Switch Focus** promotes the next strip tile.
 - **Layout templates** — thin-bar popover. **+** saves the current channels / focus / chat placement; per-row delete removes one. Local persist.
-- Fullscreen from the chrome (F11 by default). The bar can pin or auto-hide. Appearance → **Chrome: Top | Left** (Top default).
+- The main window is **frameless** (no OS title bar). Drag the thin bar to move it. Fullscreen from the chrome (F11 by default). The bar can pin or auto-hide in fullscreen, or with **Ghost overlay**. Appearance → **Chrome: Top | Left** (Top default).
 
 ## Chat (in-app drawer)
 - **Open chat** / **Open #channel chat** slides a drawer that **pushes** the grid (Slide right / Slide left / Dock bottom) or **Float**. This stays in the main window.
@@ -39,8 +39,9 @@ Settings modal → **Appearance**
 - Presets: Dark / Dim / Light
 - Colors: Accent, Surface, Text
 - Background: Color or Image + overlay opacity
-- **Chrome: Top | Left** (Top default). Left is the same ~42px icon stack, not a wide sidebar.
+- **Chrome: Top | Left** (Top default). Left is the same ~42px icon stack, not a wide sidebar. Ghost does not change this.
 - **Window → See desktop behind app.** Empty stage shows the desktop. Chrome, tiles, and chat stay solid. Twitch embeds are not transparent.
+- **Window → Ghost overlay** (off by default). Auto-hides the thin bar until you move to the edge (or use Pin / Toggle chrome). Works with See desktop and Lock window. Does **not** toggle frameless — the main window is always frameless.
 - Reset restores Dark.
 
 ## Chat type
@@ -56,13 +57,16 @@ With See desktop on, empty-stage clicks pass through to the desktop. **Lock wind
 With several streams open, turn on Performance mode (gauge on the thin bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU. Frosted glass blur is eased so the thin bar stays cheap to draw.
 
 ## Hotkeys
-Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, plus Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus.
+Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application** (Ctrl+Q), plus Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus.
+
+## Quit
+The main window has no OS close box. **Settings → Exit** (footer) or **Quit application** (Ctrl+Q, remappable) quits the app.
 
 ## Updates
 Settings → **Updates**. Checks GitHub Releases, including pre-releases. NSIS Setup can install and restart. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.
 
 ## Help
-Settings → **Help**. Short in-app panel (add streams, Focus mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **Lock window (click-through)**, Settings, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
+Settings → **Help**. Short in-app panel (add streams, Focus mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **Lock window (click-through)**, Settings, **Ghost overlay**, **Exit** / **Quit application**, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
 
 ## First run
 No wizard. Four dismissible tips once: Focus mode, Open chat vs Pop out chat, Lock window (click-through), Dock back.

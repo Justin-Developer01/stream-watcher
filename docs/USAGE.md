@@ -14,14 +14,16 @@ Start here if you just downloaded the Windows EXE. The same pages open from **Se
 8. [Layout templates](#layout-templates)
 9. [Settings](#settings)
 10. [See desktop + Lock window (click-through)](#see-desktop--lock-window-click-through)
-11. [Performance Mode](#performance-mode)
-12. [Check for Updates](#check-for-updates)
+11. [Ghost overlay](#ghost-overlay)
+12. [Quit](#quit)
+13. [Performance Mode](#performance-mode)
+14. [Check for Updates](#check-for-updates)
 
 ## Install (Windows)
 
 1. Download **Stream Watcher Setup** or **Portable** from a [GitHub Release](https://github.com/Justin-Developer01/stream-watcher/releases).
 2. Open the app. SmartScreen may warn because the build is unsigned — **More info → Run anyway**.
-3. You land on the thin top bar. There is no setup wizard.
+3. You land on the thin top bar. There is no setup wizard. The main window is **frameless** (no OS title bar) — drag the thin bar (Top or Left) to move it.
 
 OAuth redirect used by Login to Twitch: `http://localhost:5173/oauth/callback`.
 
@@ -119,12 +121,14 @@ The gear opens a frosted modal (~560×480). **Esc** or **X** closes it. Left tab
 
 | Tab | What it holds |
 |---|---|
-| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left** (Top default), **See desktop behind app.** |
+| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default) |
 | Chat | Font (System / IBM Plex Sans / Inter / Mono) and Size (12 / 13 / 14 / 16) |
-| Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**. Reset defaults. |
+| Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
 | Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |
 | Help | Short in-app guide + Show tips + full docs links |
+
+**Exit** in the Settings footer quits the app (needed because the main window has no OS close button).
 
 ## See desktop + Lock window (click-through)
 
@@ -133,6 +137,14 @@ Turn on **See desktop behind app** to show the wallpaper through empty stage. St
 Empty areas then **click through** to the desktop. Use **Lock window (click-through)** on the top bar when you need to click near gaps. Tooltips: **Lock window (click-through)** / **Unlock click-through**. If See desktop is off, the lock icon tooltip is **Lock window (enable See desktop behind app first)**.
 
 Windows may need a relaunch if the desktop does not show through after the first toggle.
+
+## Ghost overlay
+
+**Settings → Appearance → Ghost overlay** is off by default. It auto-hides the thin bar until you move to the edge (or use **Pin** / **Toggle chrome**). It works with **See desktop behind app.** and **Lock window (click-through)**. Ghost does **not** change the icon stack or the window frame — the main window is always frameless. **Chrome: Top | Left** stays a separate control.
+
+## Quit
+
+The main window has no OS caption or close box. Use **Settings → Exit** or the **Quit application** hotkey (**Ctrl+Q**, remappable in Settings → Hotkeys).
 
 ## Performance Mode
 

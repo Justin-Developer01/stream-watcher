@@ -15,6 +15,7 @@ import {
   type BackgroundMode,
   type ChatFont,
 } from '../lib/theme'
+import { UI } from '../lib/uiLabels'
 
 type Props = {
   appearance: AppearanceTheme
@@ -243,6 +244,15 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
           Empty stage shows the desktop. The frosted {appearance.chrome === 'left' ? 'left bar' : 'top bar'}, stream
           tiles, and chat stay solid. Windows may need a relaunch if the desktop does not show through after toggling.
         </p>
+        <label className="theme-toggle">
+          <input
+            type="checkbox"
+            checked={appearance.ghostOverlay}
+            onChange={(event) => patch({ ghostOverlay: event.target.checked })}
+          />
+          {UI.ghostOverlay}
+        </label>
+        <p className="hint">{UI.ghostHint}</p>
 
         <button
           type="button"

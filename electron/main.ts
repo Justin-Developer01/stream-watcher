@@ -67,6 +67,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     title: 'Stream Watcher',
+    frame: false,
     transparent: true,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,
@@ -370,6 +371,10 @@ app.whenReady().then(() => {
       return
     }
     mainWindow.setIgnoreMouseEvents(false)
+  })
+
+  ipcMain.handle('app:quit', () => {
+    app.quit()
   })
 
   ipcMain.handle('chat:open-popout', (_event, channel: string) => {

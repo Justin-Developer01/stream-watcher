@@ -219,6 +219,19 @@ html.see-desktop .app-shell::after {
   color: var(--text);
   z-index: 50;
   transition: transform 0.2s ease, opacity 0.2s ease;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.topbar button,
+.topbar input,
+.topbar a,
+.topbar .icon-btn,
+.topbar .topbar-menu,
+.topbar .popover,
+.topbar [data-hit] {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 .topbar--hidden {
@@ -848,6 +861,24 @@ html.chrome-left .popover--title {
 
 .settings-modal__panel .popover-section h2 {
   display: none;
+}
+
+.settings-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.settings-exit {
+  color: var(--muted);
+}
+
+.settings-exit:hover:not(:disabled) {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .hotkey-list {

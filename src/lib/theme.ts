@@ -13,6 +13,7 @@ export type AppearanceTheme = {
   backgroundImage: string | null
   overlayOpacity: number
   seeDesktop: boolean
+  ghostOverlay: boolean
   chatFont: ChatFont
   chatFontSize: number
   chrome: ChromePosition
@@ -73,6 +74,7 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   backgroundImage: null,
   overlayOpacity: 40,
   seeDesktop: false,
+  ghostOverlay: false,
   chatFont: 'system',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
   chrome: 'top',
@@ -146,6 +148,7 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     backgroundImage: current?.backgroundImage ?? null,
     overlayOpacity: current?.overlayOpacity ?? DEFAULT_APPEARANCE.overlayOpacity,
     seeDesktop: current?.seeDesktop ?? DEFAULT_APPEARANCE.seeDesktop,
+    ghostOverlay: current?.ghostOverlay ?? DEFAULT_APPEARANCE.ghostOverlay,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
     chrome: current?.chrome ?? DEFAULT_APPEARANCE.chrome,
@@ -176,6 +179,7 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     backgroundImage,
     overlayOpacity: clampOpacity(raw?.overlayOpacity),
     seeDesktop: raw?.seeDesktop === true,
+    ghostOverlay: raw?.ghostOverlay === true,
     chatFont: normalizeChatFont(raw?.chatFont),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
     chrome: raw?.chrome === 'left' ? 'left' : 'top',
@@ -213,6 +217,7 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   root.style.setProperty('--muted', muted)
   root.style.setProperty('--border', border)
   root.classList.toggle('see-desktop', seeDesktop)
+  root.classList.toggle('ghost-overlay', windowChrome && theme.ghostOverlay)
   root.classList.toggle('chrome-left', theme.chrome === 'left')
   root.style.setProperty('--bg', seeDesktop ? 'transparent' : theme.backgroundColor)
   root.style.setProperty('--bar-scrim', scrim)

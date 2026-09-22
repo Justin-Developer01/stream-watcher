@@ -31,7 +31,7 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: UI.settings,
-    body: `Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Appearance → Chrome: Top | Left. ${UI.layoutTemplates} and ${UI.dockAllPopouts} live on the thin bar.`,
+    body: `Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Appearance → Chrome: Top | Left. ${UI.ghostOverlay} auto-hides the thin bar (Pin or the edge brings it back). ${UI.layoutTemplates} and ${UI.dockAllPopouts} live on the thin bar. ${UI.exit} in the footer quits; ${UI.quitApplication} is Ctrl+Q (remappable).`,
   },
 ]
 
@@ -40,8 +40,8 @@ export function HelpGuide({ onCloseSettings }: Props) {
     <section className="popover-section help-guide">
       <h2>Help</h2>
       <p className="hint">
-        Add a channel → {UI.loginToTwitch} → {UI.focusMode}. Then park on another monitor → {UI.lockWindow} when you
-        need the UI → {UI.dockBack} to the main desk.
+        Add a channel → {UI.loginToTwitch} → {UI.focusMode}. The main window is frameless — drag the thin bar. Then
+        park on another monitor → {UI.lockWindow} when you need the UI → {UI.dockBack} to the main desk.
       </p>
       <ol className="help-guide__steps">
         {STEPS.map((step) => (

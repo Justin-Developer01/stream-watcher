@@ -58,6 +58,7 @@ const api = {
     ipcRenderer.invoke('window:set-transparent', enabled, color) as Promise<void>,
   setIgnoreMouseEvents: (ignore: boolean) =>
     ipcRenderer.invoke('window:set-ignore-mouse', ignore) as Promise<void>,
+  quitApp: () => ipcRenderer.invoke('app:quit') as Promise<void>,
   onFullscreenChange: (callback: (value: boolean) => void) =>
     listen('window:fullscreen-changed', callback),
   onTwitchSessionUpdated: (callback: () => void) => listen('twitch-session-updated', callback),
