@@ -7,13 +7,14 @@ Desktop multi-stream Twitch viewer. The **primary “just works” path is the W
 You do **not** need Node, Git, or `npm install`.
 
 1. Get the unsigned installer from a GitHub Actions artifact or a Release:
-   - **Stream Watcher Setup 1.0.1-pre.2.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
-   - **Stream Watcher Portable 1.0.1-pre.2.exe** — no install, just run
+   - **Stream Watcher Setup 1.0.1-pre.3.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
+   - **Stream Watcher Portable 1.0.1-pre.3.exe** — no install, just run
 2. Open **Stream Watcher**. You land on the thin top-bar shell — no wizard. A one-time toast points at **Login to Twitch**; dismiss it and it does not come back.
 3. Click the title to add Twitch channels.
 4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Release builds bake in the public Client ID, so this is just the one button. Redirect URL: `http://localhost:5173/oauth/callback`.
 5. If that flow only half-works, Settings has **Reconnect chat** and **Refresh Prime session**. The Client ID field is under **Settings → Developer**.
 6. **Check for Updates** is in **Settings** (gear). It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
+7. **Theme** is also in Settings → Appearance: accent, bar, surface, background color, or a local background image (cover/contain). Defaults stay the current dark look.
 
 Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added. In-app updates use the same unsigned GitHub assets, so SmartScreen can also appear when installing an update.
 
@@ -28,6 +29,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - Fullscreen with optional pinned / auto-hiding chrome
 - **Login to Twitch** — one top-bar control for Prime + chat OAuth (no Client ID field on first run)
 - **Check for Updates** — in Settings; GitHub Releases (pre-releases included) for the installed Setup app
+- **Theme** — Settings → Appearance. Accent / bar / surface colors plus a solid background or local image. Frosted top bar stays readable.
 - First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login to Twitch**. Dismiss it and it does not return. No setup wizard.
 
 ## Browser vs desktop
@@ -78,7 +80,7 @@ npm run dist
 # same as: npm run build:win
 ```
 
-electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.2.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.2.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
+electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.3.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.3.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
 
 `npm run dist` uses `--publish never` so CI does not need a GitHub token for electron-builder. GitHub Actions on `windows-latest` uploads the `stream-watcher-windows` artifact; pushing a `v*` tag attaches those EXEs **and** `latest.yml` to a GitHub Release so **Check for Updates** can find them. Pre-release tags (`pre` / `rc`) are marked as GitHub pre-releases; the app still checks them.
 
@@ -91,6 +93,7 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 - **Open chat on another monitor** pops out a dedicated Electron window (desktop). In the browser the icon stays; hover/click says **Desktop app only**.
 - **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Developer** (hidden when the ID is baked into the build).
 - **Check for Updates** lives in Settings (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
+- **Theme** is Settings → Appearance → Theme. Change accent / bar / surface / background color, or pick a local background image (cover or contain). Reset theme restores the default dark look.
 - **F11** fullscreen, **Escape** exits; pin the bar if you do not want it to auto-hide
 
 ## Scripts

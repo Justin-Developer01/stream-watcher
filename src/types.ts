@@ -1,4 +1,7 @@
 import type { Layout } from 'react-grid-layout'
+import type { AppearanceTheme } from './lib/theme'
+
+export type { AppearanceTheme }
 
 export type StreamItem = {
   id: string
@@ -70,6 +73,7 @@ export type PersistedState = {
   chatFloat: ChatFloatPosition
   layoutMode?: LayoutMode
   focusMode?: boolean
+  appearance?: AppearanceTheme
 }
 
 export const DEFAULT_LAYOUT_COLS = 12

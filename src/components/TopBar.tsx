@@ -12,7 +12,8 @@ import {
   SquareArrowOutUpRight,
   X,
 } from 'lucide-react'
-import type { LayoutMode, SavedStream, UpdaterStatus } from '../types'
+import type { AppearanceTheme, LayoutMode, SavedStream, UpdaterStatus } from '../types'
+import { AppearanceSettings } from './AppearanceSettings'
 import { IconButton } from './IconButton'
 import { MISSING_TWITCH_CLIENT_ID_ERROR, TWITCH_OAUTH_REDIRECT } from '../lib/env'
 
@@ -54,6 +55,8 @@ type Props = {
   onCheckForUpdates: () => void
   onDownloadUpdate: () => void
   onInstallUpdate: () => void
+  appearance: AppearanceTheme
+  onAppearanceChange: (theme: AppearanceTheme) => void
   onMenuOpenChange?: (open: boolean) => void
 }
 
@@ -134,6 +137,8 @@ export function TopBar({
   onCheckForUpdates,
   onDownloadUpdate,
   onInstallUpdate,
+  appearance,
+  onAppearanceChange,
   onMenuOpenChange,
 }: Props) {
   const [openMenu, setOpenMenu] = useState<MenuId>(null)
@@ -478,6 +483,7 @@ export function TopBar({
               {authError && <p className="field-error">{authError}</p>}
             </div>
           </section>
+          <AppearanceSettings appearance={appearance} onChange={onAppearanceChange} />
           <section className="popover-section">
             <h2>Updates</h2>
             <p className="hint">

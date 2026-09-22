@@ -9,6 +9,7 @@ import {
   saveState,
 } from '../lib/storage'
 import { hasBuiltInTwitchClientId, resolveTwitchClientId } from '../lib/env'
+import { applyAppearance, normalizeAppearance, type AppearanceTheme } from '../lib/theme'
 import type { ChatDock, ChatFloatPosition, LayoutMode, SavedStream, StreamItem } from '../types'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
@@ -37,6 +38,7 @@ export function useStreams() {
         chatFloat: saved.chatFloat ?? DEFAULT_CHAT_FLOAT,
         layoutMode: saved.layoutMode ?? (saved.streams.length <= 1 ? '1x1' : saved.streams.length === 2 ? '1x2' : '2x2'),
         focusMode: saved.focusMode ?? false,
+        appearance: normalizeAppearance(saved.appearance),
       }
     }
     return {
@@ -51,6 +53,7 @@ export function useStreams() {
       chatFloat: saved?.chatFloat ?? DEFAULT_CHAT_FLOAT,
       layoutMode: saved?.layoutMode ?? '1x2',
       focusMode: false,
+      appearance: normalizeAppearance(saved?.appearance),
     }
   }, [])
 
@@ -68,9 +71,13 @@ export function useStreams() {
   const [isDragging, setIsDragging] = useState(false)
   const [layoutMode, setLayoutMode] = useState<LayoutMode>(initial.layoutMode)
   const [focusMode, setFocusMode] = useState(initial.focusMode)
+  const [appearance, setAppearanceState] = useState<AppearanceTheme>(() => {
+    applyAppearance(initial.appearance)
+    return initial.appearance
+  })
 
   useEffect(() => {
-    saveState({
+    const ok = saveState({
       streams,
       layout,
       focusedId,
@@ -83,7 +90,13 @@ export function useStreams() {
       chatFloat,
       layoutMode,
       focusMode,
+      appearance,
     })
+    if (!ok && appearance.backgroundImage) {
+      const next = { ...appearance, backgroundImage: null }
+      applyAppearance(next)
+      setAppearanceState(next)
+    }
   }, [
     streams,
     layout,
@@ -96,7 +109,18 @@ export function useStreams() {
     chatFloat,
     layoutMode,
     focusMode,
+    appearance,
   ])
+
+  useEffect(() => {
+    applyAppearance(appearance)
+  }, [appearance])
+
+  const setAppearance = useCallback((next: AppearanceTheme) => {
+    const resolved = normalizeAppearance(next)
+    applyAppearance(resolved)
+    setAppearanceState(resolved)
+  }, [])
 
   const addStream = useCallback((raw: string) => {
     const channel = normalizeChannel(raw)
@@ -241,5 +265,7 @@ export function useStreams() {
     focusStream,
     toggleMute,
     applyPreset,
+    appearance,
+    setAppearance,
   }
 }

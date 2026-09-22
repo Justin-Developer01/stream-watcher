@@ -6,6 +6,8 @@
   --bg-elevated: #10141b;
   --bg-panel: #0c1016;
   --bg-bar: #0b0e13;
+  --bg-image: none;
+  --bg-fit: cover;
   --border: #1b2430;
   --text: #e6edf5;
   --muted: #7d8b9c;
@@ -136,7 +138,11 @@ code {
   max-height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--bg-image);
+  background-size: var(--bg-fit);
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .overflow-hidden {
@@ -169,10 +175,10 @@ code {
   justify-content: space-between;
   gap: 4px;
   padding: 0 8px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--bg-bar) 58%, rgba(0, 0, 0, 0.48));
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
   z-index: 50;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -358,10 +364,12 @@ code {
   top: calc(100% + 8px);
   left: 0;
   width: min(320px, 86vw);
+  max-height: min(72vh, 38rem);
+  overflow: auto;
   padding: 0.75rem;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--bg-panel) 96%, #000);
+  background: color-mix(in srgb, var(--bg-panel) 92%, #000 8%);
   box-shadow: var(--shadow);
   z-index: 80;
 }
@@ -560,6 +568,59 @@ code {
 .developer-panel {
   display: grid;
   gap: 0.3rem;
+}
+
+.appearance-panel {
+  margin-top: 0.2rem;
+}
+
+.theme-color-row {
+  display: grid;
+  grid-template-columns: 1fr 32px minmax(5.2rem, 6.4rem);
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.theme-color-row label {
+  margin: 0;
+}
+
+.theme-color-row input[type='color'] {
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: #0a1017;
+  cursor: pointer;
+}
+
+.theme-hex {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+}
+
+.theme-image-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.theme-image-row__label {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.theme-fit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.theme-fit select {
+  width: auto;
+  min-width: 7rem;
 }
 
 .hint,

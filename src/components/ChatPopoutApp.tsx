@@ -4,6 +4,7 @@ import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { loadState } from '../lib/storage'
 import { resolveTwitchClientId } from '../lib/env'
+import { applyAppearance, normalizeAppearance } from '../lib/theme'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
 export function ChatPopoutApp() {
@@ -13,6 +14,10 @@ export function ChatPopoutApp() {
   }, [])
   const saved = useMemo(() => loadState(), [])
   const clientId = resolveTwitchClientId(saved?.clientId)
+
+  useEffect(() => {
+    applyAppearance(normalizeAppearance(saved?.appearance))
+  }, [saved])
   const channels = channel ? [channel] : []
 
   useEffect(() => {

@@ -45,6 +45,8 @@ function MainApp() {
     focusStream,
     toggleMute,
     applyPreset,
+    appearance,
+    setAppearance,
   } = useStreams()
 
   const { auth, busy, error, loginToTwitch, reconnectChat, refreshPrimeSession, logout, isLoggedIn } =
@@ -258,6 +260,8 @@ function MainApp() {
         onCheckForUpdates={() => void updater.check()}
         onDownloadUpdate={() => void updater.download()}
         onInstallUpdate={() => void updater.install()}
+        appearance={appearance}
+        onAppearanceChange={setAppearance}
         onMenuOpenChange={setMenuOpen}
       />
 

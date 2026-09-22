@@ -17,7 +17,12 @@ export function loadState(): PersistedState | null {
 }
 
 export function saveState(state: PersistedState) {
-  localStorage.setItem(STATE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(state))
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function loadAuth(): AuthState {
