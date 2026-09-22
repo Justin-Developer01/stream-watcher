@@ -9,6 +9,14 @@ export type TwitchOAuthResult = {
 
 export type PopoutKind = 'chat' | 'stream'
 
+function listen<T extends unknown[]>(channel: string, callback: (...args: T) => void) {
+  const handler = (_event: unknown, ...args: T) => callback(...args)
+  ipcRenderer.on(channel, handler)
+  return () => {
+    ipcRenderer.removeListener(channel, handler)
+  }
+}
+
 const api = {
   openTwitchLogin: () => ipcRenderer.invoke('twitch:open-login') as Promise<void>,
   startTwitchOAuth: (payload: {
@@ -33,43 +41,16 @@ const api = {
   downloadUpdate: () => ipcRenderer.invoke('updater:download') as Promise<UpdaterStatus>,
   installUpdate: () => ipcRenderer.invoke('updater:install') as Promise<void>,
   getUpdaterStatus: () => ipcRenderer.invoke('updater:status') as Promise<UpdaterStatus>,
-  onUpdaterStatus: (callback: (status: UpdaterStatus) => void) => {
-    const handler = (_event: unknown, status: UpdaterStatus) => callback(status)
-    ipcRenderer.on('updater:status', handler)
-    return () => {
-      ipcRenderer.removeListener('updater:status', handler)
-    }
-  },
-  onChatPopoutOpened: (callback: (channel: string) => void) => {
-    const handler = (_event: unknown, channel: string) => callback(channel)
-    ipcRenderer.on('chat:popout-opened', handler)
-    return () => ipcRenderer.removeListener('chat:popout-opened', handler)
-  },
-  onChatPopoutClosed: (callback: (channel: string) => void) => {
-    const handler = (_event: unknown, channel: string) => callback(channel)
-    ipcRenderer.on('chat:popout-closed', handler)
-    return () => ipcRenderer.removeListener('chat:popout-closed', handler)
-  },
-  onChatPopoutDocked: (callback: (channel: string) => void) => {
-    const handler = (_event: unknown, channel: string) => callback(channel)
-    ipcRenderer.on('chat:popout-docked', handler)
-    return () => ipcRenderer.removeListener('chat:popout-docked', handler)
-  },
-  onStreamPopoutOpened: (callback: (channel: string) => void) => {
-    const handler = (_event: unknown, channel: string) => callback(channel)
-    ipcRenderer.on('stream:popout-opened', handler)
-    return () => ipcRenderer.removeListener('stream:popout-opened', handler)
-  },
-  onStreamPopoutClosed: (callback: (channel: string) => void) => {
-    const handler = (_event: unknown, channel: string) => callback(channel)
-    ipcRenderer.on('stream:popout-closed', handler)
-    return () => ipcRenderer.removeListener('stream:popout-closed', handler)
-  },
-  onStreamPopoutDocked: (callback: (channel: string) => void) => {
-    const handler = (_event: unknown, channel: string) => callback(channel)
-    ipcRenderer.on('stream:popout-docked', handler)
-    return () => ipcRenderer.removeListener('stream:popout-docked', handler)
-  },
+  onUpdaterStatus: (callback: (status: UpdaterStatus) => void) => listen('updater:status', callback),
+  onChatPopoutOpened: (callback: (channel: string) => void) => listen('chat:popout-opened', callback),
+  onChatPopoutClosed: (callback: (channel: string) => void) => listen('chat:popout-closed', callback),
+  onChatPopoutDocked: (callback: (channel: string) => void) => listen('chat:popout-docked', callback),
+  onStreamPopoutOpened: (callback: (channel: string) => void) =>
+    listen('stream:popout-opened', callback),
+  onStreamPopoutClosed: (callback: (channel: string) => void) =>
+    listen('stream:popout-closed', callback),
+  onStreamPopoutDocked: (callback: (channel: string) => void) =>
+    listen('stream:popout-docked', callback),
   setFullscreen: (value: boolean) =>
     ipcRenderer.invoke('window:set-fullscreen', value) as Promise<void>,
   isFullscreen: () => ipcRenderer.invoke('window:is-fullscreen') as Promise<boolean>,
@@ -77,16 +58,9 @@ const api = {
     ipcRenderer.invoke('window:set-transparent', enabled, color) as Promise<void>,
   setIgnoreMouseEvents: (ignore: boolean) =>
     ipcRenderer.invoke('window:set-ignore-mouse', ignore) as Promise<void>,
-  onFullscreenChange: (callback: (value: boolean) => void) => {
-    const handler = (_event: unknown, value: boolean) => callback(value)
-    ipcRenderer.on('window:fullscreen-changed', handler)
-    return () => ipcRenderer.removeListener('window:fullscreen-changed', handler)
-  },
-  onTwitchSessionUpdated: (callback: () => void) => {
-    const handler = () => callback()
-    ipcRenderer.on('twitch-session-updated', handler)
-    return () => ipcRenderer.removeListener('twitch-session-updated', handler)
-  },
+  onFullscreenChange: (callback: (value: boolean) => void) =>
+    listen('window:fullscreen-changed', callback),
+  onTwitchSessionUpdated: (callback: () => void) => listen('twitch-session-updated', callback),
 }
 
 contextBridge.exposeInMainWorld('streamWatcher', api)
