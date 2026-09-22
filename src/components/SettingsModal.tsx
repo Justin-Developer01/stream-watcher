@@ -22,7 +22,7 @@ type Props = {
   onTabChange: (tab: SettingsTab) => void
   onClose: () => void
   appearance: AppearanceTheme
-  onAppearanceChange: (theme: AppearanceTheme) => void
+  onAppearanceChange: (theme: AppearanceTheme | ((prev: AppearanceTheme) => AppearanceTheme)) => void
   hotkeys: Record<HotkeyId, HotkeyChord>
   onHotkeysChange: (hotkeys: Record<HotkeyId, HotkeyChord>) => void
   clientId: string

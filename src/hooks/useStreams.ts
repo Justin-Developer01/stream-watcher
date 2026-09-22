@@ -132,10 +132,12 @@ export function useStreams() {
     applyAppearance(appearance)
   }, [appearance])
 
-  const setAppearance = useCallback((next: AppearanceTheme) => {
-    const resolved = normalizeAppearance(next)
-    applyAppearance(resolved)
-    setAppearanceState(resolved)
+  const setAppearance = useCallback((next: AppearanceTheme | ((prev: AppearanceTheme) => AppearanceTheme)) => {
+    setAppearanceState((prev) => {
+      const resolved = normalizeAppearance(typeof next === 'function' ? next(prev) : next)
+      applyAppearance(resolved)
+      return resolved
+    })
   }, [])
 
   const addStream = useCallback((raw: string) => {

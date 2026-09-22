@@ -18,7 +18,7 @@ import {
 
 type Props = {
   appearance: AppearanceTheme
-  onChange: (theme: AppearanceTheme) => void
+  onChange: (theme: AppearanceTheme | ((prev: AppearanceTheme) => AppearanceTheme)) => void
 }
 
 function ColorField({
@@ -80,7 +80,7 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
   const activePreset = matchingPreset(appearance)
 
   const patch = (partial: Partial<AppearanceTheme>) => {
-    onChange({ ...appearance, ...partial })
+    onChange((prev) => ({ ...prev, ...partial }))
   }
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
               className={activePreset === preset ? 'is-active' : ''}
               onClick={() => {
                 setImageError(null)
-                onChange(applyPreset(preset, appearance))
+                onChange((prev) => applyPreset(preset, prev))
               }}
             >
               {preset === 'dark' ? 'Dark' : preset === 'dim' ? 'Dim' : 'Light'}
@@ -249,7 +249,7 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
 
 export function ChatTypographySettings({ appearance, onChange }: Props) {
   const patch = (partial: Partial<AppearanceTheme>) => {
-    onChange({ ...appearance, ...partial })
+    onChange((prev) => ({ ...prev, ...partial }))
   }
 
   return (
