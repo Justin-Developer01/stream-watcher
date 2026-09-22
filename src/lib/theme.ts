@@ -1,6 +1,6 @@
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
-export type ChatFont = 'system' | 'sans' | 'mono' | 'serif'
+export type ChatFont = 'system' | 'plex' | 'inter' | 'mono'
 
 export type AppearanceTheme = {
   preset: AppearancePreset
@@ -17,26 +17,26 @@ export type AppearanceTheme = {
 
 export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
   system: {
-    label: 'System UI',
+    label: 'System',
     stack: 'system-ui, -apple-system, "Segoe UI", sans-serif',
   },
-  sans: {
-    label: 'Sans',
+  plex: {
+    label: 'IBM Plex Sans',
+    stack: '"IBM Plex Sans", sans-serif',
+  },
+  inter: {
+    label: 'Inter',
     stack: 'Inter, "IBM Plex Sans", sans-serif',
   },
   mono: {
     label: 'Mono',
     stack: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
   },
-  serif: {
-    label: 'Serif',
-    stack: 'ui-serif, Georgia, "Times New Roman", serif',
-  },
 }
 
-export const CHAT_FONT_SIZE_MIN = 12
-export const CHAT_FONT_SIZE_MAX = 20
-export const CHAT_FONT_SIZE_DEFAULT = 13
+export const CHAT_FONT_SIZES = [12, 13, 14, 16] as const
+export type ChatFontSize = (typeof CHAT_FONT_SIZES)[number]
+export const CHAT_FONT_SIZE_DEFAULT: ChatFontSize = 13
 
 type PresetColors = Pick<AppearanceTheme, 'preset' | 'accent' | 'surface' | 'text' | 'backgroundColor'>
 
@@ -98,14 +98,26 @@ function clampOpacity(value: unknown): number {
   return Math.min(100, Math.max(0, Math.round(n)))
 }
 
-function clampChatFontSize(value: unknown): number {
+function clampChatFontSize(value: unknown): ChatFontSize {
   const n = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(n)) return CHAT_FONT_SIZE_DEFAULT
-  return Math.min(CHAT_FONT_SIZE_MAX, Math.max(CHAT_FONT_SIZE_MIN, Math.round(n)))
+  let best: ChatFontSize = CHAT_FONT_SIZE_DEFAULT
+  let bestDist = Number.POSITIVE_INFINITY
+  for (const size of CHAT_FONT_SIZES) {
+    const dist = Math.abs(size - n)
+    if (dist < bestDist) {
+      best = size
+      bestDist = dist
+    }
+  }
+  return best
 }
 
 function normalizeChatFont(value: unknown): ChatFont {
-  return value === 'sans' || value === 'mono' || value === 'serif' || value === 'system' ? value : 'system'
+  if (value === 'plex' || value === 'inter' || value === 'mono' || value === 'system') return value
+  if (value === 'sans') return 'inter'
+  if (value === 'serif') return 'system'
+  return 'system'
 }
 
 export function matchingPreset(theme: Pick<AppearanceTheme, 'accent' | 'surface' | 'text' | 'backgroundColor'>): AppearancePreset | null {

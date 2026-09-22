@@ -528,11 +528,6 @@ code {
   margin: 0.25rem 0 0;
 }
 
-.chat-error {
-  font-family: var(--chat-font);
-  font-size: var(--chat-font-size);
-}
-
 .field-success {
   color: var(--accent-2);
   font-size: 0.72rem;
@@ -655,20 +650,6 @@ code {
 .theme-overlay input[type='range'] {
   width: 100%;
   accent-color: var(--accent);
-}
-
-.theme-chat-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
-.theme-chat-row select {
-  width: auto;
-  min-width: 7.5rem;
 }
 
 .hint,
@@ -1237,8 +1218,6 @@ code {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0.4rem;
-  font-family: var(--chat-font);
-  font-size: var(--chat-font-size);
 }
 
 .chat-line {
@@ -1246,8 +1225,8 @@ code {
   grid-template-columns: auto 1fr;
   gap: 0.3rem;
   margin-bottom: 0.28rem;
-  font-family: inherit;
-  font-size: inherit;
+  font-family: var(--chat-font);
+  font-size: var(--chat-font-size);
   word-break: break-word;
 }
 

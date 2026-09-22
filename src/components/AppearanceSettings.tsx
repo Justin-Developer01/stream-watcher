@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   APPEARANCE_PRESETS,
   CHAT_FONTS,
-  CHAT_FONT_SIZE_MAX,
-  CHAT_FONT_SIZE_MIN,
+  CHAT_FONT_SIZES,
   DEFAULT_APPEARANCE,
   applyAppearance,
   applyPreset,
@@ -218,31 +217,32 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
         )}
 
         <p className="theme-label">Chat</p>
-        <label className="theme-chat-row" htmlFor="chat-font">
-          Font
-          <select
-            id="chat-font"
-            value={appearance.chatFont}
-            onChange={(event) => patch({ chatFont: event.target.value as ChatFont })}
-          >
-            {(Object.keys(CHAT_FONTS) as ChatFont[]).map((font) => (
-              <option key={font} value={font}>
-                {CHAT_FONTS[font].label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="theme-overlay" htmlFor="chat-font-size">
-          <span>Size {appearance.chatFontSize}px</span>
-          <input
-            id="chat-font-size"
-            type="range"
-            min={CHAT_FONT_SIZE_MIN}
-            max={CHAT_FONT_SIZE_MAX}
-            value={appearance.chatFontSize}
-            onChange={(event) => patch({ chatFontSize: Number(event.target.value) })}
-          />
-        </label>
+        <p className="theme-label">Font</p>
+        <div className="preset-row" role="group" aria-label="Font">
+          {(Object.keys(CHAT_FONTS) as ChatFont[]).map((font) => (
+            <button
+              key={font}
+              type="button"
+              className={appearance.chatFont === font ? 'is-active' : ''}
+              onClick={() => patch({ chatFont: font })}
+            >
+              {CHAT_FONTS[font].label}
+            </button>
+          ))}
+        </div>
+        <p className="theme-label">Size</p>
+        <div className="preset-row" role="group" aria-label="Size">
+          {CHAT_FONT_SIZES.map((size) => (
+            <button
+              key={size}
+              type="button"
+              className={appearance.chatFontSize === size ? 'is-active' : ''}
+              onClick={() => patch({ chatFontSize: size })}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
 
         <button
           type="button"
