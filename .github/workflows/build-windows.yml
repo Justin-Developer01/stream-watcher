@@ -54,7 +54,7 @@ jobs:
             **Install:** `Stream Watcher Setup *.exe` (one-click NSIS) or run `Stream Watcher Portable *.exe`.
             Open the app — no setup wizard. Use **Login to Twitch** (Prime + chat OAuth) from the top bar. OAuth redirect: `http://localhost:5173/oauth/callback`.
 
-            Docs: `docs/USAGE.md` and `docs/FEATURES.md`.
+            **Docs:** [How to use](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/USAGE.md) · [Features](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/FEATURES.md) · [Docs home](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/index.md). In-app: Settings → Advanced → Help / Docs.
 
             This build includes Focus Mode, Performance Mode, Settings modal (Appearance / Chat / Hotkeys / Updates / Advanced), See desktop behind app, Lock window / click-through, and Chat Font System / IBM Plex Sans / Inter / Mono with Size 12 / 13 / 14 / 16.
 

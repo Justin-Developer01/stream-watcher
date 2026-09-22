@@ -1,5 +1,20 @@
 # Using Stream Watcher
 
+[Home](index.md) · [Features](FEATURES.md)
+
+Start here if you just downloaded the Windows EXE. The same pages open from **Settings → Advanced → Help / Docs**.
+
+1. [Install](#install-windows)
+2. [First run](#first-run)
+3. [Add streams](#add-streams)
+4. [Login to Twitch](#login-to-twitch)
+5. [Focus Mode](#focus-mode)
+6. [Chat](#chat)
+7. [Settings](#settings)
+8. [See desktop + Lock](#see-desktop--lock-window)
+9. [Performance Mode](#performance-mode)
+10. [Check for Updates](#check-for-updates)
+
 ## Install (Windows)
 
 1. Download **Stream Watcher Setup** or **Portable** from a [GitHub Release](https://github.com/Justin-Developer01/stream-watcher/releases).

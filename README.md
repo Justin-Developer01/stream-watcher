@@ -19,7 +19,7 @@ You do **not** need Node, Git, or `npm install`.
 9. **Performance mode** is the gauge icon on the top bar. The focused stream stays full quality and unmuted; other tiles show **paused / low**.
 10. **Multi-monitor** — the main desk stays on the primary display. Pop out chat or a stream tile to another monitor; **Dock back** and optional **Always on top** live on the pop-out.
 
-Full walkthrough: [docs/USAGE.md](docs/USAGE.md). Feature list: [docs/FEATURES.md](docs/FEATURES.md).
+Docs for downloaders: [docs/](docs/index.md) — [How to use](docs/USAGE.md) · [Feature list](docs/FEATURES.md). In-app: **Settings → Advanced → Help / Docs**.
 
 Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added. In-app updates use the same unsigned GitHub assets, so SmartScreen can also appear when installing an update.
 

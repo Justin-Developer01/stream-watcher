@@ -1,11 +1,15 @@
 # Stream Watcher features
 
+[Home](index.md) · [How to use](USAGE.md)
+
 Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 
 ## Watching
 - Add channels from the top-bar title. Layouts: 1, 1×2, 2×2, 1+3. The grid always fills the window (no page scroll).
 - Drag the handle and resize tiles. Disabled in Focus Mode.
+- Save channels from a tile star for later.
 - **Focus Mode** — hero ~72% / bottom strip ~28%. Click a strip tile to promote it.
+- Fullscreen from the top bar (F11 by default). The bar can pin or auto-hide.
 
 ## Chat
 - **Open chat** slides a drawer that **pushes** the grid (left / right / bottom), or float.

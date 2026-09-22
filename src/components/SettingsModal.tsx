@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import type { AppearanceTheme, UpdaterStatus } from '../types'
 import type { HotkeyChord, HotkeyId } from '../lib/hotkeys'
-import { DOCS_USAGE_URL, TWITCH_OAUTH_REDIRECT } from '../lib/env'
+import { DOCS_FEATURES_URL, DOCS_HOME_URL, DOCS_USAGE_URL, TWITCH_OAUTH_REDIRECT } from '../lib/env'
 import { AppearanceSettings, ChatTypographySettings } from './AppearanceSettings'
 import { HotkeysSettings } from './HotkeysSettings'
 import { IconButton } from './IconButton'
@@ -209,8 +209,16 @@ export function SettingsModal({
                   )}
                   {authError && <p className="field-error">{authError}</p>}
                   <p className="hint">
-                    <a href={DOCS_USAGE_URL} target="_blank" rel="noreferrer">
+                    <a href={DOCS_HOME_URL} target="_blank" rel="noreferrer">
                       Help / Docs
+                    </a>
+                    {' · '}
+                    <a href={DOCS_USAGE_URL} target="_blank" rel="noreferrer">
+                      How to use
+                    </a>
+                    {' · '}
+                    <a href={DOCS_FEATURES_URL} target="_blank" rel="noreferrer">
+                      Features
                     </a>
                   </p>
                 </div>

@@ -8,7 +8,9 @@ export const MISSING_TWITCH_CLIENT_ID_ERROR = 'Add a Twitch Client ID in Setting
 
 export const TWITCH_OAUTH_REDIRECT = 'http://localhost:5173/oauth/callback'
 
+export const DOCS_HOME_URL = 'https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/index.md'
 export const DOCS_USAGE_URL = 'https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/USAGE.md'
+export const DOCS_FEATURES_URL = 'https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/FEATURES.md'
 
 export function getBuiltInTwitchClientId() {
   const value = import.meta.env.VITE_TWITCH_CLIENT_ID
