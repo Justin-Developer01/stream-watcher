@@ -1045,6 +1045,29 @@ html.see-desktop .app-shell::after {
   border-radius: 0 0 8px 8px;
 }
 
+.stream-tile__chip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.78);
+  color: var(--text);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.app-shell--performance .topbar,
+.app-shell--performance .settings-modal,
+.app-shell--performance .chat-panel--overlay,
+.app-shell--performance .first-run-tip {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .app-shell--fullscreen .stream-tile {
   border-radius: 4px;
 }

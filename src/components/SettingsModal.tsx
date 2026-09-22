@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import type { AppearanceTheme, UpdaterStatus } from '../types'
 import type { HotkeyChord, HotkeyId } from '../lib/hotkeys'
-import { TWITCH_OAUTH_REDIRECT } from '../lib/env'
+import { DOCS_USAGE_URL, TWITCH_OAUTH_REDIRECT } from '../lib/env'
 import { AppearanceSettings, ChatTypographySettings } from './AppearanceSettings'
 import { HotkeysSettings } from './HotkeysSettings'
 import { IconButton } from './IconButton'
@@ -208,6 +208,11 @@ export function SettingsModal({
                     </button>
                   )}
                   {authError && <p className="field-error">{authError}</p>}
+                  <p className="hint">
+                    <a href={DOCS_USAGE_URL} target="_blank" rel="noreferrer">
+                      Help / Docs
+                    </a>
+                  </p>
                 </div>
               </section>
             )}

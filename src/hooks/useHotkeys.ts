@@ -8,14 +8,19 @@ import {
 
 type Actions = Partial<Record<HotkeyId, () => void>>
 
-export function useHotkeys(hotkeys: Record<HotkeyId, HotkeyChord>, actions: Actions, paused = false) {
+export function useHotkeys(
+  hotkeys: Record<HotkeyId, HotkeyChord>,
+  actions: Actions,
+  options: { paused?: boolean; allowWhenPaused?: readonly HotkeyId[] } = {},
+) {
+  const { paused = false, allowWhenPaused = [] } = options
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (paused && event.code !== 'Escape') return
       if (isEditableTarget(event.target) && event.code !== 'Escape' && event.code !== 'F11') return
 
       for (const [id, chord] of Object.entries(hotkeys) as [HotkeyId, HotkeyChord][]) {
         if (!matchHotkey(event, chord)) continue
+        if (paused && !allowWhenPaused.includes(id)) return
         const action = actions[id]
         if (!action) continue
         event.preventDefault()
@@ -26,5 +31,5 @@ export function useHotkeys(hotkeys: Record<HotkeyId, HotkeyChord>, actions: Acti
 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [actions, hotkeys, paused])
+  }, [actions, allowWhenPaused, hotkeys, paused])
 }

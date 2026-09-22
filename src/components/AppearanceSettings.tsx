@@ -221,13 +221,7 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
           <input
             type="checkbox"
             checked={appearance.seeDesktop}
-            onChange={(event) => {
-              const seeDesktop = event.target.checked
-              patch({
-                seeDesktop,
-                overlayOpacity: seeDesktop ? 0 : appearance.overlayOpacity === 0 ? 40 : appearance.overlayOpacity,
-              })
-            }}
+            onChange={(event) => patch({ seeDesktop: event.target.checked })}
           />
           See desktop behind app.
         </label>

@@ -5,6 +5,16 @@ type Props = {
   channel: string
   muted: boolean
   interactive: boolean
+  paused?: boolean
+}
+
+type TwitchPlayerInstance = {
+  setChannel: (channel: string) => void
+  setMuted: (muted: boolean) => void
+  play: () => void
+  pause: () => void
+  setQuality?: (quality: string) => void
+  destroy?: () => void
 }
 
 declare global {
@@ -19,14 +29,9 @@ declare global {
           parent: string[]
           muted?: boolean
           autoplay?: boolean
+          quality?: string
         },
-      ) => {
-        setChannel: (channel: string) => void
-        setMuted: (muted: boolean) => void
-        play: () => void
-        pause: () => void
-        destroy?: () => void
-      }
+      ) => TwitchPlayerInstance
     }
   }
 }
@@ -57,11 +62,23 @@ function loadTwitchScript() {
   return twitchScriptPromise
 }
 
-export function TwitchPlayer({ channel, muted, interactive }: Props) {
+function applyPlayback(player: TwitchPlayerInstance, paused: boolean) {
+  try {
+    if (paused) {
+      player.setQuality?.('160p')
+      player.pause()
+      return
+    }
+    player.setQuality?.('auto')
+    player.play()
+  } catch {
+    // Embed methods are best-effort; missing quality APIs are fine.
+  }
+}
+
+export function TwitchPlayer({ channel, muted, interactive, paused = false }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<InstanceType<NonNullable<typeof window.Twitch>['Player']> | null>(
-    null,
-  )
+  const playerRef = useRef<TwitchPlayerInstance | null>(null)
   const parent = useMemo(() => getEmbedParent(), [])
 
   useEffect(() => {
@@ -70,28 +87,34 @@ export function TwitchPlayer({ channel, muted, interactive }: Props) {
     void loadTwitchScript().then(() => {
       if (disposed || !containerRef.current || !window.Twitch?.Player) return
 
-      containerRef.current.innerHTML = ''
-      const mount = document.createElement('div')
-      mount.style.width = '100%'
-      mount.style.height = '100%'
-      containerRef.current.appendChild(mount)
+      while (containerRef.current.firstChild) {
+        containerRef.current.removeChild(containerRef.current.firstChild)
+      }
 
-      const player = new window.Twitch.Player(mount, {
+      const player = new window.Twitch.Player(containerRef.current, {
         channel,
         width: '100%',
         height: '100%',
         parent: [parent, 'localhost', '127.0.0.1'],
         muted,
-        autoplay: true,
+        autoplay: !paused,
+        quality: paused ? '160p' : 'auto',
       })
 
       playerRef.current = player
+      applyPlayback(player, paused)
     })
 
     return () => {
       disposed = true
+      const player = playerRef.current
       playerRef.current = null
-      if (containerRef.current) containerRef.current.innerHTML = ''
+      try {
+        player?.pause()
+        player?.destroy?.()
+      } catch {
+        // Twitch may have already torn the iframe down.
+      }
     }
   }, [channel, parent])
 
@@ -99,9 +122,13 @@ export function TwitchPlayer({ channel, muted, interactive }: Props) {
     playerRef.current?.setMuted(muted)
   }, [muted])
 
+  useEffect(() => {
+    if (playerRef.current) applyPlayback(playerRef.current, paused)
+  }, [paused])
+
   return (
     <div
-      className={`twitch-player${interactive ? '' : ' is-blocked'}`}
+      className={`twitch-player${interactive ? '' : ' is-blocked'}${paused ? ' is-paused' : ''}`}
       ref={containerRef}
     />
   )

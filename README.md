@@ -7,8 +7,8 @@ Desktop multi-stream Twitch viewer. The **primary “just works” path is the W
 You do **not** need Node, Git, or `npm install`.
 
 1. Get the unsigned installer from a GitHub Actions artifact or a Release:
-   - **Stream Watcher Setup 1.0.1-pre.6.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
-   - **Stream Watcher Portable 1.0.1-pre.6.exe** — no install, just run
+   - **Stream Watcher Setup 1.0.1-pre.7.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
+   - **Stream Watcher Portable 1.0.1-pre.7.exe** — no install, just run
 2. Open **Stream Watcher**. You land on the thin top-bar shell — no wizard. A one-time toast points at **Login to Twitch**; dismiss it and it does not come back.
 3. Click the title to add Twitch channels.
 4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Release builds bake in the public Client ID, so this is just the one button. Redirect URL: `http://localhost:5173/oauth/callback`.
@@ -16,6 +16,9 @@ You do **not** need Node, Git, or `npm install`.
 6. **Check for Updates** is in **Settings → Updates**. It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Unsigned SmartScreen prompts are expected.
 7. The gear opens a **Settings modal** (Esc / X to close) with left tabs: **Appearance · Chat · Hotkeys · Updates · Advanced**.
 8. **Appearance** has Dark / Dim / Light, Accent / Surface / Text, Color or Image background, and **Window → See desktop behind app.** Chat **Font** (System / IBM Plex Sans / Inter / Mono) + **Size** (12 / 13 / 14 / 16, default 13) live under the **Chat** tab.
+9. **Performance mode** is the gauge icon on the top bar. The focused stream stays full quality and unmuted; other tiles show **paused / low**.
+
+Full walkthrough: [docs/USAGE.md](docs/USAGE.md). Feature list: [docs/FEATURES.md](docs/FEATURES.md).
 
 Windows SmartScreen may warn because the build is **unsigned**. “More info” → “Run anyway” is expected until a code-signing cert is added. In-app updates use the same unsigned GitHub assets, so SmartScreen can also appear when installing an update.
 
@@ -35,6 +38,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - **Chat type** — Settings → Chat. Font chips System / IBM Plex Sans / Inter / Mono and Size 12 / 13 / 14 / 16 (default 13) apply only to `.chat-line` and the composer. An open drawer live-updates.
 - **Click-through** — with See desktop on, empty stage clicks pass through to the desktop. **Lock window** on the top bar freezes that. Unlock to pass through again.
 - **Hotkeys** — remappable chords for Focus Mode, Fullscreen, Toggle chat, Lock window, Open Settings, Add stream, Mute focus. Click a keychip to rebind; Reset defaults.
+- **Performance mode** — top-bar gauge. Focused stream full quality + one unmuted audio; other tiles **paused / low**; glass blur eased.
 - First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login to Twitch**. Dismiss it and it does not return. No setup wizard.
 
 ## Browser vs desktop
@@ -87,7 +91,7 @@ npm run dist
 # same as: npm run build:win
 ```
 
-electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.6.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.6.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
+electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.7.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.7.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
 
 `npm run dist` uses `--publish never` so CI does not need a GitHub token for electron-builder. GitHub Actions on `windows-latest` uploads the `stream-watcher-windows` artifact; pushing a `v*` tag attaches those EXEs **and** `latest.yml` to a GitHub Release so **Check for Updates** can find them. Pre-release tags (`pre` / `rc`) are marked as GitHub pre-releases; the app still checks them.
 

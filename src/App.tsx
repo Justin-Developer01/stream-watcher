@@ -16,6 +16,7 @@ import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { MISSING_TWITCH_CLIENT_ID_ERROR } from './lib/env'
 
 const FULLSCREEN_IDLE_MS = 2400
+const SETTINGS_ALLOWED_HOTKEYS = ['openSettings'] as const
 
 function MainApp() {
   const {
@@ -55,6 +56,8 @@ function MainApp() {
     setWindowLocked,
     hotkeys,
     setHotkeys,
+    performanceMode,
+    setPerformanceMode,
   } = useStreams()
 
   const { auth, busy, error, loginToTwitch, reconnectChat, refreshPrimeSession, logout, isLoggedIn } =
@@ -165,7 +168,10 @@ function MainApp() {
     [appearance.seeDesktop, focusedId, setWindowLocked, toggleChatDrawer, toggleFocusMode, toggleFullscreen, toggleMute],
   )
 
-  useHotkeys(hotkeys, hotkeyActions, settingsOpen && settingsTab === 'hotkeys')
+  useHotkeys(hotkeys, hotkeyActions, {
+    paused: settingsOpen,
+    allowWhenPaused: SETTINGS_ALLOWED_HOTKEYS,
+  })
 
   useEffect(() => {
     if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned || settingsOpen) {
@@ -257,6 +263,7 @@ function MainApp() {
         isFullscreen ? 'app-shell--fullscreen' : '',
         chromeHidden ? 'app-shell--chrome-hidden' : '',
         appearance.seeDesktop ? 'app-shell--see-desktop' : '',
+        performanceMode ? 'app-shell--performance' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -285,6 +292,8 @@ function MainApp() {
         layoutMode={layoutMode}
         focusMode={focusMode}
         onToggleFocusMode={toggleFocusMode}
+        performanceMode={performanceMode}
+        onTogglePerformanceMode={() => setPerformanceMode(!performanceMode)}
         onPreset={applyPreset}
         isFullscreen={isFullscreen}
         onToggleFullscreen={() => void toggleFullscreen()}
@@ -320,6 +329,7 @@ function MainApp() {
             onLayoutChange={setLayout}
             focusedId={focusedId}
             focusMode={focusMode}
+            performanceMode={performanceMode}
             isDragging={isDragging}
             onDraggingChange={setIsDragging}
             onFocus={(id) => focusStream(id, { enterFocusMode: true })}

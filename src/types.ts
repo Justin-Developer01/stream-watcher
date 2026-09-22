@@ -77,6 +77,7 @@ export type PersistedState = {
   appearance?: AppearanceTheme
   windowLocked?: boolean
   hotkeys?: Partial<Record<HotkeyId, HotkeyChord>>
+  performanceMode?: boolean
 }
 
 export const DEFAULT_LAYOUT_COLS = 12

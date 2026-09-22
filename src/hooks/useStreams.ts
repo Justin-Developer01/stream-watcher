@@ -42,6 +42,7 @@ export function useStreams() {
         appearance: normalizeAppearance(saved.appearance),
         windowLocked: saved.windowLocked === true,
         hotkeys: normalizeHotkeys(saved.hotkeys),
+        performanceMode: saved.performanceMode === true,
       }
     }
     return {
@@ -59,6 +60,7 @@ export function useStreams() {
       appearance: normalizeAppearance(saved?.appearance),
       windowLocked: saved?.windowLocked === true,
       hotkeys: normalizeHotkeys(saved?.hotkeys),
+      performanceMode: saved?.performanceMode === true,
     }
   }, [])
 
@@ -82,6 +84,7 @@ export function useStreams() {
   })
   const [windowLocked, setWindowLocked] = useState(initial.windowLocked)
   const [hotkeys, setHotkeys] = useState<Record<HotkeyId, HotkeyChord>>(initial.hotkeys)
+  const [performanceMode, setPerformanceModeState] = useState(initial.performanceMode)
 
   useEffect(() => {
     const ok = saveState({
@@ -100,6 +103,7 @@ export function useStreams() {
       appearance,
       windowLocked,
       hotkeys,
+      performanceMode,
     })
     if (!ok && appearance.backgroundImage) {
       const next = { ...appearance, backgroundImage: null }
@@ -121,6 +125,7 @@ export function useStreams() {
     appearance,
     windowLocked,
     hotkeys,
+    performanceMode,
   ])
 
   useEffect(() => {
@@ -230,10 +235,24 @@ export function useStreams() {
   }, [streams])
 
   const toggleMute = useCallback((id: string) => {
-    setStreams((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, muted: !s.muted } : s)),
-    )
-  }, [])
+    setStreams((prev) => {
+      const target = prev.find((s) => s.id === id)
+      if (!target) return prev
+      if (performanceMode && target.muted) {
+        return prev.map((s) => ({ ...s, muted: s.id !== id }))
+      }
+      return prev.map((s) => (s.id === id ? { ...s, muted: !s.muted } : s))
+    })
+  }, [performanceMode])
+
+  const setPerformanceMode = useCallback((next: boolean) => {
+    setPerformanceModeState(next)
+    if (!next) return
+    setStreams((prev) => {
+      const keep = focusedId ?? prev[0]?.id
+      return prev.map((s) => ({ ...s, muted: s.id !== keep }))
+    })
+  }, [focusedId])
 
   const applyPreset = useCallback(
     (preset: LayoutMode) => {
@@ -282,5 +301,7 @@ export function useStreams() {
     setWindowLocked,
     hotkeys,
     setHotkeys,
+    performanceMode,
+    setPerformanceMode,
   }
 }

@@ -19,6 +19,7 @@ type Props = {
   isSaved: boolean
   showHandle?: boolean
   promoteOnClick?: boolean
+  economy?: boolean
   onFocus: () => void
   onToggleMute: () => void
   onRemove: () => void
@@ -34,6 +35,7 @@ export function StreamTile({
   isSaved,
   showHandle = true,
   promoteOnClick = false,
+  economy = false,
   onFocus,
   onToggleMute,
   onRemove,
@@ -42,7 +44,7 @@ export function StreamTile({
   onToggleSave,
 }: Props) {
   return (
-    <article className={`stream-tile${focused ? ' is-focused' : ''}${promoteOnClick ? ' is-promotable' : ''}`} data-hit>
+    <article className={`stream-tile${focused ? ' is-focused' : ''}${promoteOnClick ? ' is-promotable' : ''}${economy ? ' is-economy' : ''}`} data-hit>
       <header className="stream-tile__bar">
         {showHandle && (
           <div className="stream-drag-handle" data-tooltip="Drag to rearrange" role="button" aria-label="Drag to rearrange" tabIndex={0}>
@@ -82,10 +84,12 @@ export function StreamTile({
         onClick={promoteOnClick ? onFocus : undefined}
         onDoubleClick={onFocus}
       >
+        {economy && <span className="stream-tile__chip">paused / low</span>}
         <TwitchPlayer
           channel={stream.channel}
-          muted={stream.muted}
+          muted={stream.muted || economy}
           interactive={interactive}
+          paused={economy}
         />
       </div>
     </article>

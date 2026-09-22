@@ -12,6 +12,7 @@ type Props = {
   onLayoutChange: (layout: Layout[]) => void
   focusedId: string | null
   focusMode: boolean
+  performanceMode?: boolean
   isDragging: boolean
   onDraggingChange: (dragging: boolean) => void
   savedChannels: string[]
@@ -41,6 +42,7 @@ export function StreamGrid({
   onLayoutChange,
   focusedId,
   focusMode,
+  performanceMode = false,
   isDragging,
   onDraggingChange,
   savedChannels,
@@ -77,14 +79,16 @@ export function StreamGrid({
 
   if (!streams.length) return <EmptyGrid />
 
+  const activeId = focusedId ?? streams[0]?.id ?? null
   const renderTile = (stream: StreamItem, options?: { promoteOnClick?: boolean; showHandle?: boolean }) => (
     <StreamTile
       stream={stream}
-      focused={focusedId === stream.id}
+      focused={stream.id === activeId}
       interactive={!isDragging && !options?.promoteOnClick}
       showHandle={options?.showHandle ?? !focusMode}
       isSaved={savedChannels.includes(stream.channel)}
       promoteOnClick={options?.promoteOnClick}
+      economy={performanceMode && stream.id !== activeId}
       onFocus={() => onFocus(stream.id)}
       onToggleMute={() => onToggleMute(stream.id)}
       onRemove={() => onRemove(stream.id)}

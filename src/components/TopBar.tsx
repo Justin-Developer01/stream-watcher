@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import {
   Columns2,
   Focus,
+  Gauge,
   Lock,
   LogIn,
   Maximize2,
@@ -35,6 +36,8 @@ type Props = {
   layoutMode: LayoutMode
   focusMode: boolean
   onToggleFocusMode: () => void
+  performanceMode: boolean
+  onTogglePerformanceMode: () => void
   onPreset: (preset: LayoutMode) => void
   isFullscreen: boolean
   onToggleFullscreen: () => void
@@ -111,6 +114,8 @@ export function TopBar({
   layoutMode,
   focusMode,
   onToggleFocusMode,
+  performanceMode,
+  onTogglePerformanceMode,
   onPreset,
   isFullscreen,
   onToggleFullscreen,
@@ -320,6 +325,18 @@ export function TopBar({
           }}
         >
           <Focus size={16} strokeWidth={1.75} />
+        </IconButton>
+
+        <IconButton
+          label={performanceMode ? 'Performance mode on' : 'Performance mode'}
+          tooltip={performanceMode ? 'Performance mode on — inactive tiles paused' : 'Performance mode'}
+          active={performanceMode}
+          onClick={() => {
+            setOpenMenu(null)
+            onTogglePerformanceMode()
+          }}
+        >
+          <Gauge size={16} strokeWidth={1.75} />
         </IconButton>
 
         <Menu
