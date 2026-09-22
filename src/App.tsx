@@ -402,7 +402,7 @@ function MainApp() {
           onInstallUpdate={() => void updater.install()}
         />
       )}
-      <FirstRunTips />
+      <FirstRunTips hidden={settingsOpen} />
     </div>
   )
 }

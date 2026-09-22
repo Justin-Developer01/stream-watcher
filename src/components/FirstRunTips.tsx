@@ -31,7 +31,7 @@ export function requestFirstRunTips() {
   window.dispatchEvent(new Event(SHOW_EVENT))
 }
 
-export function FirstRunTips() {
+export function FirstRunTips({ hidden = false }: { hidden?: boolean }) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
 
@@ -45,7 +45,7 @@ export function FirstRunTips() {
     return () => window.removeEventListener(SHOW_EVENT, show)
   }, [])
 
-  if (!open) return null
+  if (!open || hidden) return null
 
   const last = step >= TIPS.length - 1
   const dismiss = () => {
@@ -58,7 +58,7 @@ export function FirstRunTips() {
       <p>
         <span className="first-run-tip__index">
           {step + 1}/{TIPS.length}
-        </span>
+        </span>{' '}
         {TIPS[step]}
       </p>
       <div className="first-run-tip__actions">
