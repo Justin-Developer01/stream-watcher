@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600&family=Syne:wght@600;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -8,6 +8,8 @@
   --bg-bar: #0b0e13;
   --bg-image: none;
   --bg-overlay: 40;
+  --chat-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --chat-font-size: 13px;
   --bar-scrim: rgba(0, 0, 0, 0.48);
   --border: #1b2430;
   --text: #e6edf5;
@@ -526,6 +528,11 @@ code {
   margin: 0.25rem 0 0;
 }
 
+.chat-error {
+  font-family: var(--chat-font);
+  font-size: var(--chat-font-size);
+}
+
 .field-success {
   color: var(--accent-2);
   font-size: 0.72rem;
@@ -648,6 +655,20 @@ code {
 .theme-overlay input[type='range'] {
   width: 100%;
   accent-color: var(--accent);
+}
+
+.theme-chat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.theme-chat-row select {
+  width: auto;
+  min-width: 7.5rem;
 }
 
 .hint,
@@ -1216,6 +1237,8 @@ code {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0.4rem;
+  font-family: var(--chat-font);
+  font-size: var(--chat-font-size);
 }
 
 .chat-line {
@@ -1223,7 +1246,8 @@ code {
   grid-template-columns: auto 1fr;
   gap: 0.3rem;
   margin-bottom: 0.28rem;
-  font-size: 0.78rem;
+  font-family: inherit;
+  font-size: inherit;
   word-break: break-word;
 }
 
@@ -1244,7 +1268,8 @@ code {
 .chat-panel__composer input,
 .chat-panel__composer button {
   padding: 0.3rem 0.45rem;
-  font-size: 0.78rem;
+  font-family: var(--chat-font);
+  font-size: var(--chat-font-size);
 }
 
 .react-grid-item {

@@ -1,5 +1,6 @@
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
+export type ChatFont = 'system' | 'sans' | 'mono' | 'serif'
 
 export type AppearanceTheme = {
   preset: AppearancePreset
@@ -10,7 +11,32 @@ export type AppearanceTheme = {
   backgroundColor: string
   backgroundImage: string | null
   overlayOpacity: number
+  chatFont: ChatFont
+  chatFontSize: number
 }
+
+export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
+  system: {
+    label: 'System UI',
+    stack: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+  },
+  sans: {
+    label: 'Sans',
+    stack: 'Inter, "IBM Plex Sans", sans-serif',
+  },
+  mono: {
+    label: 'Mono',
+    stack: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  },
+  serif: {
+    label: 'Serif',
+    stack: 'ui-serif, Georgia, "Times New Roman", serif',
+  },
+}
+
+export const CHAT_FONT_SIZE_MIN = 12
+export const CHAT_FONT_SIZE_MAX = 20
+export const CHAT_FONT_SIZE_DEFAULT = 13
 
 type PresetColors = Pick<AppearanceTheme, 'preset' | 'accent' | 'surface' | 'text' | 'backgroundColor'>
 
@@ -43,6 +69,8 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   backgroundMode: 'color',
   backgroundImage: null,
   overlayOpacity: 40,
+  chatFont: 'system',
+  chatFontSize: CHAT_FONT_SIZE_DEFAULT,
 }
 
 const HEX = /^#([0-9a-fA-F]{6})$/
@@ -70,6 +98,16 @@ function clampOpacity(value: unknown): number {
   return Math.min(100, Math.max(0, Math.round(n)))
 }
 
+function clampChatFontSize(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return CHAT_FONT_SIZE_DEFAULT
+  return Math.min(CHAT_FONT_SIZE_MAX, Math.max(CHAT_FONT_SIZE_MIN, Math.round(n)))
+}
+
+function normalizeChatFont(value: unknown): ChatFont {
+  return value === 'sans' || value === 'mono' || value === 'serif' || value === 'system' ? value : 'system'
+}
+
 export function matchingPreset(theme: Pick<AppearanceTheme, 'accent' | 'surface' | 'text' | 'backgroundColor'>): AppearancePreset | null {
   for (const key of Object.keys(APPEARANCE_PRESETS) as AppearancePreset[]) {
     const preset = APPEARANCE_PRESETS[key]
@@ -90,6 +128,8 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     backgroundMode: current?.backgroundMode ?? 'color',
     backgroundImage: current?.backgroundImage ?? null,
     overlayOpacity: current?.overlayOpacity ?? DEFAULT_APPEARANCE.overlayOpacity,
+    chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
+    chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
     ...APPEARANCE_PRESETS[preset],
   }
 }
@@ -116,6 +156,8 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     backgroundMode,
     backgroundImage,
     overlayOpacity: clampOpacity(raw?.overlayOpacity),
+    chatFont: normalizeChatFont(raw?.chatFont),
+    chatFontSize: clampChatFontSize(raw?.chatFontSize),
     preset: presetKey,
   }
   next.preset = matchingPreset(next) ?? presetKey
@@ -154,6 +196,8 @@ export function applyAppearance(theme: AppearanceTheme) {
     theme.backgroundMode === 'image' && theme.backgroundImage ? `url("${theme.backgroundImage}")` : 'none',
   )
   root.style.setProperty('--bg-overlay', String(theme.overlayOpacity))
+  root.style.setProperty('--chat-font', CHAT_FONTS[theme.chatFont].stack)
+  root.style.setProperty('--chat-font-size', `${theme.chatFontSize}px`)
 }
 
 export async function imageFileToDataUrl(file: File): Promise<string> {

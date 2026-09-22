@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   APPEARANCE_PRESETS,
+  CHAT_FONTS,
+  CHAT_FONT_SIZE_MAX,
+  CHAT_FONT_SIZE_MIN,
   DEFAULT_APPEARANCE,
   applyAppearance,
   applyPreset,
@@ -11,6 +14,7 @@ import {
   type AppearancePreset,
   type AppearanceTheme,
   type BackgroundMode,
+  type ChatFont,
 } from '../lib/theme'
 
 type Props = {
@@ -212,6 +216,33 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
             {imageError && <p className="field-error">{imageError}</p>}
           </div>
         )}
+
+        <p className="theme-label">Chat</p>
+        <label className="theme-chat-row" htmlFor="chat-font">
+          Font
+          <select
+            id="chat-font"
+            value={appearance.chatFont}
+            onChange={(event) => patch({ chatFont: event.target.value as ChatFont })}
+          >
+            {(Object.keys(CHAT_FONTS) as ChatFont[]).map((font) => (
+              <option key={font} value={font}>
+                {CHAT_FONTS[font].label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="theme-overlay" htmlFor="chat-font-size">
+          <span>Size {appearance.chatFontSize}px</span>
+          <input
+            id="chat-font-size"
+            type="range"
+            min={CHAT_FONT_SIZE_MIN}
+            max={CHAT_FONT_SIZE_MAX}
+            value={appearance.chatFontSize}
+            onChange={(event) => patch({ chatFontSize: Number(event.target.value) })}
+          />
+        </label>
 
         <button
           type="button"
