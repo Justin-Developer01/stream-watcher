@@ -17,7 +17,7 @@ You do **not** need Node, Git, or `npm install`.
 7. The gear opens a **Settings modal** (Esc / X to close) with left tabs: **Appearance · Chat · Hotkeys · Updates · Advanced**.
 8. **Appearance** has Dark / Dim / Light, Accent / Surface / Text, Color or Image background, and **Window → See desktop behind app.** Chat **Font** (System / IBM Plex Sans / Inter / Mono) + **Size** (12 / 13 / 14 / 16, default 13) live under the **Chat** tab.
 9. **Performance mode** is the gauge icon on the top bar. The focused stream stays full quality and unmuted; other tiles show **paused / low**.
-10. **Multi-monitor** — the main desk stays on the primary display. Pop out chat or a stream tile to another monitor; **Dock back** and optional **Always on top** live on the pop-out.
+10. **Multi-monitor** — **Open chat** is the in-app drawer (pushes the grid). **Open chat on another monitor** / **Pop out chat to another monitor** and **Pop out stream to another monitor** are separate windows. **Dock back** and **Always on top** live on the pop-out. How-to: [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 
 Docs for downloaders: [docs/](docs/index.md) — [How to use](docs/USAGE.md) · [Feature list](docs/FEATURES.md). In-app: **Settings → Advanced → Help / Docs**.
 
@@ -40,7 +40,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - **Click-through** — with See desktop on, empty stage clicks pass through to the desktop. **Lock window** on the top bar freezes that. Unlock to pass through again.
 - **Hotkeys** — remappable chords for Focus Mode, Fullscreen, Toggle chat, Lock window, Open Settings, Add stream, Mute focus. Click a keychip to rebind; Reset defaults.
 - **Performance mode** — top-bar gauge. Focused stream full quality + one unmuted audio; other tiles **paused / low**; glass blur eased.
-- **Multi-monitor** — main desk on the primary display. Chat and stream pop-outs remember position/size/always-on-top, reopen on the last monitor, and include **Dock back**.
+- **Multi-monitor** — drawer (**Open chat**) vs pop-out windows (**Open chat on another monitor**, **Pop out stream to another monitor**). **Dock back** + **Always on top** on the pop-out only. Last monitor/position/size remembered. See [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 - First run: the app opens on the thin top-bar shell. Optional one-time toast: **Login to Twitch**. Dismiss it and it does not return. No setup wizard.
 
 ## Browser vs desktop
@@ -103,9 +103,8 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 ## Usage
 
 - Click the **title** to add / switch streams
-- **Open chat** toggles the per-stream drawer
-- **Open chat on another monitor** pops out a dedicated Electron window (desktop). Drag it to any display; **Dock back** returns it. In the browser the icon stays; hover/click says **Desktop app only**.
-- **Pop out stream to another monitor** (monitor icon on a tile) sends that player to its own window. The grid tile stays as **On another monitor**. Always-on-top is per pop-out. Bounds persist in app user data (`popout-windows.json`).
+- **Open chat** toggles the in-app drawer (pushes the grid). That is not a second window.
+- **Open chat on another monitor** (thin bar) or **Pop out chat to another monitor** (tile / drawer) opens a chat window. **Pop out stream to another monitor** (tile) opens the player. **Dock back** and **Always on top** are on the pop-out only. Browser icons say **Desktop app only**. Full how-to: [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 - **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings → Advanced has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Advanced → Developer**.
 - **Check for Updates** lives in Settings → Updates (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable users download a new EXE. No code-signing cert is required; SmartScreen may still warn.
 - **Settings** (gear) opens the modal. Appearance includes **See desktop behind app.** Chat tab has Font + Size. Hotkeys are remappable. Lock window on the top bar disables click-through.

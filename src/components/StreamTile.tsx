@@ -69,7 +69,7 @@ export function StreamTile({
             <PopoutIcon />
           </IconButton>
           {poppedOut ? (
-            <IconButton label="Dock stream back" desktopOnly onClick={onDockStream}>
+            <IconButton label="Dock back" desktopOnly onClick={onDockStream}>
               <MonitorIcon />
             </IconButton>
           ) : (

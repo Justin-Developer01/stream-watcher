@@ -11,10 +11,20 @@ Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 - **Focus Mode** — hero ~72% / bottom strip ~28%. Click a strip tile to promote it.
 - Fullscreen from the top bar (F11 by default). The bar can pin or auto-hide.
 
-## Chat
-- **Open chat** slides a drawer that **pushes** the grid (left / right / bottom), or float.
-- Pop out chat to another monitor (desktop). Drag it anywhere; position, size, and always-on-top are remembered. **Dock back** returns it to the main desk drawer.
+## Chat (in-app drawer)
+- **Open chat** / **Open #channel chat** slides a drawer that **pushes** the grid (Slide right / Slide left / Dock bottom) or **Float**. This stays in the main window.
+- **Hide chat** / **Close chat** puts the drawer away. Streams stay on the desk.
 - Send messages after **Login to Twitch**.
+
+## Multi-monitor (desktop pop-out windows)
+Pop-outs are separate windows. Browser builds show the icons but say **Desktop app only**.
+
+- **Chat window:** **Open chat on another monitor** (thin top bar) or **Pop out chat to another monitor** (tile or drawer).
+- **Stream window:** **Pop out stream to another monitor** (tile monitor icon). The grid tile reads **On another monitor**.
+- **Dock back** on the pop-out (or the tile, for a popped stream) returns chat to the drawer / the player to the tile. Window **X** also docks; chat drawer does not auto-open.
+- **Always on top** (pin) is per pop-out only. Tooltip: **Always on top** / **Disable always on top**. The main desk stays unpinned and thin.
+- Last **monitor, position, size, and always-on-top** are remembered per channel (`popout-windows.json` in app user data). Chat and stream for the same channel are stored separately.
+- First pop-out with nothing saved prefers a second monitor. If that display is unplugged, the window clamps onto a remaining screen. The main desk opens on the **primary** display and snaps back if that screen goes away.
 
 ## Login
 - One top-bar control: **Login to Twitch** (tooltip **Login for Prime + chat.**).
@@ -36,12 +46,6 @@ Settings → **Chat**
 
 ## Click-through + Lock
 With See desktop on, empty-stage clicks pass through to the desktop. **Lock window** on the top bar freezes that. Unlock to pass through again.
-
-## Multi-monitor (desktop)
-- The main desk opens on the **primary** display. If that display is unplugged, it snaps back.
-- Chat and stream pop-outs remember last monitor, position, size, and always-on-top per channel (`popout-windows.json` in app user data).
-- Tile / chat controls pop windows out. The thin top bar stays a single **Open chat on another monitor** icon.
-- Stream tiles show **On another monitor** until **Dock back**. Pin is always-on-top on that window only.
 
 ## Performance Mode
 Top-bar gauge toggle.

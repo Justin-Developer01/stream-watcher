@@ -26,8 +26,10 @@ To publish these pages as a site: repo **Settings → Pages → Deploy from a br
 | Add a channel | Click the **title** in the top bar |
 | Login for Prime + chat | Log-in icon. Tooltip: **Login for Prime + chat.** |
 | Focus one stream | Focus icon. Click a strip tile to promote it. |
-| Open chat | Chat icon. Drawer **pushes** the grid, or pop out to another monitor. |
-| Another monitor | Tile pop-out icons. **Dock back** and always-on-top live on the pop-out. |
+| Open chat (in the window) | **Open chat** on the thin bar, or **Open #channel chat** on a tile. Drawer **pushes** the grid. |
+| Chat on another monitor | **Open chat on another monitor** (bar) or **Pop out chat to another monitor** (tile / drawer). |
+| Stream on another monitor | Tile **Pop out stream to another monitor**. Tile reads **On another monitor**. |
+| Dock / pin | **Dock back** and **Always on top** live on the pop-out only. Position is remembered. |
 | Settings | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced. Esc / X closes. |
 | Check for Updates | Settings → **Updates** |
 | See the desktop | Settings → Appearance → **See desktop behind app.** Lock window stops click-through. |
