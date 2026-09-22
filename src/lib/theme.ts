@@ -1,21 +1,48 @@
-export type BackgroundFit = 'cover' | 'contain'
+export type AppearancePreset = 'dark' | 'dim' | 'light'
+export type BackgroundMode = 'color' | 'image'
 
 export type AppearanceTheme = {
+  preset: AppearancePreset
   accent: string
-  bar: string
   surface: string
+  text: string
+  backgroundMode: BackgroundMode
   backgroundColor: string
   backgroundImage: string | null
-  backgroundFit: BackgroundFit
+  overlayOpacity: number
+}
+
+type PresetColors = Pick<AppearanceTheme, 'preset' | 'accent' | 'surface' | 'text' | 'backgroundColor'>
+
+export const APPEARANCE_PRESETS: Record<AppearancePreset, PresetColors> = {
+  dark: {
+    preset: 'dark',
+    accent: '#2bb7ef',
+    surface: '#0c1016',
+    text: '#e6edf5',
+    backgroundColor: '#090b0f',
+  },
+  dim: {
+    preset: 'dim',
+    accent: '#5aa7c8',
+    surface: '#1a222c',
+    text: '#d0d7e0',
+    backgroundColor: '#12171e',
+  },
+  light: {
+    preset: 'light',
+    accent: '#0b7ab8',
+    surface: '#ffffff',
+    text: '#1a2130',
+    backgroundColor: '#e8edf3',
+  },
 }
 
 export const DEFAULT_APPEARANCE: AppearanceTheme = {
-  accent: '#2bb7ef',
-  bar: '#0b0e13',
-  surface: '#0c1016',
-  backgroundColor: '#090b0f',
+  ...APPEARANCE_PRESETS.dark,
+  backgroundMode: 'color',
   backgroundImage: null,
-  backgroundFit: 'cover',
+  overlayOpacity: 40,
 }
 
 const HEX = /^#([0-9a-fA-F]{6})$/
@@ -37,29 +64,96 @@ export function normalizeHex(value: string, fallback: string): string {
   return fallback
 }
 
-export function normalizeAppearance(raw?: Partial<AppearanceTheme> | null): AppearanceTheme {
-  return {
-    accent: normalizeHex(raw?.accent ?? '', DEFAULT_APPEARANCE.accent),
-    bar: normalizeHex(raw?.bar ?? '', DEFAULT_APPEARANCE.bar),
-    surface: normalizeHex(raw?.surface ?? '', DEFAULT_APPEARANCE.surface),
-    backgroundColor: normalizeHex(raw?.backgroundColor ?? '', DEFAULT_APPEARANCE.backgroundColor),
-    backgroundImage:
-      typeof raw?.backgroundImage === 'string' && raw.backgroundImage.startsWith('data:image/')
-        ? raw.backgroundImage
-        : null,
-    backgroundFit: raw?.backgroundFit === 'contain' ? 'contain' : 'cover',
+function clampOpacity(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return DEFAULT_APPEARANCE.overlayOpacity
+  return Math.min(100, Math.max(0, Math.round(n)))
+}
+
+export function matchingPreset(theme: Pick<AppearanceTheme, 'accent' | 'surface' | 'text' | 'backgroundColor'>): AppearancePreset | null {
+  for (const key of Object.keys(APPEARANCE_PRESETS) as AppearancePreset[]) {
+    const preset = APPEARANCE_PRESETS[key]
+    if (
+      preset.accent === theme.accent &&
+      preset.surface === theme.surface &&
+      preset.text === theme.text &&
+      preset.backgroundColor === theme.backgroundColor
+    ) {
+      return key
+    }
   }
+  return null
+}
+
+export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme): AppearanceTheme {
+  return {
+    backgroundMode: current?.backgroundMode ?? 'color',
+    backgroundImage: current?.backgroundImage ?? null,
+    overlayOpacity: current?.overlayOpacity ?? DEFAULT_APPEARANCE.overlayOpacity,
+    ...APPEARANCE_PRESETS[preset],
+  }
+}
+
+export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: string } | null): AppearanceTheme {
+  const presetKey =
+    raw?.preset === 'dim' || raw?.preset === 'light' || raw?.preset === 'dark' ? raw.preset : 'dark'
+  const base = APPEARANCE_PRESETS[presetKey]
+  const backgroundImage =
+    typeof raw?.backgroundImage === 'string' && raw.backgroundImage.startsWith('data:image/')
+      ? raw.backgroundImage
+      : null
+  const backgroundMode: BackgroundMode =
+    raw?.backgroundMode === 'image' || raw?.backgroundMode === 'color'
+      ? raw.backgroundMode
+      : backgroundImage
+        ? 'image'
+        : 'color'
+  const next = {
+    accent: normalizeHex(raw?.accent ?? '', base.accent),
+    surface: normalizeHex(raw?.surface ?? '', base.surface),
+    text: normalizeHex(raw?.text ?? '', base.text),
+    backgroundColor: normalizeHex(raw?.backgroundColor ?? '', base.backgroundColor),
+    backgroundMode,
+    backgroundImage,
+    overlayOpacity: clampOpacity(raw?.overlayOpacity),
+    preset: presetKey,
+  }
+  next.preset = matchingPreset(next) ?? presetKey
+  return next
+}
+
+function isLightChrome(theme: AppearanceTheme) {
+  if (theme.preset === 'light') return true
+  const n = Number.parseInt(theme.text.slice(1), 16)
+  if (!Number.isFinite(n)) return false
+  const r = (n >> 16) & 255
+  const g = (n >> 8) & 255
+  const b = n & 255
+  return (r * 299 + g * 587 + b * 114) / 1000 < 140
 }
 
 export function applyAppearance(theme: AppearanceTheme) {
   const root = document.documentElement
+  const light = isLightChrome(theme)
+  const muted = light ? '#5c6b7a' : '#7d8b9c'
+  const border = light ? '#d5dde6' : '#1b2430'
+  const scrim = light ? 'rgba(255, 255, 255, 0.58)' : 'rgba(0, 0, 0, 0.48)'
+
+  root.style.colorScheme = light ? 'light' : 'dark'
   root.style.setProperty('--accent', theme.accent)
-  root.style.setProperty('--bg-bar', theme.bar)
-  root.style.setProperty('--bg', theme.backgroundColor)
   root.style.setProperty('--bg-panel', theme.surface)
   root.style.setProperty('--bg-elevated', theme.surface)
-  root.style.setProperty('--bg-image', theme.backgroundImage ? `url("${theme.backgroundImage}")` : 'none')
-  root.style.setProperty('--bg-fit', theme.backgroundFit)
+  root.style.setProperty('--bg-bar', theme.surface)
+  root.style.setProperty('--text', theme.text)
+  root.style.setProperty('--muted', muted)
+  root.style.setProperty('--border', border)
+  root.style.setProperty('--bg', theme.backgroundColor)
+  root.style.setProperty('--bar-scrim', scrim)
+  root.style.setProperty(
+    '--bg-image',
+    theme.backgroundMode === 'image' && theme.backgroundImage ? `url("${theme.backgroundImage}")` : 'none',
+  )
+  root.style.setProperty('--bg-overlay', String(theme.overlayOpacity))
 }
 
 export async function imageFileToDataUrl(file: File): Promise<string> {
