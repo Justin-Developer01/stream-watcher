@@ -16,7 +16,7 @@ You do **not** need Node, Git, or `npm install`.
 6. If that login only half-works, Settings → **Advanced** has **Reconnect chat** and **Refresh Prime session**. The Client ID field is under **Settings → Advanced → Developer**.
 7. **Check for Updates** is in **Settings → Updates**. It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE. Unsigned SmartScreen prompts are expected.
 8. The gear opens a **Settings modal** (Esc / X to close) with left tabs: **Appearance · Chat · Hotkeys · Updates · Advanced · Help**. Appearance → **Chrome: Top | Left** (Top default).
-9. With several streams open, turn on **Performance mode** (gauge on the top bar) so only the focused stream stays full quality — other tiles show **paused / low** and use less CPU.
+9. With several streams open, turn on **Performance mode** (gauge on the thin bar) so only the focused stream stays full quality — other tiles show **paused / low** and use less CPU.
 10. **Multi-monitor** — **Open chat** is the in-app drawer (pushes the grid). **Pop out chat** and **Pop out stream** are separate windows. **Dock back** and **Always on top** live on the pop-out. Reset icon tooltip: **Dock all pop-outs back**. How-to: [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 
 Docs for downloaders: [docs/](docs/index.md) — [How to use](docs/USAGE.md) · [Feature list](docs/FEATURES.md). In-app: **Settings → Help**.
@@ -39,7 +39,7 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - **Chat type** — Settings → Chat. Font chips System / IBM Plex Sans / Inter / Mono and Size 12 / 13 / 14 / 16 (default 13) apply only to `.chat-line` and the composer. An open drawer live-updates.
 - **Click-through** — with See desktop on, empty stage clicks pass through to the desktop. **Lock window (click-through)** on the top bar freezes that. Unlock to pass through again.
 - **Hotkeys** — remappable chords including **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus. Click a keychip to rebind; Reset defaults.
-- **Performance mode** — With several streams open, turn on Performance mode (gauge on the top bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU.
+- **Performance mode** — With several streams open, turn on Performance mode (gauge on the thin bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU.
 - **Layout templates** — thin-bar popover: pick a saved layout, **+** saves the current channels/focus/chat placement, per-row delete removes one. Local persist.
 - **Dock all pop-outs back** — reset icon near layout/templates. Docks every chat and stream pop-out.
 - **Multi-monitor** — drawer (**Open chat**) vs pop-out windows (**Pop out chat**, **Pop out stream**). **Dock back** + **Always on top** on the pop-out only. Last monitor/position/size remembered. See [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).

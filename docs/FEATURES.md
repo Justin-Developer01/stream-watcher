@@ -53,7 +53,7 @@ Settings → **Chat**
 With See desktop on, empty-stage clicks pass through to the desktop. **Lock window (click-through)** on the top bar freezes that. Unlock to pass through again.
 
 ## Performance Mode
-With several streams open, turn on Performance mode (gauge on the top bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU. Frosted glass blur is eased so the thin bar stays cheap to draw.
+With several streams open, turn on Performance mode (gauge on the thin bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU. Frosted glass blur is eased so the thin bar stays cheap to draw.
 
 ## Hotkeys
 Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, plus Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus.

@@ -136,7 +136,7 @@ Windows may need a relaunch if the desktop does not show through after the first
 
 ## Performance Mode
 
-With several streams open, turn on Performance mode (gauge on the top bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU. Glass blur is reduced. The bar stays 42px.
+With several streams open, turn on Performance mode (gauge on the thin bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU. Glass blur is reduced. The bar stays 42px.
 
 ## Check for Updates
 

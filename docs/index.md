@@ -43,6 +43,6 @@ Then, for another monitor: park on another monitor → **Lock window (click-thro
 | Chrome side | Settings → Appearance → **Chrome: Top \| Left** (Top default). |
 | Check for Updates | Settings → **Updates** |
 | See the desktop | Settings → Appearance → **See desktop behind app.** |
-| Save CPU | Performance gauge on the top bar. Other tiles show **paused / low**. |
+| Save CPU | Performance gauge on the thin bar. Other tiles show **paused / low**. |
 
 Full walkthrough: [USAGE.md](USAGE.md). Everything the app does: [FEATURES.md](FEATURES.md).
