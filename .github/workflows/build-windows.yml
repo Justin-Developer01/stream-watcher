@@ -58,4 +58,4 @@ jobs:
 
             This build includes Focus mode, Performance Mode, Settings modal (Appearance / Chat / Hotkeys / Updates / Advanced / Help), See desktop behind app, Lock window (click-through), and Chat Font System / IBM Plex Sans / Inter / Mono with Size 12 / 13 / 14 / 16.
 
-            **Updates:** the installed Setup app can **Check for Updates** in Settings against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds are not auto-updated.
+            **Updates:** the installed Setup app can **Check for Updates** in Settings against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.

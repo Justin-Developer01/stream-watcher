@@ -11,10 +11,11 @@ Start here if you just downloaded the Windows EXE. The same pages open from **Se
 5. [Focus mode](#focus-mode)
 6. [Chat in the main window](#chat-in-the-main-window)
 7. [Chat vs stream on another monitor](#chat-vs-stream-on-another-monitor)
-8. [Settings](#settings)
-9. [See desktop + Lock window (click-through)](#see-desktop--lock-window-click-through)
-10. [Performance Mode](#performance-mode)
-11. [Check for Updates](#check-for-updates)
+8. [Layout templates](#layout-templates)
+9. [Settings](#settings)
+10. [See desktop + Lock window (click-through)](#see-desktop--lock-window-click-through)
+11. [Performance Mode](#performance-mode)
+12. [Check for Updates](#check-for-updates)
 
 ## Install (Windows)
 
@@ -32,7 +33,7 @@ Four short tips appear once: **Focus mode**, **Open chat** vs **Pop out chat**, 
 
 ## Add streams
 
-Click the **title** in the top bar. Paste a channel name or `twitch.tv/...` URL. Save channels for later from the same popover.
+Click the **title** in the chrome (list icon if Appearance → Chrome is **Left**). Paste a channel name or `twitch.tv/...` URL. Save channels for later from the same popover.
 
 ## Login to Twitch
 
@@ -43,6 +44,8 @@ If that only half-works: **Settings → Advanced → Reconnect chat** or **Refre
 ## Focus mode
 
 The **Focus mode** icon makes one stream large and the others a bottom strip. Click a strip tile to promote it. Drag/resize is off while Focus is on.
+
+**Switch Focus** (hotkey, remappable in Settings → Hotkeys) enters Focus mode on the current stream, then promotes the next strip tile to the hero. **Cycle streams** moves the focused/unmuted stream in list order without changing the layout. **Focus search/add stream** opens the add-channel popover. **Mute all** mutes every tile.
 
 ## Chat in the main window
 
@@ -59,7 +62,9 @@ This is the **in-app drawer**. It is not a second window.
 
 Pop-outs are **separate desktop windows** (Windows EXE / `npm run dev:desktop` only). In the browser the same icons stay visible; hover or click shows **Desktop app only**.
 
-**Quick start:** park on another monitor → **Lock window (click-through)** when you need the UI → **Dock back** to the main desk.
+**Quick start:** add a channel → **Login to Twitch** → **Focus mode**. Then park on another monitor → **Lock window (click-through)** when you need the UI → **Dock back** to the main desk.
+
+The reset icon on the thin bar (near layout / templates) is **Dock all pop-outs back**. It docks every chat and stream pop-out.
 
 The thin top bar does **not** grow extra monitor controls. Stream pop-out lives on the tile. Chat pop-out is on the tile, in the chat drawer, and as one top-bar icon.
 
@@ -104,15 +109,19 @@ The main desk starts on the **primary** display. If that screen goes away, the m
 
 If a pop-out’s monitor is gone, that window clamps onto a remaining display. The next time you pop it out, Stream Watcher uses the saved size and always-on-top, on a monitor that still exists.
 
+## Layout templates
+
+**Layout templates** is a popover on the thin bar (not a sidebar). Pick a saved name to apply it. **+** saves the current channels, Focus mode, and chat placement. Each row has a delete control. Templates persist locally.
+
 ## Settings
 
 The gear opens a frosted modal (~560×480). **Esc** or **X** closes it. Left tabs:
 
 | Tab | What it holds |
 |---|---|
-| Appearance | Dark / Dim / Light, colors, background, **See desktop behind app.** |
+| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left** (Top default), **See desktop behind app.** |
 | Chat | Font (System / IBM Plex Sans / Inter / Mono) and Size (12 / 13 / 14 / 16) |
-| Hotkeys | Label + keychip. **Click to rebind.** Reset defaults. |
+| Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
 | Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |
 | Help | Short in-app guide + Show tips + full docs links |
@@ -127,11 +136,11 @@ Windows may need a relaunch if the desktop does not show through after the first
 
 ## Performance Mode
 
-The **Performance mode** icon on the top bar. Focused stream stays full quality and is the only unmuted audio. Other tiles show **paused / low**. Glass blur is reduced. The bar stays 42px.
+With several streams open, turn on Performance mode (gauge on the top bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU. Glass blur is reduced. The bar stays 42px.
 
 ## Check for Updates
 
-**Settings → Updates**. Looks at GitHub Releases, including pre-releases. Works for the NSIS Setup app. Portable users download a new EXE.
+**Settings → Updates**. Looks at GitHub Releases, including pre-releases. Works for the NSIS Setup app. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.
 
 ## Developers
 

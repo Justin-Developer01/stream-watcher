@@ -240,8 +240,8 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
           See desktop behind app.
         </label>
         <p className="hint">
-          Empty stage shows the desktop. The frosted top bar, stream tiles, and chat stay solid. Windows may need a
-          relaunch if the desktop does not show through after toggling.
+          Empty stage shows the desktop. The frosted {appearance.chrome === 'left' ? 'left bar' : 'top bar'}, stream
+          tiles, and chat stay solid. Windows may need a relaunch if the desktop does not show through after toggling.
         </p>
 
         <button

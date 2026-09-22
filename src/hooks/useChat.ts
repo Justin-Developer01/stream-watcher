@@ -2,6 +2,28 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import tmi from 'tmi.js'
 import type { ChatMessage } from '../types'
 
+const PER_CHANNEL_CAP = 300
+
+function normChannel(channel: string) {
+  return channel.replace(/^#/, '').trim().toLowerCase()
+}
+
+function uniqueChannels(channels: string[]) {
+  return [...new Set(channels.map(normChannel).filter(Boolean))]
+}
+
+function appendCapped(prev: ChatMessage[], incoming: ChatMessage) {
+  const key = normChannel(incoming.channel)
+  const kept: ChatMessage[] = []
+  const forChannel: ChatMessage[] = []
+  for (const message of prev) {
+    if (normChannel(message.channel) === key) forChannel.push(message)
+    else kept.push(message)
+  }
+  forChannel.push(incoming)
+  return [...kept, ...forChannel.slice(-PER_CHANNEL_CAP)]
+}
+
 export function useChat(options: {
   channels: string[]
   activeChannel: string | null
@@ -13,13 +35,21 @@ export function useChat(options: {
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const clientRef = useRef<tmi.Client | null>(null)
+  const wantedRef = useRef<string[]>([])
+  const syncGen = useRef(0)
 
-  const channelKey = channels.map((c) => c.toLowerCase()).sort().join(',')
+  const identityKey = `${username ?? ''}\0${accessToken ?? ''}`
+  const channelKey = uniqueChannels(channels).join(',')
+  const hasChannels = Boolean(channelKey)
+  wantedRef.current = uniqueChannels(channels)
 
   useEffect(() => {
-    const uniqueChannels = channelKey ? channelKey.split(',') : []
-    if (!uniqueChannels.length) {
+    if (!hasChannels) {
+      const existing = clientRef.current
+      clientRef.current = null
+      if (existing) void existing.disconnect()
       setStatus('idle')
+      setError(null)
       return
     }
 
@@ -31,38 +61,60 @@ export function useChat(options: {
         username && accessToken
           ? { username, password: `oauth:${accessToken}` }
           : undefined,
-      channels: uniqueChannels,
+      channels: [],
     })
 
     clientRef.current = client
     setStatus('connecting')
     setError(null)
 
+    const syncJoins = async () => {
+      const gen = ++syncGen.current
+      const want = new Set(wantedRef.current)
+      const current = new Set(client.getChannels().map(normChannel))
+      for (const channel of current) {
+        if (cancelled || syncGen.current !== gen) return
+        if (want.has(channel)) continue
+        try {
+          await client.part(channel)
+        } catch {
+          // ignore part races during reconnect
+        }
+      }
+      for (const channel of want) {
+        if (cancelled || syncGen.current !== gen) return
+        if (current.has(channel)) continue
+        try {
+          await client.join(channel)
+        } catch {
+          // ignore join races; reconnect will retry
+        }
+      }
+    }
+
     client.on('connected', () => {
-      if (!cancelled) setStatus('connected')
+      if (cancelled) return
+      setStatus('connected')
+      void syncJoins()
     })
 
     client.on('disconnected', () => {
-      if (!cancelled) setStatus('idle')
+      if (!cancelled && clientRef.current === client) setStatus('idle')
     })
 
     client.on('message', (channel, tags, message, self) => {
       if (cancelled || self) return
-      const cleanChannel = channel.replace(/^#/, '')
-      setMessages((prev) => {
-        const next: ChatMessage[] = [
-          ...prev,
-          {
-            id: tags.id ?? `${Date.now()}-${Math.random()}`,
-            channel: cleanChannel,
-            user: tags['display-name'] || tags.username || 'unknown',
-            color: tags.color || undefined,
-            text: message,
-            timestamp: Date.now(),
-          },
-        ]
-        return next.slice(-300)
-      })
+      const cleanChannel = normChannel(channel)
+      setMessages((prev) =>
+        appendCapped(prev, {
+          id: tags.id ?? `${Date.now()}-${Math.random()}`,
+          channel: cleanChannel,
+          user: tags['display-name'] || tags.username || 'unknown',
+          color: tags.color || undefined,
+          text: message,
+          timestamp: Date.now(),
+        }),
+      )
     })
 
     void client.connect().catch((err: unknown) => {
@@ -73,10 +125,50 @@ export function useChat(options: {
 
     return () => {
       cancelled = true
-      clientRef.current = null
+      if (clientRef.current === client) clientRef.current = null
       void client.disconnect()
     }
-  }, [channelKey, username, accessToken])
+  }, [hasChannels, identityKey, username, accessToken])
+
+  useEffect(() => {
+    const client = clientRef.current
+    if (!client || !hasChannels) return
+    let open = false
+    try {
+      open = client.readyState() === 'OPEN'
+    } catch {
+      open = false
+    }
+    if (!open) return
+
+    const gen = ++syncGen.current
+    const wanted = channelKey ? channelKey.split(',') : []
+    const current = new Set(client.getChannels().map(normChannel))
+    const want = new Set(wanted)
+
+    const run = async () => {
+      for (const channel of current) {
+        if (syncGen.current !== gen) return
+        if (want.has(channel)) continue
+        try {
+          await client.part(channel)
+        } catch {
+          // ignore part races during reconnect
+        }
+      }
+      for (const channel of want) {
+        if (syncGen.current !== gen) return
+        if (current.has(channel)) continue
+        try {
+          await client.join(channel)
+        } catch {
+          // ignore join races; reconnect will retry
+        }
+      }
+    }
+
+    void run()
+  }, [channelKey, hasChannels, identityKey])
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -90,16 +182,15 @@ export function useChat(options: {
 
       try {
         await client.say(activeChannel, body)
-        setMessages((prev) => [
-          ...prev,
-          {
+        setMessages((prev) =>
+          appendCapped(prev, {
             id: `local-${Date.now()}`,
             channel: activeChannel,
             user: username,
             text: body,
             timestamp: Date.now(),
-          },
-        ].slice(-300))
+          }),
+        )
         return { ok: true as const }
       } catch (err) {
         return {
@@ -112,7 +203,7 @@ export function useChat(options: {
   )
 
   const visibleMessages = activeChannel
-    ? messages.filter((m) => m.channel.toLowerCase() === activeChannel.toLowerCase())
+    ? messages.filter((m) => normChannel(m.channel) === normChannel(activeChannel))
     : messages
 
   return { messages: visibleMessages, status, error, sendMessage }

@@ -7,9 +7,12 @@ type Props = {
 }
 
 const STEPS: { title: string; body: string }[] = [
-  { title: 'Add streams', body: 'Click the title in the thin top bar. Paste a channel name or twitch.tv URL.' },
+  { title: 'Add streams', body: 'Click the title (list icon if Chrome is Left). Paste a channel name or twitch.tv URL.' },
   { title: UI.loginToTwitch, body: `${UI.loginTooltip} One button for Prime and chat.` },
-  { title: UI.focusMode, body: 'One stream large, others in the bottom strip. Click a strip tile to promote it.' },
+  {
+    title: UI.focusMode,
+    body: `One stream large, others in the bottom strip. Click a strip tile to promote it. ${UI.switchFocus} (hotkey) promotes the next strip tile.`,
+  },
   {
     title: UI.openChat,
     body: 'Opens the in-app drawer. It pushes the grid (Slide right / left, Dock bottom, or Float). Not another window.',
@@ -28,7 +31,7 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: UI.settings,
-    body: 'Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help.',
+    body: `Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Appearance → Chrome: Top | Left. ${UI.layoutTemplates} and ${UI.dockAllPopouts} live on the thin bar.`,
   },
 ]
 
@@ -37,7 +40,8 @@ export function HelpGuide({ onCloseSettings }: Props) {
     <section className="popover-section help-guide">
       <h2>Help</h2>
       <p className="hint">
-        Park on another monitor → {UI.lockWindow} when you need the UI → {UI.dockBack} to the main desk.
+        Add a channel → {UI.loginToTwitch} → {UI.focusMode}. Then park on another monitor → {UI.lockWindow} when you
+        need the UI → {UI.dockBack} to the main desk.
       </p>
       <ol className="help-guide__steps">
         {STEPS.map((step) => (

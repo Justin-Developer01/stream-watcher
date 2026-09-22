@@ -276,6 +276,7 @@ html.chrome-left .topbar {
   padding: 8px 0;
   border-bottom: none;
   border-right: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+  overflow: hidden;
 }
 
 html.chrome-left .topbar--hidden {
@@ -288,12 +289,18 @@ html.chrome-left .topbar__title {
   padding: 0;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
 }
 
 html.chrome-left .topbar__controls {
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   margin-left: 0;
-  margin-top: auto;
+  margin-top: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 html.chrome-left .workspace {

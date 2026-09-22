@@ -147,7 +147,8 @@ export function SettingsModal({
                 </div>
                 <p className="hint">
                   Unsigned builds still update from GitHub. Windows SmartScreen may warn — More info → Run anyway.
-                  Portable EXEs are not auto-updated; download a new file from the Release.
+                  Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser
+                  so you can download a new Setup or Portable EXE.
                 </p>
               </section>
             )}

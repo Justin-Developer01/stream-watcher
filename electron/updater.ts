@@ -99,7 +99,8 @@ export function registerUpdater(getMain: () => BrowserWindow | null) {
     if (isPortable()) {
       set({
         state: 'unsupported',
-        message: 'Portable build: download a new Setup/Portable from GitHub Releases.',
+        message:
+          'Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.',
       })
       await shell.openExternal('https://github.com/Justin-Developer01/stream-watcher/releases')
       return status

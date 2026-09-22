@@ -14,6 +14,7 @@ export const UI = {
   loginToTwitch: 'Login to Twitch',
   loginTooltip: 'Login for Prime + chat.',
   focusMode: 'Focus mode',
+  switchFocus: 'Switch Focus',
   seeDesktop: 'See desktop behind app.',
   settings: 'Settings',
   onAnotherMonitor: 'On another monitor',

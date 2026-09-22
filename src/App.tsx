@@ -51,6 +51,7 @@ function MainApp() {
     toggleSaveStream,
     focusStream,
     cycleFocus,
+    switchFocus,
     muteAll,
     toggleMute,
     applyPreset,
@@ -223,6 +224,7 @@ function MainApp() {
         if (focusedId) toggleMute(focusedId)
       },
       cycleFocus,
+      switchFocus,
       muteAll,
     }),
     [
@@ -234,6 +236,7 @@ function MainApp() {
       toggleFullscreen,
       toggleMute,
       cycleFocus,
+      switchFocus,
       muteAll,
     ],
   )
