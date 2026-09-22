@@ -3,11 +3,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  clampToDisplays,
+  boundsOnADisplay,
   debounce,
-  defaultPopoutBounds,
   primaryWorkAreaBounds,
   readPopout,
+  recordFromWindow,
+  resolvePopoutBounds,
   writePopout,
   type PopoutKind,
 } from './popouts'
@@ -40,20 +41,23 @@ function resolvePreloadPath() {
   return path.join(__dirname, 'preload.mjs')
 }
 
-function keepMainOnADisplay() {
-  if (!mainWindow || mainWindow.isDestroyed()) return
-  const bounds = mainWindow.getBounds()
-  const visible = screen.getAllDisplays().some((display) => {
-    const area = display.workArea
-    return (
-      bounds.x < area.x + area.width &&
-      bounds.x + Math.min(48, bounds.width) > area.x &&
-      bounds.y < area.y + area.height &&
-      bounds.y + Math.min(48, bounds.height) > area.y
-    )
-  })
-  if (visible) return
-  mainWindow.setBounds(primaryWorkAreaBounds(bounds.width, bounds.height))
+function keepWindowsOnDisplays() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const bounds = mainWindow.getBounds()
+    if (!boundsOnADisplay(bounds)) {
+      mainWindow.setBounds(primaryWorkAreaBounds(bounds.width, bounds.height))
+    }
+  }
+  for (const kind of ['chat', 'stream'] as PopoutKind[]) {
+    for (const [channel, win] of popoutWindows[kind]) {
+      if (win.isDestroyed()) continue
+      const rec = recordFromWindow(win)
+      if (boundsOnADisplay(rec)) continue
+      const next = resolvePopoutBounds(kind, rec, mainWindow)
+      win.setBounds({ x: next.x, y: next.y, width: next.width, height: next.height })
+      writePopout(kind, channel, recordFromWindow(win))
+    }
+  }
 }
 
 function createWindow() {
@@ -119,8 +123,7 @@ function openPopout(kind: PopoutKind, channel: string) {
     return
   }
 
-  const saved = readPopout(kind, key)
-  const restore = saved ? clampToDisplays(saved) : defaultPopoutBounds(kind, mainWindow, map.size)
+  const restore = resolvePopoutBounds(kind, readPopout(kind, key), mainWindow, map.size)
   const min =
     kind === 'chat' ? { minWidth: 260, minHeight: 320 } : { minWidth: 360, minHeight: 220 }
 
@@ -148,14 +151,10 @@ function openPopout(kind: PopoutKind, channel: string) {
 
   if (restore.alwaysOnTop) popout.setAlwaysOnTop(true, 'floating')
 
-  let lastBounds = popout.getBounds()
-  let lastAlwaysOnTop = popout.isAlwaysOnTop()
+  let lastRecord = recordFromWindow(popout)
   const persistNow = () => {
-    if (!popout.isDestroyed()) {
-      lastBounds = popout.getBounds()
-      lastAlwaysOnTop = popout.isAlwaysOnTop()
-    }
-    writePopout(kind, key, { ...lastBounds, alwaysOnTop: lastAlwaysOnTop })
+    if (!popout.isDestroyed()) lastRecord = recordFromWindow(popout)
+    writePopout(kind, key, lastRecord)
   }
   const persist = debounce(persistNow, 200)
 
@@ -189,7 +188,7 @@ function dockPopout(kind: PopoutKind, channel: string) {
   const key = channel.toLowerCase()
   const win = popoutWindows[kind].get(key)
   if (win && !win.isDestroyed()) {
-    writePopout(kind, key, { ...win.getBounds(), alwaysOnTop: win.isAlwaysOnTop() })
+    writePopout(kind, key, recordFromWindow(win))
     win.close()
   }
   notifyMain(kind, key, 'docked')
@@ -403,10 +402,7 @@ app.whenReady().then(() => {
     const found = findSenderPopout(event.sender)
     if (!found) return false
     found.win.setAlwaysOnTop(Boolean(value), 'floating')
-    writePopout(found.kind, found.channel, {
-      ...found.win.getBounds(),
-      alwaysOnTop: found.win.isAlwaysOnTop(),
-    })
+    writePopout(found.kind, found.channel, recordFromWindow(found.win))
     return found.win.isAlwaysOnTop()
   })
 
@@ -417,8 +413,8 @@ app.whenReady().then(() => {
 
   registerUpdater(() => mainWindow)
 
-  screen.on('display-removed', keepMainOnADisplay)
-  screen.on('display-metrics-changed', keepMainOnADisplay)
+  screen.on('display-removed', keepWindowsOnDisplays)
+  screen.on('display-metrics-changed', keepWindowsOnDisplays)
 
   createWindow()
 

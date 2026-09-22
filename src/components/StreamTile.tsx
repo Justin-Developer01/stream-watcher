@@ -65,7 +65,7 @@ export function StreamTile({
           <IconButton label={`Open #${stream.channel} chat`} onClick={onOpenChat}>
             <ChatIcon />
           </IconButton>
-          <IconButton label="Pop out chat" desktopOnly onClick={onPopoutChat}>
+          <IconButton label="Pop out chat to another monitor" desktopOnly onClick={onPopoutChat}>
             <PopoutIcon />
           </IconButton>
           {poppedOut ? (
@@ -73,7 +73,7 @@ export function StreamTile({
               <MonitorIcon />
             </IconButton>
           ) : (
-            <IconButton label="Pop out stream" desktopOnly onClick={onPopoutStream}>
+            <IconButton label="Pop out stream to another monitor" desktopOnly onClick={onPopoutStream}>
               <MonitorIcon />
             </IconButton>
           )}

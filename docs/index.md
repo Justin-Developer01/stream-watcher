@@ -27,6 +27,7 @@ To publish these pages as a site: repo **Settings → Pages → Deploy from a br
 | Login for Prime + chat | Log-in icon. Tooltip: **Login for Prime + chat.** |
 | Focus one stream | Focus icon. Click a strip tile to promote it. |
 | Open chat | Chat icon. Drawer **pushes** the grid, or pop out to another monitor. |
+| Another monitor | Tile pop-out icons. **Dock back** and always-on-top live on the pop-out. |
 | Settings | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced. Esc / X closes. |
 | Check for Updates | Settings → **Updates** |
 | See the desktop | Settings → Appearance → **See desktop behind app.** Lock window stops click-through. |

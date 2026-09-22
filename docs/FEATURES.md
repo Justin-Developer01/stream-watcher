@@ -39,9 +39,9 @@ With See desktop on, empty-stage clicks pass through to the desktop. **Lock wind
 
 ## Multi-monitor (desktop)
 - The main desk opens on the **primary** display. If that display is unplugged, it snaps back.
-- Chat pop-outs prefer a second monitor when you have one, then remember the last monitor/position/size.
-- Stream tiles can pop out to their own windows. The grid tile shows **On another monitor** until you **Dock back**.
-- **Always on top** is per pop-out window only (pin icon). The main desk stays thin.
+- Chat and stream pop-outs remember last monitor, position, size, and always-on-top per channel (`popout-windows.json` in app user data).
+- Tile / chat controls pop windows out. The thin top bar stays a single **Open chat on another monitor** icon.
+- Stream tiles show **On another monitor** until **Dock back**. Pin is always-on-top on that window only.
 
 ## Performance Mode
 Top-bar gauge toggle.

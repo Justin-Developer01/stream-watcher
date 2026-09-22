@@ -47,12 +47,12 @@ The Focus icon makes one stream large and the others a bottom strip. Click a str
 
 ## Multi-monitor (desktop)
 
-The main window starts on your primary display. Chat and stream pop-outs are independent windows (`parent` unset) so they can live on other monitors.
+The main window starts on your primary display. Chat and stream pop-outs are independent windows so they can live on other monitors. Bounds are saved per channel in the app’s user data (`popout-windows.json`) — last monitor, position, size, and always-on-top.
 
 - First pop-out without a saved position opens on a **second monitor** when one exists.
 - Closing a display that held a pop-out clamps it back onto a remaining screen.
-- On a stream tile, the monitor icon **Pop out stream** sends that player to its own window. The tile stays in the grid as **On another monitor**.
-- Pin on a pop-out is **Always on top** for that window only.
+- Tile icons (not the thin top bar): **Pop out chat to another monitor** and **Pop out stream to another monitor**. The stream tile stays in the grid as **On another monitor**.
+- **Dock back** and the pin (**Always on top**) live on the pop-out only.
 
 ## Settings
 

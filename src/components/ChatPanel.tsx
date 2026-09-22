@@ -188,7 +188,7 @@ export function ChatPanel({
                   <option value="float">Float</option>
                 </select>
                 <IconButton
-                  label="Pop out chat"
+                  label="Pop out chat to another monitor"
                   desktopOnly
                   onClick={onPopout}
                   onMouseDown={(e) => e.stopPropagation()}

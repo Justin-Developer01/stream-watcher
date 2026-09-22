@@ -11,6 +11,7 @@ export type PopoutRecord = {
   width: number
   height: number
   alwaysOnTop?: boolean
+  displayId?: number
 }
 
 const DEFAULT_SIZE: Record<PopoutKind, { width: number; height: number }> = {
@@ -49,6 +50,7 @@ export function readPopoutStore(): Record<string, PopoutRecord> {
     for (const [channel, bounds] of Object.entries(legacy ?? {})) {
       if (isRecord(bounds)) next[keyFor('chat', channel)] = bounds
     }
+    if (Object.keys(next).length) writePopoutStore(next)
     return next
   } catch {
     return {}
@@ -57,7 +59,15 @@ export function readPopoutStore(): Record<string, PopoutRecord> {
 
 export function writePopoutStore(next: Record<string, PopoutRecord>) {
   try {
-    fs.writeFileSync(storePath(), JSON.stringify(next))
+    const dest = storePath()
+    const tmp = `${dest}.tmp`
+    fs.writeFileSync(tmp, JSON.stringify(next))
+    try {
+      fs.renameSync(tmp, dest)
+    } catch {
+      fs.copyFileSync(tmp, dest)
+      fs.unlinkSync(tmp)
+    }
   } catch {
     // ignore disk errors
   }
@@ -79,6 +89,7 @@ export function writePopout(kind: PopoutKind, channel: string, patch: Partial<Po
     width: patch.width ?? prev?.width ?? size.width,
     height: patch.height ?? prev?.height ?? size.height,
     alwaysOnTop: patch.alwaysOnTop ?? prev?.alwaysOnTop ?? false,
+    displayId: patch.displayId ?? prev?.displayId,
   }
   writePopoutStore({ ...store, [key]: next })
   return next
@@ -96,16 +107,46 @@ export function boundsOnADisplay(bounds: Pick<PopoutRecord, 'x' | 'y' | 'width' 
   })
 }
 
-export function clampToDisplays(bounds: PopoutRecord): PopoutRecord {
-  if (boundsOnADisplay(bounds)) return bounds
-  const area = screen.getPrimaryDisplay().workArea
+function fitToArea(bounds: PopoutRecord, area: { x: number; y: number; width: number; height: number }): PopoutRecord {
   return {
     ...bounds,
     x: area.x + 40,
     y: area.y + 40,
-    width: Math.min(bounds.width, area.width - 48),
-    height: Math.min(bounds.height, area.height - 48),
+    width: Math.min(bounds.width, Math.max(200, area.width - 48)),
+    height: Math.min(bounds.height, Math.max(200, area.height - 48)),
   }
+}
+
+export function clampToDisplays(bounds: PopoutRecord): PopoutRecord {
+  if (boundsOnADisplay(bounds)) return bounds
+  return fitToArea(bounds, screen.getPrimaryDisplay().workArea)
+}
+
+export function recordFromWindow(win: BrowserWindow): PopoutRecord {
+  const bounds = win.getBounds()
+  const display = screen.getDisplayMatching(bounds)
+  return {
+    ...bounds,
+    alwaysOnTop: win.isAlwaysOnTop(),
+    displayId: display?.id,
+  }
+}
+
+export function resolvePopoutBounds(
+  kind: PopoutKind,
+  saved: PopoutRecord | null,
+  main: BrowserWindow | null,
+  openCount = 0,
+): PopoutRecord {
+  if (!saved) return defaultPopoutBounds(kind, main, openCount)
+  if (typeof saved.displayId === 'number') {
+    const display = screen.getAllDisplays().find((item) => item.id === saved.displayId)
+    if (display) {
+      if (boundsOnADisplay(saved)) return saved
+      return { ...fitToArea(saved, display.workArea), displayId: display.id }
+    }
+  }
+  return clampToDisplays(saved)
 }
 
 export function debounce(fn: () => void, ms: number) {
