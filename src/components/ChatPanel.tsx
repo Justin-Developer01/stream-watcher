@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMo
 import type { ChatDock, ChatFloatPosition, ChatMessage } from '../types'
 import { IconButton } from './IconButton'
 import { CloseIcon, PinIcon, PopoutIcon } from './icons'
+import { UI } from '../lib/uiLabels'
 
 type Props = {
   collapsed: boolean
@@ -153,7 +154,7 @@ export function ChatPanel({
               <>
                 {onToggleAlwaysOnTop && (
                   <IconButton
-                    label={alwaysOnTop ? 'Disable always on top' : 'Always on top'}
+                    label={alwaysOnTop ? UI.disableAlwaysOnTop : UI.alwaysOnTop}
                     active={alwaysOnTop}
                     onClick={onToggleAlwaysOnTop}
                     onMouseDown={(e) => e.stopPropagation()}
@@ -168,7 +169,7 @@ export function ChatPanel({
                     onClick={onDockBack}
                     onMouseDown={(e) => e.stopPropagation()}
                   >
-                    Dock back
+                    {UI.dockBack}
                   </button>
                 )}
               </>
@@ -188,7 +189,7 @@ export function ChatPanel({
                   <option value="float">Float</option>
                 </select>
                 <IconButton
-                  label="Pop out chat to another monitor"
+                  label={UI.popOutChat}
                   desktopOnly
                   onClick={onPopout}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -196,7 +197,7 @@ export function ChatPanel({
                   <PopoutIcon />
                 </IconButton>
                 <IconButton
-                  label="Close chat"
+                  label={UI.closeChat}
                   onClick={onToggleCollapsed}
                   onMouseDown={(e) => e.stopPropagation()}
                 >

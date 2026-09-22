@@ -12,6 +12,7 @@ import {
   UnmuteIcon,
 } from './icons'
 import type { StreamItem } from '../types'
+import { UI } from '../lib/uiLabels'
 
 type Props = {
   stream: StreamItem
@@ -65,15 +66,15 @@ export function StreamTile({
           <IconButton label={`Open #${stream.channel} chat`} onClick={onOpenChat}>
             <ChatIcon />
           </IconButton>
-          <IconButton label="Pop out chat to another monitor" desktopOnly onClick={onPopoutChat}>
+          <IconButton label={UI.popOutChat} desktopOnly onClick={onPopoutChat}>
             <PopoutIcon />
           </IconButton>
           {poppedOut ? (
-            <IconButton label="Dock back" desktopOnly onClick={onDockStream}>
+            <IconButton label={UI.dockBack} desktopOnly onClick={onDockStream}>
               <MonitorIcon />
             </IconButton>
           ) : (
-            <IconButton label="Pop out stream to another monitor" desktopOnly onClick={onPopoutStream}>
+            <IconButton label={UI.popOutStream} desktopOnly onClick={onPopoutStream}>
               <MonitorIcon />
             </IconButton>
           )}
@@ -102,7 +103,7 @@ export function StreamTile({
       >
         {poppedOut ? (
           <div className="stream-tile__away">
-            <p>On another monitor</p>
+            <p>{UI.onAnotherMonitor}</p>
             <button
               type="button"
               className="dock-back-btn"
@@ -111,7 +112,7 @@ export function StreamTile({
                 onDockStream()
               }}
             >
-              Dock back
+              {UI.dockBack}
             </button>
           </div>
         ) : (

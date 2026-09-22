@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChatPanel } from './components/ChatPanel'
 import { ChatPopoutApp } from './components/ChatPopoutApp'
-import { FirstRunTip } from './components/FirstRunTip'
+import { FirstRunTips } from './components/FirstRunTips'
 import { SettingsModal, type SettingsTab } from './components/SettingsModal'
 import { StreamGrid } from './components/StreamGrid'
 import { StreamPopoutApp } from './components/StreamPopoutApp'
@@ -402,7 +402,7 @@ function MainApp() {
           onInstallUpdate={() => void updater.install()}
         />
       )}
-      <FirstRunTip />
+      <FirstRunTips />
     </div>
   )
 }

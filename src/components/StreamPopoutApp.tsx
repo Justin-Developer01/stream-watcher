@@ -5,6 +5,7 @@ import { applyAppearance, normalizeAppearance } from '../lib/theme'
 import { IconButton } from './IconButton'
 import { MuteIcon, PinIcon, UnmuteIcon } from './icons'
 import { TwitchPlayer } from './TwitchPlayer'
+import { UI } from '../lib/uiLabels'
 
 export function StreamPopoutApp() {
   const channel = useMemo(() => {
@@ -32,14 +33,14 @@ export function StreamPopoutApp() {
             {muted ? <MuteIcon /> : <UnmuteIcon />}
           </IconButton>
           <IconButton
-            label={alwaysOnTop ? 'Disable always on top' : 'Always on top'}
+            label={alwaysOnTop ? UI.disableAlwaysOnTop : UI.alwaysOnTop}
             active={alwaysOnTop}
             onClick={() => void toggleAlwaysOnTop()}
           >
             <PinIcon />
           </IconButton>
           <button type="button" className="dock-back-btn" onClick={dockBack}>
-            Dock back
+            {UI.dockBack}
           </button>
         </div>
       </header>

@@ -2,17 +2,17 @@
 
 [Home](index.md) · [Features](FEATURES.md)
 
-Start here if you just downloaded the Windows EXE. The same pages open from **Settings → Advanced → Help / Docs**.
+Start here if you just downloaded the Windows EXE. The same pages open from **Settings → Help**.
 
 1. [Install](#install-windows)
 2. [First run](#first-run)
 3. [Add streams](#add-streams)
 4. [Login to Twitch](#login-to-twitch)
-5. [Focus Mode](#focus-mode)
+5. [Focus mode](#focus-mode)
 6. [Chat in the main window](#chat-in-the-main-window)
 7. [Chat vs stream on another monitor](#chat-vs-stream-on-another-monitor)
 8. [Settings](#settings)
-9. [See desktop + Lock](#see-desktop--lock-window)
+9. [See desktop + Lock window (click-through)](#see-desktop--lock-window-click-through)
 10. [Performance Mode](#performance-mode)
 11. [Check for Updates](#check-for-updates)
 
@@ -26,7 +26,9 @@ OAuth redirect used by Login to Twitch: `http://localhost:5173/oauth/callback`.
 
 ## First run
 
-A one-time toast points at **Login to Twitch**. Dismiss it and it does not come back.
+Four short tips appear once: **Focus mode**, **Open chat** vs **Pop out chat**, **Lock window (click-through)**, **Dock back**. Skip or Done dismisses them. Replay from **Settings → Help → Show tips**.
+
+**Settings → Help** is a short panel (not a tour over the streams). It uses the same control names as the tooltips.
 
 ## Add streams
 
@@ -38,7 +40,7 @@ Click the log-in icon. Tooltip: **Login for Prime + chat.** One OAuth flow cover
 
 If that only half-works: **Settings → Advanced → Reconnect chat** or **Refresh Prime session**. Client ID is under **Developer** on that tab (baked into release builds).
 
-## Focus Mode
+## Focus mode
 
 The **Focus mode** icon makes one stream large and the others a bottom strip. Click a strip tile to promote it. Drag/resize is off while Focus is on.
 
@@ -57,22 +59,23 @@ This is the **in-app drawer**. It is not a second window.
 
 Pop-outs are **separate desktop windows** (Windows EXE / `npm run dev:desktop` only). In the browser the same icons stay visible; hover or click shows **Desktop app only**.
 
+**Quick start:** park on another monitor → **Lock window (click-through)** when you need the UI → **Dock back** to the main desk.
+
 The thin top bar does **not** grow extra monitor controls. Stream pop-out lives on the tile. Chat pop-out is on the tile, in the chat drawer, and as one top-bar icon.
 
 ### Pop out chat
 
-| Control | Where | Tooltip / label |
+| Control | Where | What it does |
 |---|---|---|
-| **Open chat on another monitor** | Thin top bar | Opens a chat window for the current channel |
-| **Pop out chat to another monitor** | Stream tile, or the chat drawer | Same thing, for that channel |
+| **Pop out chat** | Thin top bar, stream tile, or the chat drawer | Opens a chat window for that channel |
 
 The drawer closes for that channel. Chat now lives in its own window (`#channel` in the title). Drag that window to any display.
 
-### Pop out a stream (the player)
+### Pop out stream
 
-| Control | Where | Tooltip / label |
+| Control | Where | What it does |
 |---|---|---|
-| **Pop out stream to another monitor** | Stream tile (monitor icon) | Sends **that player** to its own window |
+| **Pop out stream** | Stream tile (monitor icon) | Sends **that player** to its own window |
 
 The tile stays in the grid and reads **On another monitor**. The main desk does not play that stream until you dock it. Chat is unchanged — pop the player and the chat separately if you want both on the other monitor.
 
@@ -111,13 +114,14 @@ The gear opens a frosted modal (~560×480). **Esc** or **X** closes it. Left tab
 | Chat | Font (System / IBM Plex Sans / Inter / Mono) and Size (12 / 13 / 14 / 16) |
 | Hotkeys | Label + keychip. **Click to rebind.** Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
-| Advanced | Developer Client ID, Reconnect / Refresh Prime, Help / Docs |
+| Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |
+| Help | Short in-app guide + Show tips + full docs links |
 
-## See desktop + Lock window
+## See desktop + Lock window (click-through)
 
 Turn on **See desktop behind app** to show the wallpaper through empty stage. Stream tiles and chat stay solid.
 
-Empty areas then **click through** to the desktop. Use **Lock window** on the top bar when you need to click near gaps. Tooltips: **Lock window (disable click-through)** / **Unlock click-through**. If See desktop is off, the lock icon tooltip is **Lock window (enable See desktop behind app first)**.
+Empty areas then **click through** to the desktop. Use **Lock window (click-through)** on the top bar when you need to click near gaps. Tooltips: **Lock window (click-through)** / **Unlock click-through**. If See desktop is off, the lock icon tooltip is **Lock window (enable See desktop behind app first)**.
 
 Windows may need a relaunch if the desktop does not show through after the first toggle.
 

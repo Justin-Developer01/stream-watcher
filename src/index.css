@@ -1126,7 +1126,7 @@ html.see-desktop .app-shell::after {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  max-width: min(420px, 92vw);
+  max-width: min(480px, 92vw);
   padding: 0.55rem 0.7rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -1138,6 +1138,40 @@ html.see-desktop .app-shell::after {
 .first-run-tip p {
   margin: 0;
   color: var(--text);
+}
+
+.first-run-tip__index {
+  color: var(--muted);
+  margin-right: 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.first-run-tip__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.help-guide__steps {
+  margin: 0.35rem 0 0.7rem;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.help-guide__steps li {
+  display: grid;
+  gap: 0.1rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.help-guide__steps strong {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .chat-panel {

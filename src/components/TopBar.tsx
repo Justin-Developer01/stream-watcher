@@ -17,6 +17,7 @@ import {
 import type { LayoutMode, SavedStream } from '../types'
 import { IconButton } from './IconButton'
 import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
+import { UI } from '../lib/uiLabels'
 
 type MenuId = 'streams' | 'layout' | null
 
@@ -306,7 +307,7 @@ export function TopBar({
 
       <div className="topbar__controls">
         <IconButton
-          label={chatOpen ? 'Hide chat' : 'Open chat'}
+          label={chatOpen ? UI.hideChat : UI.openChat}
           active={chatOpen}
           onClick={() => {
             setOpenMenu(null)
@@ -317,7 +318,7 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label="Focus mode"
+          label={UI.focusMode}
           active={focusMode}
           onClick={() => {
             setOpenMenu(null)
@@ -394,13 +395,13 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label={windowLocked ? 'Unlock click-through' : 'Lock window (disable click-through)'}
+          label={windowLocked ? UI.unlockClickThrough : UI.lockWindow}
           tooltip={
             !seeDesktop
-              ? 'Lock window (enable See desktop behind app first)'
+              ? UI.lockNeedsSeeDesktop
               : windowLocked
-                ? 'Unlock click-through'
-                : 'Lock window (disable click-through)'
+                ? UI.unlockClickThrough
+                : UI.lockWindow
           }
           tooltipAlign="end"
           active={windowLocked}
@@ -414,7 +415,7 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label="Open chat on another monitor"
+          label={UI.popOutChat}
           desktopOnly
           tooltipAlign="end"
           onClick={() => {
@@ -426,8 +427,8 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login to Twitch'}
-          tooltip={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : 'Login for Prime + chat.'}
+          label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : UI.loginToTwitch}
+          tooltip={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : UI.loginTooltip}
           tooltipAlign="end"
           active={isLoggedIn}
           disabled={authBusy}
@@ -440,7 +441,7 @@ export function TopBar({
         </IconButton>
 
         <IconButton
-          label="Settings"
+          label={UI.settings}
           tooltipAlign="end"
           active={settingsOpen}
           onClick={() => {

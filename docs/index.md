@@ -13,26 +13,29 @@ Windows desktop app for watching several Twitch streams at once. Download the EX
 1. Open the latest [GitHub Release](https://github.com/Justin-Developer01/stream-watcher/releases).
 2. Download **Stream Watcher Setup** (installer) or **Portable** (just run).
 3. Windows SmartScreen may warn because the build is unsigned. **More info → Run anyway**.
-4. You land on a thin top bar. A one-time toast points at **Login to Twitch**.
+4. You land on a thin top bar. Four short tips appear once (Focus mode, chat, Lock, Dock back).
 
-In the app, **Settings → Advanced → Help / Docs** opens this folder.
+In the app, **Settings → Help** is the short guide. Full docs links sit on that tab and under Advanced.
 
 To publish these pages as a site: repo **Settings → Pages → Deploy from a branch → `/docs`**.
 
 ## Quick start
 
+Park on another monitor → **Lock window (click-through)** when you need the UI → **Dock back** to the main desk.
+
 | Do this | Where |
 |---|---|
 | Add a channel | Click the **title** in the top bar |
 | Login for Prime + chat | Log-in icon. Tooltip: **Login for Prime + chat.** |
-| Focus one stream | Focus icon. Click a strip tile to promote it. |
+| Focus one stream | **Focus mode**. Click a strip tile to promote it. |
 | Open chat (in the window) | **Open chat** on the thin bar, or **Open #channel chat** on a tile. Drawer **pushes** the grid. |
-| Chat on another monitor | **Open chat on another monitor** (bar) or **Pop out chat to another monitor** (tile / drawer). |
-| Stream on another monitor | Tile **Pop out stream to another monitor**. Tile reads **On another monitor**. |
+| Chat on another monitor | **Pop out chat** (bar, tile, or drawer). |
+| Stream on another monitor | Tile **Pop out stream**. Tile reads **On another monitor**. |
 | Dock / pin | **Dock back** and **Always on top** live on the pop-out only. Position is remembered. |
-| Settings | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced. Esc / X closes. |
+| Lock the UI | **Lock window (click-through)** after See desktop, when you need to click the desk. |
+| Settings / Help | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc / X closes. |
 | Check for Updates | Settings → **Updates** |
-| See the desktop | Settings → Appearance → **See desktop behind app.** Lock window stops click-through. |
+| See the desktop | Settings → Appearance → **See desktop behind app.** |
 | Save CPU | Performance gauge on the top bar. Other tiles show **paused / low**. |
 
 Full walkthrough: [USAGE.md](USAGE.md). Everything the app does: [FEATURES.md](FEATURES.md).

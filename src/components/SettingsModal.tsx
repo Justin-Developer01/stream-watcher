@@ -4,10 +4,11 @@ import type { AppearanceTheme, UpdaterStatus } from '../types'
 import type { HotkeyChord, HotkeyId } from '../lib/hotkeys'
 import { DOCS_FEATURES_URL, DOCS_HOME_URL, DOCS_USAGE_URL, TWITCH_OAUTH_REDIRECT } from '../lib/env'
 import { AppearanceSettings, ChatTypographySettings } from './AppearanceSettings'
+import { HelpGuide } from './HelpGuide'
 import { HotkeysSettings } from './HotkeysSettings'
 import { IconButton } from './IconButton'
 
-export type SettingsTab = 'appearance' | 'chat' | 'hotkeys' | 'updates' | 'advanced'
+export type SettingsTab = 'appearance' | 'chat' | 'hotkeys' | 'updates' | 'advanced' | 'help'
 
 const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'appearance', label: 'Appearance' },
@@ -15,6 +16,7 @@ const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'hotkeys', label: 'Hotkeys' },
   { id: 'updates', label: 'Updates' },
   { id: 'advanced', label: 'Advanced' },
+  { id: 'help', label: 'Help' },
 ]
 
 type Props = {
@@ -209,8 +211,9 @@ export function SettingsModal({
                   )}
                   {authError && <p className="field-error">{authError}</p>}
                   <p className="hint">
+                    Short steps live on the <strong>Help</strong> tab. Full write-up:{' '}
                     <a href={DOCS_HOME_URL} target="_blank" rel="noreferrer">
-                      Help / Docs
+                      Docs
                     </a>
                     {' · '}
                     <a href={DOCS_USAGE_URL} target="_blank" rel="noreferrer">
@@ -224,6 +227,7 @@ export function SettingsModal({
                 </div>
               </section>
             )}
+            {tab === 'help' && <HelpGuide onCloseSettings={onClose} />}
           </div>
         </div>
       </div>

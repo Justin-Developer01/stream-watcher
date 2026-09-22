@@ -1,0 +1,20 @@
+/** Exact control names shown in tooltips, docs, and the in-app guide. */
+export const UI = {
+  openChat: 'Open chat',
+  hideChat: 'Hide chat',
+  closeChat: 'Close chat',
+  popOutChat: 'Pop out chat',
+  popOutStream: 'Pop out stream',
+  dockBack: 'Dock back',
+  alwaysOnTop: 'Always on top',
+  disableAlwaysOnTop: 'Disable always on top',
+  lockWindow: 'Lock window (click-through)',
+  unlockClickThrough: 'Unlock click-through',
+  lockNeedsSeeDesktop: 'Lock window (enable See desktop behind app first)',
+  loginToTwitch: 'Login to Twitch',
+  loginTooltip: 'Login for Prime + chat.',
+  focusMode: 'Focus mode',
+  seeDesktop: 'See desktop behind app.',
+  settings: 'Settings',
+  onAnotherMonitor: 'On another monitor',
+} as const

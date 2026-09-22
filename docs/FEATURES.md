@@ -6,9 +6,9 @@ Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 
 ## Watching
 - Add channels from the top-bar title. Layouts: 1, 1×2, 2×2, 1+3. The grid always fills the window (no page scroll).
-- Drag the handle and resize tiles. Disabled in Focus Mode.
+- Drag the handle and resize tiles. Disabled in Focus mode.
 - Save channels from a tile star for later.
-- **Focus Mode** — hero ~72% / bottom strip ~28%. Click a strip tile to promote it.
+- **Focus mode** — hero ~72% / bottom strip ~28%. Click a strip tile to promote it.
 - Fullscreen from the top bar (F11 by default). The bar can pin or auto-hide.
 
 ## Chat (in-app drawer)
@@ -19,8 +19,10 @@ Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 ## Multi-monitor (desktop pop-out windows)
 Pop-outs are separate windows. Browser builds show the icons but say **Desktop app only**.
 
-- **Chat window:** **Open chat on another monitor** (thin top bar) or **Pop out chat to another monitor** (tile or drawer).
-- **Stream window:** **Pop out stream to another monitor** (tile monitor icon). The grid tile reads **On another monitor**.
+**Quick start:** park on another monitor → **Lock window (click-through)** when you need the UI → **Dock back** to the main desk.
+
+- **Chat window:** **Pop out chat** (thin top bar, tile, or drawer).
+- **Stream window:** **Pop out stream** (tile monitor icon). The grid tile reads **On another monitor**.
 - **Dock back** on the pop-out (or the tile, for a popped stream) returns chat to the drawer / the player to the tile. Window **X** also docks; chat drawer does not auto-open.
 - **Always on top** (pin) is per pop-out only. Tooltip: **Always on top** / **Disable always on top**. The main desk stays unpinned and thin.
 - Last **monitor, position, size, and always-on-top** are remembered per channel (`popout-windows.json` in app user data). Chat and stream for the same channel are stored separately.
@@ -44,8 +46,8 @@ Settings → **Chat**
 - Size: 12 / 13 / 14 / 16 (default 13)
 - Applies to chat lines and the composer only. An open drawer updates live.
 
-## Click-through + Lock
-With See desktop on, empty-stage clicks pass through to the desktop. **Lock window** on the top bar freezes that. Unlock to pass through again.
+## Click-through + Lock window (click-through)
+With See desktop on, empty-stage clicks pass through to the desktop. **Lock window (click-through)** on the top bar freezes that. Unlock to pass through again.
 
 ## Performance Mode
 Top-bar gauge toggle.
@@ -54,10 +56,13 @@ Top-bar gauge toggle.
 - Frosted glass blur is eased so the thin bar stays cheap to draw.
 
 ## Hotkeys
-Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Defaults include Focus Mode, Fullscreen, Toggle chat, Lock window, Open Settings, Add stream, Mute focus.
+Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Defaults include Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Add stream, Mute focus.
 
 ## Updates
 Settings → **Updates**. Checks GitHub Releases, including pre-releases. NSIS Setup can install and restart. Portable builds download a new EXE.
 
+## Help
+Settings → **Help**. Short in-app panel (add streams, Focus mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **Lock window (click-through)**, Settings, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
+
 ## First run
-No wizard. Optional one-time toast pointing at Login to Twitch.
+No wizard. Four dismissible tips once: Focus mode, Open chat vs Pop out chat, Lock window (click-through), Dock back.

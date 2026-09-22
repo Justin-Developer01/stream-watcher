@@ -26,7 +26,7 @@ export const HOTKEY_ORDER: HotkeyId[] = [
 ]
 
 export const HOTKEY_LABELS: Record<HotkeyId, string> = {
-  focusMode: 'Focus Mode',
+  focusMode: 'Focus mode',
   fullscreen: 'Fullscreen',
   toggleChat: 'Toggle chat',
   lockWindow: 'Lock window',
