@@ -15,6 +15,19 @@ export type SavedStream = {
   savedAt: number
 }
 
+export type LayoutTemplate = {
+  id: string
+  name: string
+  createdAt: number
+  channels: string[]
+  focusMode: boolean
+  focusedChannel: string | null
+  layoutMode: LayoutMode
+  chatDock: ChatDock
+  chatSidebarOpen: boolean
+  chatChannel: string | null
+}
+
 export type ChatDock = 'right' | 'left' | 'bottom' | 'float'
 
 export type LayoutMode = '1x1' | '1x2' | '2x2' | '1+3'

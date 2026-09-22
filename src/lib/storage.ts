@@ -1,8 +1,9 @@
 import type { Layout } from 'react-grid-layout'
-import type { AuthState, PersistedState, StreamItem } from '../types'
+import type { AuthState, LayoutTemplate, PersistedState, StreamItem } from '../types'
 
 const STATE_KEY = 'stream-watcher:v1'
 const AUTH_KEY = 'stream-watcher:auth:v1'
+const TEMPLATES_KEY = 'stream-watcher:templates:v1'
 
 export type GridLayout = Layout[]
 
@@ -81,4 +82,24 @@ export function normalizeChannel(input: string): string | null {
 
 export function newStreamId() {
   return `stream-${crypto.randomUUID()}`
+}
+
+export function loadTemplates(): LayoutTemplate[] {
+  try {
+    const raw = localStorage.getItem(TEMPLATES_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as LayoutTemplate[]) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveTemplates(templates: LayoutTemplate[]) {
+  try {
+    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates))
+    return true
+  } catch {
+    return false
+  }
 }

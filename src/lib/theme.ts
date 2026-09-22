@@ -1,6 +1,7 @@
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
 export type ChatFont = 'system' | 'plex' | 'inter' | 'mono'
+export type ChromePosition = 'top' | 'left'
 
 export type AppearanceTheme = {
   preset: AppearancePreset
@@ -14,6 +15,7 @@ export type AppearanceTheme = {
   seeDesktop: boolean
   chatFont: ChatFont
   chatFontSize: number
+  chrome: ChromePosition
 }
 
 export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
@@ -73,6 +75,7 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   seeDesktop: false,
   chatFont: 'system',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
+  chrome: 'top',
 }
 
 const HEX = /^#([0-9a-fA-F]{6})$/
@@ -145,6 +148,7 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     seeDesktop: current?.seeDesktop ?? DEFAULT_APPEARANCE.seeDesktop,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
+    chrome: current?.chrome ?? DEFAULT_APPEARANCE.chrome,
     ...APPEARANCE_PRESETS[preset],
   }
 }
@@ -163,7 +167,7 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
       : backgroundImage
         ? 'image'
         : 'color'
-  const next = {
+  const next: AppearanceTheme = {
     accent: normalizeHex(raw?.accent ?? '', base.accent),
     surface: normalizeHex(raw?.surface ?? '', base.surface),
     text: normalizeHex(raw?.text ?? '', base.text),
@@ -174,6 +178,7 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     seeDesktop: raw?.seeDesktop === true,
     chatFont: normalizeChatFont(raw?.chatFont),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
+    chrome: raw?.chrome === 'left' ? 'left' : 'top',
     preset: presetKey,
   }
   next.preset = matchingPreset(next) ?? presetKey
@@ -208,6 +213,7 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   root.style.setProperty('--muted', muted)
   root.style.setProperty('--border', border)
   root.classList.toggle('see-desktop', seeDesktop)
+  root.classList.toggle('chrome-left', theme.chrome === 'left')
   root.style.setProperty('--bg', seeDesktop ? 'transparent' : theme.backgroundColor)
   root.style.setProperty('--bar-scrim', scrim)
   root.style.setProperty(

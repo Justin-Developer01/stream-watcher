@@ -264,6 +264,65 @@ html.see-desktop .app-shell::after {
   position: relative;
 }
 
+html.chrome-left .topbar {
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  width: var(--topbar-h);
+  height: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 8px 0;
+  border-bottom: none;
+  border-right: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+html.chrome-left .topbar--hidden {
+  transform: translateX(-100%);
+}
+
+html.chrome-left .topbar__title {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+html.chrome-left .topbar__controls {
+  flex-direction: column;
+  margin-left: 0;
+  margin-top: auto;
+}
+
+html.chrome-left .workspace {
+  padding-top: 0;
+  padding-left: var(--topbar-h);
+}
+
+html.chrome-left .app-shell--chrome-hidden .workspace {
+  padding-top: 0;
+  padding-left: 0;
+}
+
+html.chrome-left .app-shell--chrome-hidden .topbar-hotzone {
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  width: 10px;
+  height: auto;
+}
+
+html.chrome-left .popover,
+html.chrome-left .topbar-menu--end .popover,
+html.chrome-left .popover--title {
+  top: 0;
+  left: calc(100% + 8px);
+  right: auto;
+}
+
 .brand__mark {
   width: 28px;
   height: 28px;
@@ -508,6 +567,23 @@ html.see-desktop .app-shell::after {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.saved-list__name-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .saved-list__actions {

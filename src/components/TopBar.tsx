@@ -3,23 +3,26 @@ import {
   Columns2,
   Focus,
   Gauge,
+  List,
   Lock,
   LogIn,
   Maximize2,
   MessageSquare,
   Minimize2,
   Pin,
+  RotateCcw,
   Settings,
   SquareArrowOutUpRight,
+  LayoutTemplate as LayoutTemplateIcon,
   Unlock,
   X,
 } from 'lucide-react'
-import type { LayoutMode, SavedStream } from '../types'
+import type { LayoutMode, LayoutTemplate, SavedStream } from '../types'
 import { IconButton } from './IconButton'
 import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
 import { UI } from '../lib/uiLabels'
 
-type MenuId = 'streams' | 'layout' | null
+type MenuId = 'streams' | 'layout' | 'templates' | null
 
 type Props = {
   hidden?: boolean
@@ -56,6 +59,13 @@ type Props = {
   onOpenSettings: () => void
   openStreamsRequest?: number
   onMenuOpenChange?: (open: boolean) => void
+  onDockAllPopouts: () => void
+  hasPoppedOut: boolean
+  templates: LayoutTemplate[]
+  onApplyTemplate: (template: LayoutTemplate) => void
+  onSaveTemplate: (name: string) => { ok: boolean; error?: string }
+  onDeleteTemplate: (id: string) => void
+  chrome: 'top' | 'left'
 }
 
 function Menu({
@@ -134,11 +144,20 @@ export function TopBar({
   onOpenSettings,
   openStreamsRequest = 0,
   onMenuOpenChange,
+  onDockAllPopouts,
+  hasPoppedOut,
+  templates,
+  onApplyTemplate,
+  onSaveTemplate,
+  onDeleteTemplate,
+  chrome,
 }: Props) {
   const [openMenu, setOpenMenu] = useState<MenuId>(null)
   const [channelInput, setChannelInput] = useState('')
   const [addError, setAddError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [templateNameInput, setTemplateNameInput] = useState('')
+  const [templateError, setTemplateError] = useState<string | null>(null)
   const barRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -210,9 +229,14 @@ export function TopBar({
         type="button"
         className="topbar__title"
         title={title}
+        aria-label={chrome === 'left' ? title : undefined}
         onClick={() => setOpenMenu(openMenu === 'streams' ? null : 'streams')}
       >
-        <span className="topbar__title-text">{title}</span>
+        {chrome === 'left' ? (
+          <List size={16} strokeWidth={1.75} aria-hidden />
+        ) : (
+          <span className="topbar__title-text">{title}</span>
+        )}
       </button>
       {openMenu === 'streams' && (
         <div className="popover popover--title" role="dialog" aria-label="Streams" data-hit>
@@ -367,6 +391,88 @@ export function TopBar({
             <p className="hint">Tiles always fill the window. No page scroll.</p>
           </section>
         </Menu>
+
+        <Menu
+          id="templates"
+          openId={openMenu}
+          setOpenId={setOpenMenu}
+          label={UI.layoutTemplates}
+          icon={<LayoutTemplateIcon size={16} strokeWidth={1.75} />}
+        >
+          <section className="popover-section popover-section--flush">
+            <h2>Layout templates</h2>
+            {templates.length > 0 ? (
+              <ul className="saved-list">
+                {templates.map((item) => (
+                  <li key={item.id} className="saved-list__item">
+                    <button
+                      type="button"
+                      className="saved-list__name-btn"
+                      onClick={() => {
+                        onApplyTemplate(item)
+                        setOpenMenu(null)
+                      }}
+                      title={`Apply "${item.name}"`}
+                    >
+                      {item.name}
+                    </button>
+                    <div className="saved-list__actions">
+                      <button
+                        type="button"
+                        className="ghost danger saved-list__remove"
+                        onClick={() => onDeleteTemplate(item.id)}
+                        title="Delete template"
+                        aria-label={`Delete template ${item.name}`}
+                      >
+                        <X size={14} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="hint">Save the current channels, focus, and chat placement as a template.</p>
+            )}
+            <form
+              className="add-form__row"
+              onSubmit={(event) => {
+                event.preventDefault()
+                const result = onSaveTemplate(templateNameInput)
+                if (result.ok) {
+                  setTemplateNameInput('')
+                  setTemplateError(null)
+                } else {
+                  setTemplateError(result.error ?? 'Could not save template')
+                }
+              }}
+            >
+              <input
+                value={templateNameInput}
+                onChange={(e) => setTemplateNameInput(e.target.value)}
+                placeholder="Template name"
+                autoComplete="off"
+              />
+              <button type="submit" disabled={!templateNameInput.trim()} title="Save current layout">
+                +
+              </button>
+            </form>
+            {templateError && <p className="field-error">{templateError}</p>}
+          </section>
+        </Menu>
+
+        <IconButton
+          label={UI.dockAllPopouts}
+          tooltip={UI.dockAllPopouts}
+          tooltipAlign="end"
+          desktopOnly
+          disabled={!hasPoppedOut}
+          onClick={() => {
+            setOpenMenu(null)
+            onDockAllPopouts()
+          }}
+        >
+          <RotateCcw size={16} strokeWidth={1.75} />
+        </IconButton>
 
         <IconButton
           label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}

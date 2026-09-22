@@ -11,7 +11,14 @@ import {
 import { hasBuiltInTwitchClientId, resolveTwitchClientId } from '../lib/env'
 import { applyAppearance, normalizeAppearance, type AppearanceTheme } from '../lib/theme'
 import { normalizeHotkeys, type HotkeyChord, type HotkeyId } from '../lib/hotkeys'
-import type { ChatDock, ChatFloatPosition, LayoutMode, SavedStream, StreamItem } from '../types'
+import type {
+  ChatDock,
+  ChatFloatPosition,
+  LayoutMode,
+  LayoutTemplate,
+  SavedStream,
+  StreamItem,
+} from '../types'
 import { DEFAULT_CHAT_FLOAT } from '../types'
 
 const DEFAULT_STREAMS: StreamItem[] = [
@@ -236,6 +243,17 @@ export function useStreams() {
     })
   }, [streams])
 
+  const cycleFocus = useCallback(() => {
+    if (streams.length < 2) return
+    const idx = streams.findIndex((s) => s.id === focusedId)
+    const next = streams[(idx + 1) % streams.length] ?? streams[0]
+    if (next) focusStream(next.id)
+  }, [streams, focusedId, focusStream])
+
+  const muteAll = useCallback(() => {
+    setStreams((prev) => prev.map((s) => ({ ...s, muted: true })))
+  }, [])
+
   const toggleMute = useCallback((id: string) => {
     setStreams((prev) => {
       const target = prev.find((s) => s.id === id)
@@ -266,6 +284,35 @@ export function useStreams() {
     [streams],
   )
 
+  const applyTemplate = useCallback((template: LayoutTemplate) => {
+    if (!template.channels.length) return
+
+    const focusChannel =
+      template.focusedChannel && template.channels.includes(template.focusedChannel)
+        ? template.focusedChannel
+        : template.channels[0]
+
+    const newStreams: StreamItem[] = template.channels.map((channel) => ({
+      id: newStreamId(),
+      channel,
+      muted: channel !== focusChannel,
+    }))
+
+    setStreams(newStreams)
+    setLayoutMode(template.layoutMode)
+    setLayout(buildPresetLayout(newStreams, template.layoutMode))
+    setFocusMode(template.focusMode)
+    setFocusedId(newStreams.find((s) => s.channel === focusChannel)?.id ?? newStreams[0].id)
+
+    setChatDock(template.chatDock)
+    setChatSidebarOpen(template.chatSidebarOpen)
+    const chatMatch =
+      template.chatChannel && template.channels.includes(template.chatChannel)
+        ? template.chatChannel
+        : newStreams[0].channel
+    setChatChannel(chatMatch)
+  }, [])
+
   return {
     streams,
     layout,
@@ -295,8 +342,11 @@ export function useStreams() {
     unsaveStream,
     toggleSaveStream,
     focusStream,
+    cycleFocus,
+    muteAll,
     toggleMute,
     applyPreset,
+    applyTemplate,
     appearance,
     setAppearance,
     windowLocked,

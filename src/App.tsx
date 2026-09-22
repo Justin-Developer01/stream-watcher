@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChatPanel } from './components/ChatPanel'
 import { ChatPopoutApp } from './components/ChatPopoutApp'
 import { FirstRunTips } from './components/FirstRunTips'
@@ -8,6 +8,7 @@ import { StreamPopoutApp } from './components/StreamPopoutApp'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
 import { usePopouts } from './hooks/usePopouts'
+import { useTemplates } from './hooks/useTemplates'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useHotkeys } from './hooks/useHotkeys'
@@ -49,8 +50,11 @@ function MainApp() {
     unsaveStream,
     toggleSaveStream,
     focusStream,
+    cycleFocus,
+    muteAll,
     toggleMute,
     applyPreset,
+    applyTemplate,
     appearance,
     setAppearance,
     windowLocked,
@@ -65,7 +69,9 @@ function MainApp() {
     useTwitchAuth(clientId)
   const updater = useAppUpdater()
   const { isFullscreen, toggleFullscreen, setFullscreen } = useFullscreen()
-  const { isChatPopped, isStreamPopped, markChatPopped, markStreamPopped } = usePopouts()
+  const { poppedChat, poppedStreams, isChatPopped, isStreamPopped, markChatPopped, markStreamPopped } =
+    usePopouts()
+  const { templates, saveCurrentAsTemplate, deleteTemplate } = useTemplates()
 
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -73,6 +79,7 @@ function MainApp() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('appearance')
   const [openStreamsRequest, setOpenStreamsRequest] = useState(0)
+  const suppressChatAutoOpenRef = useRef(false)
 
   const channels = streams.map((s) => s.channel)
   const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
@@ -155,10 +162,38 @@ function MainApp() {
     const api = window.streamWatcher
     if (!api?.onChatPopoutDocked) return
     return api.onChatPopoutDocked((channel) => {
+      if (suppressChatAutoOpenRef.current) return
       setChatChannel(channel)
       setChatSidebarOpen(true)
     })
   }, [setChatChannel, setChatSidebarOpen])
+
+  const dockAllPopouts = useCallback(async () => {
+    const api = window.streamWatcher
+    if (!api?.dockPopout) return
+    suppressChatAutoOpenRef.current = true
+    try {
+      await Promise.all([
+        ...poppedChat.map((channel) => api.dockPopout('chat', channel)),
+        ...poppedStreams.map((channel) => api.dockPopout('stream', channel)),
+      ])
+    } finally {
+      suppressChatAutoOpenRef.current = false
+    }
+  }, [poppedChat, poppedStreams])
+
+  const buildTemplateSnapshot = useCallback(() => {
+    const focusedStream = streams.find((s) => s.id === focusedId)
+    return {
+      channels: streams.map((s) => s.channel),
+      focusMode,
+      focusedChannel: focusedStream?.channel ?? null,
+      layoutMode,
+      chatDock,
+      chatSidebarOpen,
+      chatChannel,
+    }
+  }, [streams, focusedId, focusMode, layoutMode, chatDock, chatSidebarOpen, chatChannel])
 
   useClickThrough(appearance.seeDesktop && !windowLocked)
 
@@ -187,8 +222,20 @@ function MainApp() {
       muteFocus: () => {
         if (focusedId) toggleMute(focusedId)
       },
+      cycleFocus,
+      muteAll,
     }),
-    [appearance.seeDesktop, focusedId, setWindowLocked, toggleChatDrawer, toggleFocusMode, toggleFullscreen, toggleMute],
+    [
+      appearance.seeDesktop,
+      focusedId,
+      setWindowLocked,
+      toggleChatDrawer,
+      toggleFocusMode,
+      toggleFullscreen,
+      toggleMute,
+      cycleFocus,
+      muteAll,
+    ],
   )
 
   useHotkeys(hotkeys, hotkeyActions, {
@@ -204,7 +251,8 @@ function MainApp() {
 
     let timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
     const onMove = (event: MouseEvent) => {
-      if (event.clientY <= 52) {
+      const nearEdge = appearance.chrome === 'left' ? event.clientX <= 52 : event.clientY <= 52
+      if (nearEdge) {
         setChromeHidden(false)
         window.clearTimeout(timer)
         return
@@ -226,7 +274,7 @@ function MainApp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('keydown', onKey)
     }
-  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen, settingsOpen])
+  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen, settingsOpen, appearance.chrome])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -334,6 +382,13 @@ function MainApp() {
         onOpenSettings={() => openSettings(error === MISSING_TWITCH_CLIENT_ID_ERROR ? 'advanced' : 'appearance')}
         openStreamsRequest={openStreamsRequest}
         onMenuOpenChange={setMenuOpen}
+        onDockAllPopouts={() => void dockAllPopouts()}
+        hasPoppedOut={poppedChat.length + poppedStreams.length > 0}
+        templates={templates}
+        onApplyTemplate={applyTemplate}
+        onSaveTemplate={(name) => saveCurrentAsTemplate(name, buildTemplateSnapshot())}
+        onDeleteTemplate={deleteTemplate}
+        chrome={appearance.chrome}
       />
 
       <div

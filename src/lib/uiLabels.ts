@@ -17,4 +17,6 @@ export const UI = {
   seeDesktop: 'See desktop behind app.',
   settings: 'Settings',
   onAnotherMonitor: 'On another monitor',
+  dockAllPopouts: 'Dock all pop-outs back',
+  layoutTemplates: 'Layout templates',
 } as const
