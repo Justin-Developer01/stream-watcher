@@ -69,7 +69,7 @@ export function SettingsModal({
   }, [authError, hasBuiltInClientId])
 
   return (
-    <div className="settings-modal-backdrop" onMouseDown={onClose}>
+    <div className="settings-modal-backdrop" data-hit onMouseDown={onClose}>
       <div
         className="settings-modal"
         role="dialog"
