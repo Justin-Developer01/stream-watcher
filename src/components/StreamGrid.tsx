@@ -21,6 +21,9 @@ type Props = {
   onRemove: (id: string) => void
   onOpenChat: (channel: string) => void
   onPopoutChat: (channel: string) => void
+  onPopoutStream: (channel: string) => void
+  onDockStream: (channel: string) => void
+  isStreamPopped: (channel: string) => boolean
   onToggleSave: (channel: string) => void
 }
 
@@ -51,6 +54,9 @@ export function StreamGrid({
   onRemove,
   onOpenChat,
   onPopoutChat,
+  onPopoutStream,
+  onDockStream,
+  isStreamPopped,
   onToggleSave,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -88,12 +94,15 @@ export function StreamGrid({
       showHandle={options?.showHandle ?? !focusMode}
       isSaved={savedChannels.includes(stream.channel)}
       promoteOnClick={options?.promoteOnClick}
-      economy={performanceMode && stream.id !== activeId}
+      economy={performanceMode && stream.id !== activeId && !isStreamPopped(stream.channel)}
+      poppedOut={isStreamPopped(stream.channel)}
       onFocus={() => onFocus(stream.id)}
       onToggleMute={() => onToggleMute(stream.id)}
       onRemove={() => onRemove(stream.id)}
       onOpenChat={() => onOpenChat(stream.channel)}
       onPopoutChat={() => onPopoutChat(stream.channel)}
+      onPopoutStream={() => onPopoutStream(stream.channel)}
+      onDockStream={() => onDockStream(stream.channel)}
       onToggleSave={() => onToggleSave(stream.channel)}
     />
   )

@@ -83,6 +83,23 @@ export function PopoutIcon({ size = 15 }: IconProps) {
   )
 }
 
+export function MonitorIcon({ size = 15 }: IconProps) {
+  return (
+    <svg {...svgProps(size)}>
+      <rect x="2.5" y="3.5" width="11" height="7" rx="1" />
+      <path d="M6 13h4M8 10.5V13" />
+    </svg>
+  )
+}
+
+export function PinIcon({ size = 15 }: IconProps) {
+  return (
+    <svg {...svgProps(size)}>
+      <path d="M6 2.8h4l.7 4.1 1.8 1.4v1.4H3.5V8.3l1.8-1.4L6 2.8zM8 9.7v3.5" />
+    </svg>
+  )
+}
+
 export function CloseIcon({ size = 15 }: IconProps) {
   return (
     <svg {...svgProps(size)}>

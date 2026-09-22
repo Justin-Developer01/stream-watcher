@@ -4,9 +4,10 @@ import { ChatPopoutApp } from './components/ChatPopoutApp'
 import { FirstRunTip } from './components/FirstRunTip'
 import { SettingsModal, type SettingsTab } from './components/SettingsModal'
 import { StreamGrid } from './components/StreamGrid'
+import { StreamPopoutApp } from './components/StreamPopoutApp'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
-import { useChatPopouts } from './hooks/useChatPopouts'
+import { usePopouts } from './hooks/usePopouts'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useHotkeys } from './hooks/useHotkeys'
@@ -64,7 +65,7 @@ function MainApp() {
     useTwitchAuth(clientId)
   const updater = useAppUpdater()
   const { isFullscreen, toggleFullscreen, setFullscreen } = useFullscreen()
-  const { isPopped, markPopped } = useChatPopouts()
+  const { isChatPopped, isStreamPopped, markChatPopped, markStreamPopped } = usePopouts()
 
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -76,10 +77,10 @@ function MainApp() {
   const channels = streams.map((s) => s.channel)
   const focused = streams.find((s) => s.id === focusedId) ?? streams[0]
   const title = focused?.channel ?? chatChannel ?? 'Stream Watcher'
-  const drawerChannels = channels.filter((channel) => !isPopped(channel))
+  const drawerChannels = channels.filter((channel) => !isChatPopped(channel))
   const chat = useChat({
     channels: drawerChannels,
-    activeChannel: chatChannel && !isPopped(chatChannel) ? chatChannel : drawerChannels[0] ?? null,
+    activeChannel: chatChannel && !isChatPopped(chatChannel) ? chatChannel : drawerChannels[0] ?? null,
     username: auth.username,
     accessToken: auth.accessToken,
   })
@@ -88,7 +89,7 @@ function MainApp() {
     async (channel: string) => {
       setChatChannel(channel)
       if (window.streamWatcher?.openChatPopout) {
-        markPopped(channel)
+        markChatPopped(channel)
         await window.streamWatcher.openChatPopout(channel)
         setChatSidebarOpen(false)
         return
@@ -96,19 +97,32 @@ function MainApp() {
       setChatDock('float')
       setChatSidebarOpen(true)
     },
-    [markPopped, setChatChannel, setChatDock, setChatSidebarOpen],
+    [markChatPopped, setChatChannel, setChatDock, setChatSidebarOpen],
   )
+
+  const popoutStream = useCallback(
+    async (channel: string) => {
+      if (!window.streamWatcher?.openStreamPopout) return
+      markStreamPopped(channel)
+      await window.streamWatcher.openStreamPopout(channel)
+    },
+    [markStreamPopped],
+  )
+
+  const dockStream = useCallback((channel: string) => {
+    void window.streamWatcher?.dockPopout?.('stream', channel)
+  }, [])
 
   const openChatFor = useCallback(
     (channel: string) => {
-      if (isPopped(channel) && window.streamWatcher?.openChatPopout) {
+      if (isChatPopped(channel) && window.streamWatcher?.openChatPopout) {
         void popoutChat(channel)
         return
       }
       setChatChannel(channel)
       setChatSidebarOpen(true)
     },
-    [isPopped, popoutChat, setChatChannel, setChatSidebarOpen],
+    [isChatPopped, popoutChat, setChatChannel, setChatSidebarOpen],
   )
 
   const toggleChatDrawer = useCallback(() => {
@@ -116,7 +130,7 @@ function MainApp() {
       setChatSidebarOpen(false)
       return
     }
-    if (chatChannel && isPopped(chatChannel)) {
+    if (chatChannel && isChatPopped(chatChannel)) {
       const next = drawerChannels[0]
       if (!next) {
         void popoutChat(chatChannel)
@@ -131,11 +145,20 @@ function MainApp() {
     chatChannel,
     chatSidebarOpen,
     drawerChannels,
-    isPopped,
+    isChatPopped,
     popoutChat,
     setChatChannel,
     setChatSidebarOpen,
   ])
+
+  useEffect(() => {
+    const api = window.streamWatcher
+    if (!api?.onChatPopoutDocked) return
+    return api.onChatPopoutDocked((channel) => {
+      setChatChannel(channel)
+      setChatSidebarOpen(true)
+    })
+  }, [setChatChannel, setChatSidebarOpen])
 
   useClickThrough(appearance.seeDesktop && !windowLocked)
 
@@ -240,7 +263,7 @@ function MainApp() {
       float={chatFloat}
       onFloatChange={setChatFloat}
       channels={drawerChannels}
-      activeChannel={chatChannel && !isPopped(chatChannel) ? chatChannel : drawerChannels[0] ?? null}
+      activeChannel={chatChannel && !isChatPopped(chatChannel) ? chatChannel : drawerChannels[0] ?? null}
       onChannelChange={setChatChannel}
       messages={chat.messages}
       status={chat.status}
@@ -249,7 +272,7 @@ function MainApp() {
       username={auth.username}
       onSend={chat.sendMessage}
       onPopout={() => {
-        const target = chatChannel && !isPopped(chatChannel) ? chatChannel : drawerChannels[0]
+        const target = chatChannel && !isChatPopped(chatChannel) ? chatChannel : drawerChannels[0]
         if (target) void popoutChat(target)
       }}
     />
@@ -342,6 +365,11 @@ function MainApp() {
             onPopoutChat={(channel) => {
               void popoutChat(channel)
             }}
+            onPopoutStream={(channel) => {
+              void popoutStream(channel)
+            }}
+            onDockStream={dockStream}
+            isStreamPopped={isStreamPopped}
             onToggleSave={toggleSaveStream}
             savedChannels={savedStreams.map((s) => s.channel)}
           />
@@ -382,5 +410,6 @@ function MainApp() {
 export default function App() {
   const mode = new URLSearchParams(window.location.search).get('mode')
   if (mode === 'chat') return <ChatPopoutApp />
+  if (mode === 'stream') return <StreamPopoutApp />
   return <MainApp />
 }

@@ -7,6 +7,8 @@ export type TwitchOAuthResult = {
   scope: string
 }
 
+export type PopoutKind = 'chat' | 'stream'
+
 const api = {
   openTwitchLogin: () => ipcRenderer.invoke('twitch:open-login') as Promise<void>,
   startTwitchOAuth: (payload: {
@@ -17,7 +19,16 @@ const api = {
   clearTwitchSession: () => ipcRenderer.invoke('twitch:clear-session') as Promise<void>,
   openChatPopout: (channel: string) =>
     ipcRenderer.invoke('chat:open-popout', channel) as Promise<void>,
+  openStreamPopout: (channel: string) =>
+    ipcRenderer.invoke('stream:open-popout', channel) as Promise<void>,
   listChatPopouts: () => ipcRenderer.invoke('chat:list-popouts') as Promise<string[]>,
+  listStreamPopouts: () => ipcRenderer.invoke('stream:list-popouts') as Promise<string[]>,
+  dockPopout: (kind: PopoutKind, channel: string) =>
+    ipcRenderer.invoke('popout:dock', kind, channel) as Promise<void>,
+  dockThisPopout: () => ipcRenderer.invoke('popout:dock-this') as Promise<void>,
+  setThisPopoutAlwaysOnTop: (value: boolean) =>
+    ipcRenderer.invoke('popout:set-always-on-top', value) as Promise<boolean>,
+  getThisPopoutAlwaysOnTop: () => ipcRenderer.invoke('popout:get-always-on-top') as Promise<boolean>,
   checkForUpdates: () => ipcRenderer.invoke('updater:check') as Promise<UpdaterStatus>,
   downloadUpdate: () => ipcRenderer.invoke('updater:download') as Promise<UpdaterStatus>,
   installUpdate: () => ipcRenderer.invoke('updater:install') as Promise<void>,
@@ -38,6 +49,26 @@ const api = {
     const handler = (_event: unknown, channel: string) => callback(channel)
     ipcRenderer.on('chat:popout-closed', handler)
     return () => ipcRenderer.removeListener('chat:popout-closed', handler)
+  },
+  onChatPopoutDocked: (callback: (channel: string) => void) => {
+    const handler = (_event: unknown, channel: string) => callback(channel)
+    ipcRenderer.on('chat:popout-docked', handler)
+    return () => ipcRenderer.removeListener('chat:popout-docked', handler)
+  },
+  onStreamPopoutOpened: (callback: (channel: string) => void) => {
+    const handler = (_event: unknown, channel: string) => callback(channel)
+    ipcRenderer.on('stream:popout-opened', handler)
+    return () => ipcRenderer.removeListener('stream:popout-opened', handler)
+  },
+  onStreamPopoutClosed: (callback: (channel: string) => void) => {
+    const handler = (_event: unknown, channel: string) => callback(channel)
+    ipcRenderer.on('stream:popout-closed', handler)
+    return () => ipcRenderer.removeListener('stream:popout-closed', handler)
+  },
+  onStreamPopoutDocked: (callback: (channel: string) => void) => {
+    const handler = (_event: unknown, channel: string) => callback(channel)
+    ipcRenderer.on('stream:popout-docked', handler)
+    return () => ipcRenderer.removeListener('stream:popout-docked', handler)
   },
   setFullscreen: (value: boolean) =>
     ipcRenderer.invoke('window:set-fullscreen', value) as Promise<void>,

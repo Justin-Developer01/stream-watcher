@@ -28,7 +28,16 @@ The Focus icon makes one stream large and the others a bottom strip. Click a str
 
 ## Chat
 
-**Open chat** docks a drawer that pushes the grid (right / left / bottom) or floats. **Open chat on another monitor** pops out a separate window (desktop only).
+**Open chat** docks a drawer that pushes the grid (right / left / bottom) or floats. **Open chat on another monitor** pops out a separate window (desktop only). Drag that window to any display — Stream Watcher remembers its position, size, and always-on-top. **Dock back** on the pop-out returns chat to the main drawer.
+
+## Multi-monitor (desktop)
+
+The main window starts on your primary display. Chat and stream pop-outs are independent windows (`parent` unset) so they can live on other monitors.
+
+- First pop-out without a saved position opens on a **second monitor** when one exists.
+- Closing a display that held a pop-out clamps it back onto a remaining screen.
+- On a stream tile, the monitor icon **Pop out stream** sends that player to its own window. The tile stays in the grid as **On another monitor**.
+- Pin on a pop-out is **Always on top** for that window only.
 
 ## Settings
 

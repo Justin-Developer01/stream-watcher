@@ -2,6 +2,15 @@ import { app, BrowserWindow, shell, ipcMain, session, screen } from 'electron'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  clampToDisplays,
+  debounce,
+  defaultPopoutBounds,
+  primaryWorkAreaBounds,
+  readPopout,
+  writePopout,
+  type PopoutKind,
+} from './popouts'
 import { registerUpdater } from './updater'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -12,54 +21,14 @@ export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 let mainWindow: BrowserWindow | null = null
-const chatPopouts = new Map<string, BrowserWindow>()
-
-type PopoutBounds = { x: number; y: number; width: number; height: number }
-
-function popoutBoundsPath() {
-  return path.join(app.getPath('userData'), 'chat-popout-bounds.json')
+const popoutWindows: Record<PopoutKind, Map<string, BrowserWindow>> = {
+  chat: new Map(),
+  stream: new Map(),
 }
 
-function readPopoutBounds(): Record<string, PopoutBounds> {
-  try {
-    return JSON.parse(fs.readFileSync(popoutBoundsPath(), 'utf8')) as Record<string, PopoutBounds>
-  } catch {
-    return {}
-  }
-}
-
-function writePopoutBounds(next: Record<string, PopoutBounds>) {
-  try {
-    fs.writeFileSync(popoutBoundsPath(), JSON.stringify(next))
-  } catch {
-    // ignore disk errors
-  }
-}
-
-function boundsOnADisplay(bounds: PopoutBounds) {
-  return screen.getAllDisplays().some((display) => {
-    const area = display.workArea
-    return (
-      bounds.x < area.x + area.width &&
-      bounds.x + 48 > area.x &&
-      bounds.y < area.y + area.height &&
-      bounds.y + 48 > area.y
-    )
-  })
-}
-
-function notifyMain(channel: string, event: 'opened' | 'closed') {
+function notifyMain(kind: PopoutKind, channel: string, event: 'opened' | 'closed' | 'docked') {
   if (!mainWindow || mainWindow.isDestroyed()) return
-  mainWindow.webContents.send(`chat:popout-${event}`, channel)
-}
-
-function defaultPopoutOrigin() {
-  if (!mainWindow || mainWindow.isDestroyed()) return undefined
-  const bounds = mainWindow.getBounds()
-  return {
-    x: bounds.x + Math.max(48, bounds.width - 360),
-    y: bounds.y + 72,
-  }
+  mainWindow.webContents.send(`${kind}:popout-${event}`, channel)
 }
 
 function resolvePreloadPath() {
@@ -71,10 +40,26 @@ function resolvePreloadPath() {
   return path.join(__dirname, 'preload.mjs')
 }
 
+function keepMainOnADisplay() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  const bounds = mainWindow.getBounds()
+  const visible = screen.getAllDisplays().some((display) => {
+    const area = display.workArea
+    return (
+      bounds.x < area.x + area.width &&
+      bounds.x + Math.min(48, bounds.width) > area.x &&
+      bounds.y < area.y + area.height &&
+      bounds.y + Math.min(48, bounds.height) > area.y
+    )
+  })
+  if (visible) return
+  mainWindow.setBounds(primaryWorkAreaBounds(bounds.width, bounds.height))
+}
+
 function createWindow() {
+  const placed = primaryWorkAreaBounds(1440, 900)
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
+    ...placed,
     minWidth: 960,
     minHeight: 640,
     title: 'Stream Watcher',
@@ -106,6 +91,15 @@ function createWindow() {
 
   mainWindow.on('enter-full-screen', () => sendFullscreen(true))
   mainWindow.on('leave-full-screen', () => sendFullscreen(false))
+  mainWindow.on('closed', () => {
+    for (const kind of ['chat', 'stream'] as PopoutKind[]) {
+      for (const win of popoutWindows[kind].values()) {
+        if (!win.isDestroyed()) win.close()
+      }
+      popoutWindows[kind].clear()
+    }
+    mainWindow = null
+  })
 
   if (VITE_DEV_SERVER_URL) {
     void mainWindow.loadURL(VITE_DEV_SERVER_URL)
@@ -114,33 +108,36 @@ function createWindow() {
   }
 }
 
-function openChatPopout(channel: string) {
+function openPopout(kind: PopoutKind, channel: string) {
   const key = channel.toLowerCase()
-  const existing = chatPopouts.get(key)
+  const map = popoutWindows[kind]
+  const existing = map.get(key)
   if (existing && !existing.isDestroyed()) {
     existing.show()
     existing.focus()
-    notifyMain(key, 'opened')
+    notifyMain(kind, key, 'opened')
     return
   }
 
-  const saved = readPopoutBounds()[key]
-  const restore = saved && boundsOnADisplay(saved) ? saved : null
-  const fallback = defaultPopoutOrigin()
+  const saved = readPopout(kind, key)
+  const restore = saved ? clampToDisplays(saved) : defaultPopoutBounds(kind, mainWindow, map.size)
+  const min =
+    kind === 'chat' ? { minWidth: 260, minHeight: 320 } : { minWidth: 360, minHeight: 220 }
+
   const popout = new BrowserWindow({
-    width: restore?.width ?? 320,
-    height: restore?.height ?? 520,
-    x: restore?.x ?? fallback?.x,
-    y: restore?.y ?? fallback?.y,
-    minWidth: 260,
-    minHeight: 320,
-    title: `#${key}`,
+    width: restore.width,
+    height: restore.height,
+    x: restore.x,
+    y: restore.y,
+    ...min,
+    title: kind === 'chat' ? `#${key}` : key,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,
     parent: undefined,
     modal: false,
     skipTaskbar: false,
     fullscreenable: false,
+    alwaysOnTop: Boolean(restore.alwaysOnTop),
     webPreferences: {
       preload: resolvePreloadPath(),
       contextIsolation: true,
@@ -149,37 +146,64 @@ function openChatPopout(channel: string) {
     },
   })
 
+  if (restore.alwaysOnTop) popout.setAlwaysOnTop(true, 'floating')
+
   let lastBounds = popout.getBounds()
-  const persist = () => {
-    if (!popout.isDestroyed()) lastBounds = popout.getBounds()
-    writePopoutBounds({ ...readPopoutBounds(), [key]: lastBounds })
+  let lastAlwaysOnTop = popout.isAlwaysOnTop()
+  const persistNow = () => {
+    if (!popout.isDestroyed()) {
+      lastBounds = popout.getBounds()
+      lastAlwaysOnTop = popout.isAlwaysOnTop()
+    }
+    writePopout(kind, key, { ...lastBounds, alwaysOnTop: lastAlwaysOnTop })
   }
+  const persist = debounce(persistNow, 200)
 
   popout.webContents.on('preload-error', (_event, preloadPath, error) => {
     console.error('popout preload failed', preloadPath, error)
   })
 
-  chatPopouts.set(key, popout)
-  notifyMain(key, 'opened')
-  // Linux fires move/resize; macOS/Windows also fire moved/resized.
+  map.set(key, popout)
+  notifyMain(kind, key, 'opened')
   popout.on('move', persist)
   popout.on('moved', persist)
   popout.on('resize', persist)
   popout.on('resized', persist)
   popout.on('closed', () => {
-    persist()
-    chatPopouts.delete(key)
-    notifyMain(key, 'closed')
+    persistNow()
+    map.delete(key)
+    notifyMain(kind, key, 'closed')
   })
 
-  const query = `mode=chat&channel=${encodeURIComponent(key)}`
+  const query = `mode=${kind}&channel=${encodeURIComponent(key)}`
   if (VITE_DEV_SERVER_URL) {
     void popout.loadURL(`${VITE_DEV_SERVER_URL}?${query}`)
   } else {
     void popout.loadFile(path.join(RENDERER_DIST, 'index.html'), {
-      query: { mode: 'chat', channel: key },
+      query: { mode: kind, channel: key },
     })
   }
+}
+
+function dockPopout(kind: PopoutKind, channel: string) {
+  const key = channel.toLowerCase()
+  const win = popoutWindows[kind].get(key)
+  if (win && !win.isDestroyed()) {
+    writePopout(kind, key, { ...win.getBounds(), alwaysOnTop: win.isAlwaysOnTop() })
+    win.close()
+  }
+  notifyMain(kind, key, 'docked')
+}
+
+function findSenderPopout(sender: Electron.WebContents) {
+  for (const kind of ['chat', 'stream'] as PopoutKind[]) {
+    for (const [channel, win] of popoutWindows[kind]) {
+      if (!win.isDestroyed() && win.webContents.id === sender.id) {
+        return { kind, channel, win }
+      }
+    }
+  }
+  return null
 }
 
 function openTwitchLogin() {
@@ -351,13 +375,50 @@ app.whenReady().then(() => {
 
   ipcMain.handle('chat:open-popout', (_event, channel: string) => {
     if (typeof channel === 'string' && channel.trim()) {
-      openChatPopout(channel.trim().toLowerCase())
+      openPopout('chat', channel.trim().toLowerCase())
     }
   })
 
-  ipcMain.handle('chat:list-popouts', () => [...chatPopouts.keys()])
+  ipcMain.handle('stream:open-popout', (_event, channel: string) => {
+    if (typeof channel === 'string' && channel.trim()) {
+      openPopout('stream', channel.trim().toLowerCase())
+    }
+  })
+
+  ipcMain.handle('chat:list-popouts', () => [...popoutWindows.chat.keys()])
+  ipcMain.handle('stream:list-popouts', () => [...popoutWindows.stream.keys()])
+
+  ipcMain.handle('popout:dock', (_event, kind: PopoutKind, channel: string) => {
+    if ((kind === 'chat' || kind === 'stream') && typeof channel === 'string' && channel.trim()) {
+      dockPopout(kind, channel.trim().toLowerCase())
+    }
+  })
+
+  ipcMain.handle('popout:dock-this', (event) => {
+    const found = findSenderPopout(event.sender)
+    if (found) dockPopout(found.kind, found.channel)
+  })
+
+  ipcMain.handle('popout:set-always-on-top', (event, value: boolean) => {
+    const found = findSenderPopout(event.sender)
+    if (!found) return false
+    found.win.setAlwaysOnTop(Boolean(value), 'floating')
+    writePopout(found.kind, found.channel, {
+      ...found.win.getBounds(),
+      alwaysOnTop: found.win.isAlwaysOnTop(),
+    })
+    return found.win.isAlwaysOnTop()
+  })
+
+  ipcMain.handle('popout:get-always-on-top', (event) => {
+    const found = findSenderPopout(event.sender)
+    return found?.win.isAlwaysOnTop() ?? false
+  })
 
   registerUpdater(() => mainWindow)
+
+  screen.on('display-removed', keepMainOnADisplay)
+  screen.on('display-metrics-changed', keepMainOnADisplay)
 
   createWindow()
 

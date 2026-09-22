@@ -9,7 +9,7 @@ Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 
 ## Chat
 - **Open chat** slides a drawer that **pushes** the grid (left / right / bottom), or float.
-- Pop out chat to another monitor (desktop). Position and size are remembered.
+- Pop out chat to another monitor (desktop). Drag it anywhere; position, size, and always-on-top are remembered. **Dock back** returns it to the main desk drawer.
 - Send messages after **Login to Twitch**.
 
 ## Login
@@ -32,6 +32,12 @@ Settings → **Chat**
 
 ## Click-through + Lock
 With See desktop on, empty-stage clicks pass through to the desktop. **Lock window** on the top bar freezes that. Unlock to pass through again.
+
+## Multi-monitor (desktop)
+- The main desk opens on the **primary** display. If that display is unplugged, it snaps back.
+- Chat pop-outs prefer a second monitor when you have one, then remember the last monitor/position/size.
+- Stream tiles can pop out to their own windows. The grid tile shows **On another monitor** until you **Dock back**.
+- **Always on top** is per pop-out window only (pin icon). The main desk stays thin.
 
 ## Performance Mode
 Top-bar gauge toggle.

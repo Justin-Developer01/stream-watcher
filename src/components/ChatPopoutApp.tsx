@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { ChatPanel } from './ChatPanel'
 import { useChat } from '../hooks/useChat'
+import { usePopoutChrome } from '../hooks/usePopoutChrome'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { loadState } from '../lib/storage'
 import { resolveTwitchClientId } from '../lib/env'
@@ -14,6 +15,7 @@ export function ChatPopoutApp() {
   }, [])
   const saved = useMemo(() => loadState(), [])
   const clientId = resolveTwitchClientId(saved?.clientId)
+  const { alwaysOnTop, toggleAlwaysOnTop, dockBack } = usePopoutChrome()
 
   useEffect(() => {
     applyAppearance(normalizeAppearance(saved?.appearance), { windowChrome: false })
@@ -52,6 +54,9 @@ export function ChatPopoutApp() {
         onSend={chat.sendMessage}
         onPopout={() => undefined}
         compact
+        alwaysOnTop={alwaysOnTop}
+        onToggleAlwaysOnTop={() => void toggleAlwaysOnTop()}
+        onDockBack={dockBack}
       />
     </div>
   )

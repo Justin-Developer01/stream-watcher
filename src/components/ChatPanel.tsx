@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from 'react'
 import type { ChatDock, ChatFloatPosition, ChatMessage } from '../types'
 import { IconButton } from './IconButton'
-import { CloseIcon, PopoutIcon } from './icons'
+import { CloseIcon, PinIcon, PopoutIcon } from './icons'
 
 type Props = {
   collapsed: boolean
@@ -21,6 +21,9 @@ type Props = {
   onSend: (text: string) => Promise<{ ok: boolean; error?: string }>
   onPopout: () => void
   compact?: boolean
+  alwaysOnTop?: boolean
+  onToggleAlwaysOnTop?: () => void
+  onDockBack?: () => void
 }
 
 export function ChatPanel({
@@ -41,6 +44,9 @@ export function ChatPanel({
   onSend,
   onPopout,
   compact = false,
+  alwaysOnTop = false,
+  onToggleAlwaysOnTop,
+  onDockBack,
 }: Props) {
   const [draft, setDraft] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
@@ -143,7 +149,30 @@ export function ChatPanel({
             {username && <span className="chat-user-tag">{username}</span>}
           </div>
           <div className="chat-panel__tools">
-            {!compact && (
+            {compact ? (
+              <>
+                {onToggleAlwaysOnTop && (
+                  <IconButton
+                    label={alwaysOnTop ? 'Disable always on top' : 'Always on top'}
+                    active={alwaysOnTop}
+                    onClick={onToggleAlwaysOnTop}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <PinIcon />
+                  </IconButton>
+                )}
+                {onDockBack && (
+                  <button
+                    type="button"
+                    className="dock-back-btn"
+                    onClick={onDockBack}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    Dock back
+                  </button>
+                )}
+              </>
+            ) : (
               <>
                 <select
                   className="dock-select"
