@@ -16,9 +16,9 @@ Desktop multi-stream Twitch viewer. The Windows EXE is the primary path.
 
 ## Window
 - The main window is **frameless and launches maximized** — no Windows title bar. Drag empty bar space to move it. It draws its own **Minimize / Maximize-Restore / Close** icons at the far end of the bar, and is still resizable from any edge once restored.
-- **Exit Stream Watcher** — a danger-styled button in the Settings footer. The **Quit application** hotkey (Ctrl+Q, remappable) does the same, as does the bar's **Close** icon. Quits the app and every pop-out. Esc only ever closes a modal/drawer, never the app.
+- **Exit Vesper Desk** — a danger-styled button in the Settings footer. The **Quit application** hotkey (Ctrl+Q, remappable) does the same, as does the bar's **Close** icon. Quits the app and every pop-out. Esc only ever closes a modal/drawer, never the app.
 - **Edge-snap**: Settings → Appearance → **Chrome** — **Top** (default), **Left**, **Right**, **Bottom**. Left/Right are the same ~42px icon stack, not a wide sidebar, and collapse the title to an icon; Top/Bottom keep the text. Popovers always open toward free space.
-- **Ghost overlay** (off by default; **More …** menu or Settings → Appearance) auto-hides the thin bar until you move to its edge. **Pin toolbar** (**More …**) or the **Toggle chrome** hotkey keeps it showing. Fullscreen auto-hides the bar the same way. Ghost overlay and frameless are independent — the window is always frameless; Ghost only hides the bar.
+- **Ghost overlay** (off by default; **More …** menu or Settings → Appearance) auto-hides the thin bar until you move to its edge. **Pin toolbar** (**More …**) or the **Toggle toolbar** hotkey keeps it showing. Fullscreen auto-hides the bar the same way. Ghost overlay and frameless are independent — the window is always frameless; Ghost only hides the bar.
 
 ## Chat (in-app drawer)
 - **Open chat** / **Open #channel chat** slides a drawer that **pushes** the grid (Slide right / Slide left / Dock bottom) or **Float**. This stays in the main window. **Open chat** lives in the **More …** menu; **Open #channel chat** stays on each tile.
@@ -77,13 +77,13 @@ One toggle on the bar does both: turns on **See desktop behind app** and unlocks
 - Frosted glass blur is eased so the thin bar stays cheap to draw.
 
 ## Hotkeys
-Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application** (Ctrl+Q), plus Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus stream.
+Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle toolbar**, **Quit application** (Ctrl+Q), plus Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus stream.
 
 ## Updates
 Settings → **Updates**. Checks GitHub Releases, including pre-releases. NSIS Setup can install and restart. Portable builds can't auto-update — Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE. Builds are unsigned, so SmartScreen may warn — More info → Run anyway.
 
 ## Help
-Settings → **Help**. Short in-app panel (add streams, Mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **See through windows**, Settings, **Ghost overlay**, **Exit Stream Watcher** / **Quit application**, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
+Settings → **Help**. Short in-app panel (add streams, Mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **See through windows**, Settings, **Ghost overlay**, **Exit Vesper Desk** / **Quit application**, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
 
 ## First run
 No wizard. Four dismissible tips once: Focus mode, Open chat vs Pop out chat, See through windows, Dock back.

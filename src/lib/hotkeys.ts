@@ -46,7 +46,7 @@ export const HOTKEY_LABELS: Record<HotkeyId, string> = {
   cycleFocus: 'Cycle streams',
   switchFocus: 'Switch Focus',
   muteAll: 'Mute all',
-  toggleChrome: 'Toggle chrome',
+  toggleChrome: 'Toggle toolbar',
   quitApp: 'Quit application',
 }
 

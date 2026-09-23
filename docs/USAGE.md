@@ -31,7 +31,7 @@ OAuth redirect used by Login to Twitch: `http://localhost:5173/oauth/callback`.
 
 Frameless means Windows draws no title bar, so the app draws its own: three small icons at the far end of the bar — **Minimize**, **Maximize/Restore**, and **Close**. The window still launches maximized and is still resizable from any edge once restored, with the same sensible minimum size as before.
 
-**Exit Stream Watcher** is a separate, danger-styled button in the Settings modal's footer, and the same action is the **Quit application** hotkey (**Ctrl+Q**, remappable in Settings → Hotkeys). Either quits the whole app (and any open pop-outs); the window's own **Close** button does the same. Esc still only closes whatever modal or drawer is open — it never quits.
+**Exit Vesper Desk** is a separate, danger-styled button in the Settings modal's footer, and the same action is the **Quit application** hotkey (**Ctrl+Q**, remappable in Settings → Hotkeys). Either quits the whole app (and any open pop-outs); the window's own **Close** button does the same. Esc still only closes whatever modal or drawer is open — it never quits.
 
 ## First run
 
@@ -135,12 +135,12 @@ Two controls, both small popovers (never a sidebar). Templates persist locally.
 |---|---|
 | Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left \| Right \| Bottom** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default). Main window is frameless. |
 | Chat | **Font** (System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…** for a Windows-installed family), **Size** (12 / 13 / 14 / 16), **Drawer width** (280–480px for docked left / right). After **Login to Twitch**, emotes render in the list and the composer picker. |
-| Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application**. Reset defaults. |
+| Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle toolbar**, **Quit application**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
 | Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |
 | Help | Short in-app guide + Show tips + full docs links |
 
-A footer below the tabs has a danger-styled **Exit Stream Watcher** button — see [Window controls](#window-controls). **Esc** only closes Settings.
+A footer below the tabs has a danger-styled **Exit Vesper Desk** button — see [Window controls](#window-controls). **Esc** only closes Settings.
 
 ## See through windows
 
@@ -152,7 +152,7 @@ Windows may need a relaunch if the desktop does not show through after the first
 
 ## Ghost overlay
 
-**Ghost overlay** is off by default. Turn it on from the **More …** menu or **Settings → Appearance**. It auto-hides the thin bar until you move to the edge it’s snapped to (or use **Pin toolbar** in **More …**, or the **Toggle chrome** hotkey, `B`). It works with **See through windows**. Ghost does **not** change the icon stack or the window frame — the main window is always frameless. **Chrome** edge position stays a separate control.
+**Ghost overlay** is off by default. Turn it on from the **More …** menu or **Settings → Appearance**. It auto-hides the thin bar until you move to the edge it’s snapped to (or use **Pin toolbar** in **More …**, or the **Toggle toolbar** hotkey, `B`). It works with **See through windows**. Ghost does **not** change the icon stack or the window frame — the main window is always frameless. **Chrome** edge position stays a separate control.
 
 ## Edge-snap position
 

@@ -39,8 +39,8 @@ Then, for another monitor: park on another monitor → **See through windows** w
 | Always on top | Lives on the pop-out only. Position is remembered. |
 | See through | **See through windows** on the bar turns on See-desktop and unlocks click-through in one click. |
 | Change layout | Bar = apply a saved template. **☰ → Layout templates** to save/delete; **☰ → Change layout** for the quick 1×1/1×2/2×2/1+3 grid. |
-| Settings / Help | **☰ → Settings**. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc closes. Footer has **Exit Stream Watcher**. |
-| Exit the app | Settings footer's **Exit Stream Watcher**, the bar's **Close** icon, or **Quit application** (Ctrl+Q). |
+| Settings / Help | **☰ → Settings**. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc closes. Footer has **Exit Vesper Desk**. |
+| Exit the app | Settings footer's **Exit Vesper Desk**, the bar's **Close** icon, or **Quit application** (Ctrl+Q). |
 | Check for Updates | Settings → **Updates** |
 | Edge-snap the bar | Settings → Appearance → **Chrome**: Top / Left / Right / Bottom |
 | Ghost overlay | **More …** menu or Settings → Appearance. Auto-hides the thin bar until the edge; **Pin toolbar** keeps it. Frameless is always on. |
