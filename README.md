@@ -35,9 +35,9 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - **Login to Twitch** — one **☰** menu control for Prime + chat OAuth (no Client ID field on first run)
 - **Check for Updates** — Settings → Updates; GitHub Releases (pre-releases included) for the installed Setup app
 - **Settings modal** — **☰ → Settings** opens a frosted ~560×480 modal with left nav: Appearance · Chat · Hotkeys · Updates · Advanced · Help
-- **Appearance** — Dark / Dim / Light, Accent / Surface / Text, Color or Image background, **Chrome: Top | Left | Right | Bottom** (Top default), **See desktop behind app.**, and **Ghost overlay** (off by default; auto-hides the thin bar only). The main window is frameless. Empty stage can show the desktop; chrome, tiles, and chat stay solid. Twitch players are not rethemed.
+- **Appearance** — Dark / Dim / Light, Accent / Surface / Text, Color or Image background, **Chrome: Top | Left | Right | Bottom** (Top default), **See through windows**, and **Ghost overlay** (off by default; auto-hides the thin bar only). The main window is frameless. Empty stage can show the desktop; chrome, tiles, and chat stay solid. Twitch players are not rethemed.
 - **Chat** — Settings → Chat. Font: System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…** (type a Windows-installed family; live preview; falls back to System). Size 12–16 (default 13). **Drawer width** 280–480px for docked side chat. After **Login to Twitch**, emotes render in the list and a composer picker. No Bits control.
-- **See through windows** — one bar toggle turns on See desktop and lets empty-stage clicks pass through to the desktop. The **Lock window** hotkey (`L`) freezes click-through while staying see-through.
+- **See through windows** — one bar toggle shows the desktop through the empty stage and lets empty-stage clicks pass through. The **Lock window** hotkey (`L`) freezes click-through while staying see-through.
 - **Hotkeys** — remappable chords including **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle toolbar**, **Quit application** (Ctrl+Q), Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus. Click a keychip to rebind; Reset defaults.
 - **Quit** — Settings footer **Exit Vesper Desk**, the bar's **Close** icon, or **Quit application** (Ctrl+Q). **Esc** closes Settings only.
 - **Performance** — **Mode → Performance**: only the focused stream stays full quality — other tiles show paused / low and use less CPU.
@@ -61,7 +61,7 @@ The renderer detects Electron with `window.streamWatcher`. Desktop-only icons **
 | Pop-out chat on another monitor | Visible, **Desktop app only** | Works (`chat:open-popout`); remembers bounds + always-on-top |
 | Pop-out stream tile | Visible, **Desktop app only** | Works (`stream:open-popout`); tile leaves the grid, redock menu on the bar |
 | Check for Updates | Settings → Updates | NSIS Setup vs GitHub Releases |
-| See desktop behind app | Stage can look transparent | Transparent Electron window; empty stage click-through |
+| See through windows | Stage can look transparent | Transparent Electron window; empty stage click-through |
 | See through windows / Lock window hotkey | Toggle present, no desktop pass-through | Click-through on empty stage; `L` freezes it |
 
 ## Developers
@@ -111,7 +111,7 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 - **Pop out chat** (**More …** menu, tile, or drawer) opens a chat window. **Pop out stream** (tile) opens the player. **Dock back** and **Always on top** are on the pop-out only. Browser icons say **Desktop app only**. Full how-to: [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 - **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings → Advanced has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Advanced → Developer**.
 - **Check for Updates** lives in Settings → Updates (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE. No code-signing cert is required; SmartScreen may still warn.
-- **☰ → Settings** opens the modal. Appearance includes **See desktop behind app.**, **Ghost overlay**, and Chrome edge. Chat tab has Font (including **Custom…**), Size, and Drawer width. Hotkeys are remappable. **Exit Vesper Desk** in the footer quits.
+- **☰ → Settings** opens the modal. Appearance includes **See through windows**, **Ghost overlay**, and Chrome edge. Chat tab has Font (including **Custom…**), Size, and Drawer width. Hotkeys are remappable. **Exit Vesper Desk** in the footer quits.
 - **F11** fullscreen (remappable), **Escape** closes Settings then exits fullscreen / chat; **Pin toolbar** (**More …**) if you do not want the bar to auto-hide. **Ctrl+Q** quits (remappable).
 
 ## Scripts

@@ -55,7 +55,7 @@ Settings modal → **Appearance**
 - Colors: Accent, Surface, Text
 - Background: Color or Image + overlay opacity
 - **Chrome**: Top / Left / Right / Bottom — see [Window](#window).
-- **Window → See desktop behind app.** Empty stage shows the desktop. Chrome, tiles, and chat stay solid. Twitch embeds are not transparent.
+- **Window → See through windows.** Empty stage shows the desktop. Chrome, tiles, and chat stay solid. Twitch embeds are not transparent.
 - **Window → Ghost overlay** — see [Window](#window).
 - Reset restores Dark.
 
@@ -68,7 +68,7 @@ Settings → **Chat** (its own tab, not buried in Appearance)
 - Applies to chat lines and the composer only. An open drawer updates live.
 
 ## See through windows
-One toggle on the bar does both: turns on **See desktop behind app** and unlocks click-through, in a single click. Turning it off restores both. To freeze click-through while staying see-through (e.g. to click near a gap), use the **Lock window** hotkey (`L` by default) — there's no separate icon for that anymore. Settings → Appearance keeps its own independent **See desktop behind app** checkbox if you only want that half. Click-through never collapses streams or the bar.
+One toggle on the bar does both: shows the desktop through the empty stage and unlocks click-through, in a single click. Turning it off restores both. To freeze click-through while staying see-through (e.g. to click near a gap), use the **Lock window** hotkey (`L` by default) — there's no separate icon for that anymore. Settings → Appearance keeps its own independent **See through windows** checkbox if you only want that half. Click-through never collapses streams or the bar.
 
 ## Performance
 **Mode → Performance** on the bar.

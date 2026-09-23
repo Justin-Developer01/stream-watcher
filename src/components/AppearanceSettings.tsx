@@ -241,7 +241,7 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
             checked={appearance.seeDesktop}
             onChange={(event) => patch({ seeDesktop: event.target.checked })}
           />
-          See desktop behind app.
+          {UI.seeDesktop}
         </label>
         <p className="hint">
           Empty stage shows the desktop. The frosted {appearance.chrome} bar, stream

@@ -15,7 +15,7 @@ export const UI = {
   loginTooltip: 'Login for Prime + chat.',
   focusMode: 'Focus mode',
   switchFocus: 'Switch Focus',
-  seeDesktop: 'See desktop behind app.',
+  seeDesktop: 'See through windows',
   settings: 'Settings',
   onAnotherMonitor: 'On another monitor',
   dockAllPopouts: 'Dock all pop-outs',

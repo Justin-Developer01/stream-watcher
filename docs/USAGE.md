@@ -133,7 +133,7 @@ Two controls, both small popovers (never a sidebar). Templates persist locally.
 
 | Tab | What it holds |
 |---|---|
-| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left \| Right \| Bottom** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default). Main window is frameless. |
+| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left \| Right \| Bottom** (Top default), **See through windows**, **Ghost overlay** (off by default). Main window is frameless. |
 | Chat | **Font** (System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…** for a Windows-installed family), **Size** (12 / 13 / 14 / 16), **Drawer width** (280–480px for docked left / right). After **Login to Twitch**, emotes render in the list and the composer picker. |
 | Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle toolbar**, **Quit application**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
@@ -144,9 +144,9 @@ A footer below the tabs has a danger-styled **Exit Vesper Desk** button — see 
 
 ## See through windows
 
-**See through windows** on the top bar is a single toggle: turning it on shows the wallpaper through the empty stage (turns on **See desktop behind app**) *and* immediately lets clicks pass through empty areas to the desktop. Turning it off restores both. Stream tiles and chat always stay solid either way.
+**See through windows** on the top bar is a single toggle: turning it on shows the wallpaper through the empty stage and immediately lets clicks pass through empty areas to the desktop. Turning it off restores both. Stream tiles and chat always stay solid either way.
 
-To click near a gap without turning the whole thing off, use the **Lock window** hotkey (`L` by default) to freeze click-through in place — there's no separate icon for this anymore, only the hotkey. Settings → Appearance still has its own **See desktop behind app** checkbox if you'd rather set that half on its own.
+To click near a gap without turning the whole thing off, use the **Lock window** hotkey (`L` by default) to freeze click-through in place — there's no separate icon for this anymore, only the hotkey. Settings → Appearance still has its own **See through windows** checkbox if you'd rather set that half on its own.
 
 Windows may need a relaunch if the desktop does not show through after the first toggle.
 

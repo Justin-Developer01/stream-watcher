@@ -37,7 +37,7 @@ Then, for another monitor: park on another monitor → **See through windows** w
 | Stream on another monitor | Tile **Pop out stream**. A redock chip with a count badge appears on the bar — no tile placeholder. |
 | Dock back | The redock chip's **Dock back**, or **Dock all pop-outs** for every popped window at once. |
 | Always on top | Lives on the pop-out only. Position is remembered. |
-| See through | **See through windows** on the bar turns on See-desktop and unlocks click-through in one click. |
+| See through | **See through windows** on the bar shows the desktop through the empty stage and unlocks click-through in one click. |
 | Change layout | Bar = apply a saved template. **☰ → Layout templates** to save/delete; **☰ → Change layout** for the quick 1×1/1×2/2×2/1+3 grid. |
 | Settings / Help | **☰ → Settings**. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc closes. Footer has **Exit Vesper Desk**. |
 | Exit the app | Settings footer's **Exit Vesper Desk**, the bar's **Close** icon, or **Quit application** (Ctrl+Q). |
@@ -45,7 +45,7 @@ Then, for another monitor: park on another monitor → **See through windows** w
 | Edge-snap the bar | Settings → Appearance → **Chrome**: Top / Left / Right / Bottom |
 | Ghost overlay | **More …** menu or Settings → Appearance. Auto-hides the thin bar until the edge; **Pin toolbar** keeps it. Frameless is always on. |
 | Chat type | Settings → **Chat**: Font (incl. **Custom…**), Size, Drawer width 280–480. Emotes after Login to Twitch. |
-| See the desktop | **See through windows** on the bar, or Settings → Appearance → **See desktop behind app.** |
+| See the desktop | **See through windows** on the bar, or the same checkbox in Settings → Appearance. |
 | Save CPU | **Mode → Performance**. Other tiles show **paused / low**. |
 
 Full walkthrough: [USAGE.md](USAGE.md). Everything the app does: [FEATURES.md](FEATURES.md).
