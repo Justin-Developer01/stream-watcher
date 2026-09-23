@@ -118,7 +118,7 @@ export function StreamGrid({
       <div className="focus-stage">
         <div className="focus-hero">{tile(hero)}</div>
         <aside className="focus-strip">
-          <button type="button" className="text-btn" onClick={onSwitchFocus}>
+          <button type="button" className="text-btn" data-hit onClick={onSwitchFocus}>
             {ui.switchFocus}
           </button>
           {strip.map((stream) => (

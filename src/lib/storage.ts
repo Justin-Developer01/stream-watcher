@@ -39,6 +39,7 @@ export function loadState(): PersistedState | null {
       mode: parsed.mode ?? 'standard',
       templates: parsed.templates ?? [],
       settings: mergeSettings(parsed.settings),
+      windowLocked: parsed.windowLocked === true,
     }
   } catch {
     return null

@@ -37,6 +37,7 @@ export function useDesk() {
       mode: saved?.mode ?? 'standard',
       templates: saved?.templates ?? [],
       settings: saved?.settings ?? DEFAULT_SETTINGS,
+      windowLocked: saved?.windowLocked === true,
     }
   }, [])
 
@@ -53,7 +54,7 @@ export function useDesk() {
   const [templates, setTemplates] = useState<LayoutTemplate[]>(initial.templates)
   const [settings, setSettings] = useState<AppSettings>(initial.settings)
   const [isDragging, setIsDragging] = useState(false)
-  const [windowLocked, setWindowLocked] = useState(false)
+  const [windowLocked, setWindowLocked] = useState(initial.windowLocked)
   const [toolbarForced, setToolbarForced] = useState(false)
   const snapshotRef = useRef<PersistedState | null>(null)
 
@@ -71,6 +72,7 @@ export function useDesk() {
       mode,
       templates,
       settings,
+      windowLocked,
     }),
     [
       streams,
@@ -85,6 +87,7 @@ export function useDesk() {
       mode,
       templates,
       settings,
+      windowLocked,
     ],
   )
   snapshotRef.current = snapshot

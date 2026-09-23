@@ -286,7 +286,29 @@ button:disabled {
 .desk--chrome-left .chrome-hotzone { top: 0; bottom: 0; left: 0; width: 10px; }
 .desk--chrome-right .chrome-hotzone { top: 0; bottom: 0; right: 0; width: 10px; }
 
-.desk--fullscreen .chrome-bar { display: none; }
+.desk--fullscreen .chrome-bar {
+  position: absolute;
+  z-index: 5;
+}
+.desk--fullscreen.desk--chrome-top .chrome-bar,
+.desk--fullscreen.desk--chrome-bottom .chrome-bar {
+  left: 0;
+  right: 0;
+  height: var(--chrome);
+  width: auto;
+}
+.desk--fullscreen.desk--chrome-top .chrome-bar { top: 0; }
+.desk--fullscreen.desk--chrome-bottom .chrome-bar { bottom: 0; }
+.desk--fullscreen.desk--chrome-left .chrome-bar,
+.desk--fullscreen.desk--chrome-right .chrome-bar {
+  top: 0;
+  bottom: 0;
+  width: var(--chrome);
+  height: auto;
+}
+.desk--fullscreen.desk--chrome-left .chrome-bar { left: 0; }
+.desk--fullscreen.desk--chrome-right .chrome-bar { right: 0; }
+.menu__item.is-on { box-shadow: inset 3px 0 0 var(--accent); }
 .desk--fullscreen {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);

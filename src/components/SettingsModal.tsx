@@ -303,7 +303,9 @@ export function SettingsModal({
                 className="text-btn"
                 onClick={async () => {
                   setUpdateNote('Opening GitHub Releases…')
-                  await window.vesper?.openExternal('https://github.com/releases')
+                  await window.vesper?.openExternal(
+                    'https://github.com/Justin-Developer01/vesper-desk/releases',
+                  )
                 }}
               >
                 {ui.checkUpdates}

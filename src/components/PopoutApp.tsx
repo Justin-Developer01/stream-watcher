@@ -15,6 +15,10 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
   const clientId = saved?.clientId ?? ''
   const { auth, isLoggedIn } = useTwitchAuth(clientId)
   const [alwaysOnTop, setAlwaysOnTop] = useState(false)
+
+  useEffect(() => {
+    void window.vesper?.getThisPopoutAlwaysOnTop().then((value) => setAlwaysOnTop(Boolean(value)))
+  }, [])
   const chat = useChat({
     channels: [channel],
     activeChannel: channel,
@@ -39,7 +43,7 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
   return (
     <PortalThemeProvider theme={settings.theme} style={style}>
     <div className="popout-root" data-theme={settings.theme} style={style}>
-      <header className="popout-bar">
+      <header className="popout-bar" data-hit>
         <span>{mode === 'chat' ? `#${channel}` : channel}</span>
         <button
           type="button"
@@ -60,7 +64,7 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
         </button>
       </header>
       {mode === 'stream' ? (
-        <div className="popout-player">
+        <div className="popout-player" data-hit>
           <TwitchPlayer channel={channel} muted={false} interactive />
         </div>
       ) : (

@@ -48,6 +48,8 @@ type Props = {
   displayName: string | null
   searchRef: RefObject<HTMLInputElement | null>
   chromeEdge: ChromeEdge
+  onMenuOpen: (open: boolean) => void
+  onSearchBlur: () => void
 }
 
 export function ChromeBar({
@@ -78,6 +80,8 @@ export function ChromeBar({
   displayName,
   searchRef,
   chromeEdge,
+  onMenuOpen,
+  onSearchBlur,
 }: Props) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -125,6 +129,7 @@ export function ChromeBar({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={ui.searchAdd}
           aria-label={ui.addStream}
+          onBlur={onSearchBlur}
         />
         {error && <span className="chrome-error">{error}</span>}
       </form>
@@ -155,7 +160,7 @@ export function ChromeBar({
         </Tip>
       </ToggleGroup.Root>
 
-      <DropdownMenu.Root>
+      <DropdownMenu.Root onOpenChange={onMenuOpen}>
         <DropdownMenu.Trigger asChild>
           <button type="button" className="text-btn">
             <LayoutGrid size={13} /> {ui.changeLayout}
@@ -190,7 +195,7 @@ export function ChromeBar({
       </Tip>
 
       {streamPops.length > 0 && (
-        <DropdownMenu.Root>
+        <DropdownMenu.Root onOpenChange={onMenuOpen}>
           <DropdownMenu.Trigger asChild>
             <button type="button" className="text-btn">
               {ui.redock} <span className="badge">{streamPops.length}</span>
@@ -212,7 +217,7 @@ export function ChromeBar({
         </DropdownMenu.Root>
       )}
 
-      <DropdownMenu.Root>
+      <DropdownMenu.Root onOpenChange={onMenuOpen}>
         <DropdownMenu.Trigger asChild>
           <button type="button" className="icon-btn" aria-label={ui.more}>
             <MoreHorizontal size={15} />
@@ -226,17 +231,17 @@ export function ChromeBar({
             <DropdownMenu.Item className="menu__item" onSelect={onOpenChat}>
               {chatOpen ? ui.hideChat : chatChannel ? ui.openChannelChat(chatChannel) : ui.openChat}
             </DropdownMenu.Item>
-            <DropdownMenu.Item className="menu__item" onSelect={() => onGhost(!ghost)}>
+            <DropdownMenu.Item className={`menu__item${ghost ? ' is-on' : ''}`} onSelect={() => onGhost(!ghost)}>
               {ui.ghostOverlay}
             </DropdownMenu.Item>
-            <DropdownMenu.Item className="menu__item" onSelect={() => onPinned(!pinned)}>
+            <DropdownMenu.Item className={`menu__item${pinned ? ' is-on' : ''}`} onSelect={() => onPinned(!pinned)}>
               {ui.pinToolbar}
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
 
-      <DropdownMenu.Root>
+      <DropdownMenu.Root onOpenChange={onMenuOpen}>
         <DropdownMenu.Trigger asChild>
           <button type="button" className="icon-btn" aria-label={ui.menu}>
             <Menu size={15} />

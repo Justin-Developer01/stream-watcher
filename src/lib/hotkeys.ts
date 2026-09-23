@@ -45,6 +45,13 @@ export const defaultHotkeys: Record<HotkeyAction, string> = {
   quitApplication: 'Ctrl+Q',
 }
 
+export function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false
+  if (target.isContentEditable) return true
+  const tag = target.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+}
+
 export function formatHotkeyEvent(event: KeyboardEvent): string {
   const parts: string[] = []
   if (event.ctrlKey || event.metaKey) parts.push('Ctrl')

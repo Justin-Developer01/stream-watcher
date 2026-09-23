@@ -11,31 +11,90 @@ import { useChat } from './hooks/useChat'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
-import { formatHotkeyEvent, type HotkeyAction } from './lib/hotkeys'
+import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
 import { chatFontFamily } from './lib/storage'
 import type { AppSettings, PopoutInfo } from './types'
+
+const CHROME_IDLE_MS = 2400
+
+function nearChromeEdge(edge: AppSettings['chromeEdge'], x: number, y: number) {
+  if (edge === 'bottom') return y >= window.innerHeight - 52
+  if (edge === 'left') return x <= 52
+  if (edge === 'right') return x >= window.innerWidth - 52
+  return y <= 52
+}
 
 function DeskApp() {
   const desk = useDesk()
   const { auth, busy, error, loginToTwitch, loginForPrime, isLoggedIn } = useTwitchAuth(desk.clientId)
   const searchRef = useRef<HTMLInputElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [hoverChrome, setHoverChrome] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [chromeHidden, setChromeHidden] = useState(false)
   const [popped, setPopped] = useState<PopoutInfo[]>([])
   const [fullscreen, setFullscreen] = useState(false)
 
   const channels = desk.visibleStreams.map((s) => s.channel)
+  const poppedChat = useMemo(
+    () => new Set(popped.filter((item) => item.kind === 'chat').map((item) => item.channel.toLowerCase())),
+    [popped],
+  )
+  const drawerChannels = channels.filter((channel) => !poppedChat.has(channel.toLowerCase()))
+  const drawerActive =
+    desk.chatChannel && !poppedChat.has(desk.chatChannel.toLowerCase())
+      ? desk.chatChannel
+      : (drawerChannels[0] ?? null)
   const chat = useChat({
-    channels,
-    activeChannel: desk.chatChannel,
+    channels: drawerChannels,
+    activeChannel: drawerActive,
     username: auth.username,
     accessToken: auth.accessToken,
   })
 
-  const ghostHidden =
-    desk.settings.ghostOverlay && !desk.settings.pinToolbar && !desk.toolbarForced && !hoverChrome && !settingsOpen
+  const autoHideChrome =
+    (fullscreen || desk.settings.ghostOverlay) &&
+    !desk.settings.pinToolbar &&
+    !desk.toolbarForced &&
+    !desk.chatOpen &&
+    !settingsOpen &&
+    !menuOpen
 
   useClickThrough(desk.settings.seeThrough && !desk.windowLocked, desk.settings.chromeEdge)
+
+  useEffect(() => {
+    if (!autoHideChrome) {
+      setChromeHidden(false)
+      return
+    }
+    let hidden = false
+    const setHidden = (next: boolean) => {
+      if (hidden === next) return
+      hidden = next
+      setChromeHidden(next)
+    }
+    let timer = window.setTimeout(() => setHidden(true), CHROME_IDLE_MS)
+    const reveal = (hold: boolean) => {
+      setHidden(false)
+      window.clearTimeout(timer)
+      if (!hold) timer = window.setTimeout(() => setHidden(true), CHROME_IDLE_MS)
+    }
+    const onMove = (event: MouseEvent) => {
+      reveal(nearChromeEdge(desk.settings.chromeEdge, event.clientX, event.clientY))
+    }
+    const onKey = () => reveal(false)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [autoHideChrome, desk.settings.chromeEdge])
+
+  useEffect(() => {
+    void window.vesper?.isFullscreen().then((value) => setFullscreen(Boolean(value)))
+    return window.vesper?.onFullscreenChange(setFullscreen)
+  }, [])
 
   useEffect(() => {
     void window.vesper?.listPopouts().then(setPopped)
@@ -86,6 +145,10 @@ function DeskApp() {
           desk.setMode((m) => (m === 'focus' ? 'standard' : 'focus'))
           break
         case 'fullscreen':
+          if (window.vesper?.setFullscreen) {
+            void window.vesper.setFullscreen(!fullscreen)
+            break
+          }
           if (document.fullscreenElement) {
             void document.exitFullscreen()
             setFullscreen(false)
@@ -98,10 +161,11 @@ function DeskApp() {
           desk.setChatOpen((v) => !v)
           break
         case 'lockWindow':
+          if (!desk.settings.seeThrough) break
           desk.setWindowLocked((v) => !v)
           break
         case 'openSettings':
-          setSettingsOpen(true)
+          setSettingsOpen((open) => !open)
           break
         case 'focusSearch':
           desk.setToolbarForced(true)
@@ -120,33 +184,45 @@ function DeskApp() {
           desk.muteAll()
           break
         case 'toggleToolbar':
-          desk.setToolbarForced((v) => !v)
+          desk.applySettings({ ...desk.settings, pinToolbar: !desk.settings.pinToolbar })
           break
         case 'quitApplication':
           void window.vesper?.quit()
           break
       }
     },
-    [desk],
+    [desk, fullscreen],
   )
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setSettingsOpen(false)
+        if (settingsOpen) {
+          setSettingsOpen(false)
+          return
+        }
+        if (fullscreen) {
+          void window.vesper?.setFullscreen(false)
+          if (!window.vesper?.setFullscreen && document.fullscreenElement) void document.exitFullscreen()
+          setFullscreen(false)
+          return
+        }
+        if (desk.chatOpen) desk.setChatOpen(false)
         return
       }
+      if (isEditableTarget(event.target) && event.key !== 'F11') return
       const combo = formatHotkeyEvent(event)
       const match = (Object.entries(desk.settings.hotkeys) as Array<[HotkeyAction, string]>).find(
         ([, value]) => value === combo,
       )
       if (!match) return
+      if (settingsOpen && match[0] !== 'openSettings' && match[0] !== 'quitApplication') return
       event.preventDefault()
       runHotkey(match[0])
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [desk.settings.hotkeys, runHotkey])
+  }, [desk.chatOpen, desk.settings.hotkeys, fullscreen, runHotkey, settingsOpen])
 
   const saveSettings = (next: AppSettings, clientId: string) => {
     desk.applySettings(next, clientId)
@@ -174,8 +250,8 @@ function DeskApp() {
   const chatEl = desk.chatOpen ? (
     <ChatDrawer
       dock={desk.chatDock}
-      channels={channels}
-      activeChannel={desk.chatChannel}
+      channels={drawerChannels}
+      activeChannel={drawerActive}
       onChannelChange={desk.setChatChannel}
       messages={chat.messages}
       status={chat.status}
@@ -202,24 +278,15 @@ function DeskApp() {
         desk.chatOpen && desk.chatDock !== 'float' ? `desk--chat-${desk.chatDock}` : '',
         desk.settings.seeThrough ? 'desk--see-through' : '',
         desk.mode === 'performance' ? 'desk--performance' : '',
-        ghostHidden ? 'desk--ghost' : '',
+        chromeHidden ? 'desk--ghost' : '',
         fullscreen ? 'desk--fullscreen' : '',
       ]
         .filter(Boolean)
         .join(' ')}
       data-theme={desk.settings.theme}
       style={style}
-      onMouseMove={(e) => {
-        const edge = desk.settings.chromeEdge
-        const near =
-          (edge === 'top' && e.clientY < 48) ||
-          (edge === 'bottom' && e.clientY > window.innerHeight - 48) ||
-          (edge === 'left' && e.clientX < 48) ||
-          (edge === 'right' && e.clientX > window.innerWidth - 48)
-        setHoverChrome(near)
-      }}
     >
-      {ghostHidden && <div className="chrome-hotzone" data-hit aria-hidden />}
+      {chromeHidden && <div className="chrome-hotzone" data-hit aria-hidden />}
       <ChromeBar
         mode={desk.mode}
         onMode={desk.setMode}
@@ -248,6 +315,8 @@ function DeskApp() {
         displayName={auth.displayName}
         searchRef={searchRef}
         chromeEdge={desk.settings.chromeEdge}
+        onMenuOpen={setMenuOpen}
+        onSearchBlur={() => desk.setToolbarForced(false)}
       />
 
       {desk.chatOpen && desk.chatDock === 'left' && chatEl}

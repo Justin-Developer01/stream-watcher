@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { readPopoutStore, recordFromWindow, resolvePopoutBounds, writePopoutStore, type SavedPopout } from './popoutStore'
 
 const moduleDir = dirname(fileURLToPath(import.meta.url))
 
@@ -15,7 +16,7 @@ type PopoutRecord = {
 }
 
 const popouts = new Map<string, PopoutRecord>()
-const boundsStore = new Map<string, Electron.Rectangle>()
+let popoutDisk: Record<string, SavedPopout> = {}
 
 let mainWindow: BrowserWindow | null = null
 let clickThrough = false
@@ -99,6 +100,13 @@ function createMainWindow() {
     mainWindow?.show()
   })
 
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow?.webContents.send('window:fullscreen-changed', true)
+  })
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow?.webContents.send('window:fullscreen-changed', false)
+  })
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -111,6 +119,17 @@ function createMainWindow() {
   loadRenderer(mainWindow)
 }
 
+function rememberPopout(key: string, saved: SavedPopout) {
+  popoutDisk = { ...popoutDisk, [key]: saved }
+  writePopoutStore(popoutDisk)
+}
+
+function persistPopoutWindow(key: string) {
+  const rec = popouts.get(key)
+  if (!rec || rec.win.isDestroyed()) return
+  rememberPopout(key, recordFromWindow(rec.win, rec.alwaysOnTop))
+}
+
 function openPopout(kind: PopoutKind, channel: string) {
   const key = popoutKey(kind, channel)
   const existing = popouts.get(key)
@@ -119,13 +138,13 @@ function openPopout(kind: PopoutKind, channel: string) {
     return
   }
 
-  const saved = boundsStore.get(key)
+  const saved = resolvePopoutBounds(popoutDisk[key])
   const win = new BrowserWindow({
-    width: kind === 'chat' ? 340 : 960,
-    height: kind === 'chat' ? 560 : 540,
+    width: saved?.width ?? (kind === 'chat' ? 340 : 960),
+    height: saved?.height ?? (kind === 'chat' ? 560 : 540),
+    ...(saved ? { x: saved.x, y: saved.y } : {}),
     minWidth: kind === 'chat' ? 260 : 420,
     minHeight: 280,
-    ...saved,
     frame: false,
     title: kind === 'chat' ? `#${channel}` : channel,
     backgroundColor: '#0c0a10',
@@ -139,18 +158,17 @@ function openPopout(kind: PopoutKind, channel: string) {
     },
   })
 
-  const rec: PopoutRecord = { channel, kind, win, alwaysOnTop: false }
+  const alwaysOnTop = Boolean(saved?.alwaysOnTop)
+  if (alwaysOnTop) win.setAlwaysOnTop(true, 'floating')
+
+  const rec: PopoutRecord = { channel, kind, win, alwaysOnTop }
   popouts.set(key, rec)
 
-  win.on('moved', () => boundsStore.set(key, win.getBounds()))
-  win.on('resized', () => boundsStore.set(key, win.getBounds()))
+  win.on('moved', () => persistPopoutWindow(key))
+  win.on('resized', () => persistPopoutWindow(key))
   win.on('close', (event) => {
     event.preventDefault()
-    boundsStore.set(key, win.getBounds())
-    popouts.delete(key)
-    mainWindow?.webContents.send('popouts:dock-request', { channel, kind })
-    if (!win.isDestroyed()) win.destroy()
-    broadcastPopouts()
+    dockPopout(kind, channel)
   })
 
   loadRenderer(win, `mode=${kind}&channel=${encodeURIComponent(channel)}`)
@@ -162,10 +180,11 @@ function dockPopout(kind: PopoutKind, channel: string) {
   const rec = popouts.get(key)
   if (!rec) return
   if (!rec.win.isDestroyed()) {
-    boundsStore.set(key, rec.win.getBounds())
+    persistPopoutWindow(key)
     rec.win.destroy()
   }
   popouts.delete(key)
+  mainWindow?.webContents.send('popouts:dock-request', { channel: rec.channel, kind: rec.kind })
   broadcastPopouts()
 }
 
@@ -279,13 +298,28 @@ app.whenReady().then(() => {
     if (ignore) mainWindow.setIgnoreMouseEvents(true, { forward: true })
     else mainWindow.setIgnoreMouseEvents(false)
   })
+  ipcMain.handle('window:set-fullscreen', (_event, value: boolean) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return false
+    mainWindow.setFullScreen(Boolean(value))
+    return mainWindow.isFullScreen()
+  })
+  ipcMain.handle('window:is-fullscreen', () => mainWindow?.isFullScreen() ?? false)
   ipcMain.handle('window:set-always-on-top', (event, enabled: boolean) => {
     const win = BrowserWindow.fromWebContents(event.sender)
-    win?.setAlwaysOnTop(Boolean(enabled))
-    for (const rec of popouts.values()) {
-      if (rec.win === win) rec.alwaysOnTop = Boolean(enabled)
+    if (!win) return false
+    const on = Boolean(enabled)
+    if (on) win.setAlwaysOnTop(true, 'floating')
+    else win.setAlwaysOnTop(false)
+    for (const [key, rec] of popouts) {
+      if (rec.win !== win) continue
+      rec.alwaysOnTop = on
+      rememberPopout(key, recordFromWindow(win, on))
     }
     broadcastPopouts()
+    return win.isAlwaysOnTop()
+  })
+  ipcMain.handle('popout:get-always-on-top', (event) => {
+    return BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false
   })
   ipcMain.handle('window:open-external', (_e, url: string) => {
     if (typeof url === 'string' && /^https?:\/\//.test(url)) void shell.openExternal(url)
@@ -298,7 +332,8 @@ app.whenReady().then(() => {
       openTwitchOAuth(payload.clientId, payload.redirectUri, payload.scopes),
   )
   ipcMain.handle('twitch:clear-session', async () => {
-    await session.defaultSession.clearStorageData({ storages: ['cookies', 'localstorage'] })
+    // Cookies only. Renderer localStorage holds the desk layout and must survive logout.
+    await session.defaultSession.clearStorageData({ storages: ['cookies'] })
     mainWindow?.webContents.send('twitch-session-updated')
   })
 
@@ -321,6 +356,7 @@ app.whenReady().then(() => {
     })),
   )
 
+  popoutDisk = readPopoutStore()
   createMainWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()

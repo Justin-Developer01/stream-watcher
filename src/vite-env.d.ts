@@ -15,7 +15,10 @@ type VesperApi = {
   setClickThrough: (enabled: boolean) => Promise<void>
   setClickThroughLocked: (locked: boolean) => Promise<void>
   setIgnoreMouseEvents: (ignore: boolean) => Promise<void>
-  setAlwaysOnTop: (enabled: boolean) => Promise<void>
+  setFullscreen: (value: boolean) => Promise<boolean>
+  isFullscreen: () => Promise<boolean>
+  setAlwaysOnTop: (enabled: boolean) => Promise<boolean>
+  getThisPopoutAlwaysOnTop: () => Promise<boolean>
   openExternal: (url: string) => Promise<void>
   openTwitchLogin: () => Promise<void>
   startTwitchOAuth: (payload: {
@@ -33,6 +36,7 @@ type VesperApi = {
   onDockRequest: (
     callback: (payload: { channel: string; kind: 'stream' | 'chat' }) => void,
   ) => () => void
+  onFullscreenChange: (callback: (value: boolean) => void) => () => void
 }
 
 declare global {

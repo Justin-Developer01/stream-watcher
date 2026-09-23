@@ -104,6 +104,7 @@ export type PersistedState = {
   mode: WatchMode
   templates: LayoutTemplate[]
   settings: AppSettings
+  windowLocked: boolean
 }
 
 export const DEFAULT_CHAT_FLOAT: ChatFloatPosition = {
@@ -131,7 +132,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     drawerWidth: 320,
   },
   hotkeys: { ...defaultHotkeys },
-  pinToolbar: true,
+  pinToolbar: false,
   dismissedTips: [],
 }
 

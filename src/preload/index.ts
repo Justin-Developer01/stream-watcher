@@ -23,8 +23,13 @@ const api = {
     ipcRenderer.invoke('window:set-click-through-locked', locked) as Promise<void>,
   setIgnoreMouseEvents: (ignore: boolean) =>
     ipcRenderer.invoke('window:set-ignore-mouse', ignore) as Promise<void>,
+  setFullscreen: (value: boolean) =>
+    ipcRenderer.invoke('window:set-fullscreen', value) as Promise<boolean>,
+  isFullscreen: () => ipcRenderer.invoke('window:is-fullscreen') as Promise<boolean>,
   setAlwaysOnTop: (enabled: boolean) =>
-    ipcRenderer.invoke('window:set-always-on-top', enabled) as Promise<void>,
+    ipcRenderer.invoke('window:set-always-on-top', enabled) as Promise<boolean>,
+  getThisPopoutAlwaysOnTop: () =>
+    ipcRenderer.invoke('popout:get-always-on-top') as Promise<boolean>,
   openExternal: (url: string) => ipcRenderer.invoke('window:open-external', url) as Promise<void>,
   openTwitchLogin: () => ipcRenderer.invoke('twitch:open-login') as Promise<void>,
   startTwitchOAuth: (payload: { clientId: string; redirectUri: string; scopes: string[] }) =>
@@ -51,6 +56,11 @@ const api = {
       callback(payload)
     ipcRenderer.on('popouts:dock-request', handler)
     return () => ipcRenderer.removeListener('popouts:dock-request', handler)
+  },
+  onFullscreenChange: (callback: (value: boolean) => void) => {
+    const handler = (_e: unknown, value: boolean) => callback(Boolean(value))
+    ipcRenderer.on('window:fullscreen-changed', handler)
+    return () => ipcRenderer.removeListener('window:fullscreen-changed', handler)
   },
 }
 
