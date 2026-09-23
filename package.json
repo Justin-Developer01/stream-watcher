@@ -1,6 +1,6 @@
 {
   "name": "vesper-desk",
-  "version": "1.0.0",
+  "version": "1.0.1-pre.18",
   "description": "Vesper Desk — multi-stream Twitch desktop",
   "main": "./out/main/index.js",
   "author": "Justin",
@@ -12,7 +12,60 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.node.json",
+    "dist": "npm run build && electron-builder --win --x64 --publish never",
     "postinstall": "node node_modules/electron/install.js"
+  },
+  "build": {
+    "appId": "com.justin.vesperdesk",
+    "productName": "Vesper Desk",
+    "copyright": "Copyright © Justin",
+    "asar": true,
+    "forceCodeSigning": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Justin-Developer01",
+        "repo": "vesper-desk"
+      }
+    ],
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "shortcutName": "Vesper Desk",
+      "uninstallDisplayName": "Vesper Desk",
+      "artifactName": "Vesper-Desk-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Vesper-Desk-Portable-${version}.${ext}"
+    }
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -38,6 +91,7 @@
     "@types/tmi.js": "^1.8.6",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^34.2.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^3.1.0",
     "typescript": "^5.7.3",
     "vite": "^6.1.0"
