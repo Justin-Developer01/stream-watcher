@@ -115,7 +115,7 @@ export const DEFAULT_CHAT_FLOAT: ChatFloatPosition = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
-  accent: '#e2a35a',
+  accent: '#7ec8d8',
   surface: '#141018',
   text: '#f4ece2',
   backgroundColor: '#0c0a10',

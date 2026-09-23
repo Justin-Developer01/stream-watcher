@@ -3,7 +3,7 @@
 :root {
   --chrome: 42px;
   --drawer: 320px;
-  --accent: #e2a35a;
+  --accent: #7ec8d8;
   --surface: #141018;
   --text: #f4ece2;
   --muted: #b5a89a;
@@ -349,7 +349,32 @@ button:disabled { opacity: 0.4; }
   min-width: 0;
 }
 
-.chrome-logo { width: 22px; height: 22px; border-radius: 6px; }
+.chrome-mark {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+.chrome-mark::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 70%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+.chrome-mark svg {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: block;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 75%, transparent));
+}
 .chrome-wordmark {
   font-weight: 600;
   letter-spacing: -0.02em;

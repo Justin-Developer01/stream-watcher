@@ -15,7 +15,6 @@ import {
   X,
 } from 'lucide-react'
 import { useState, type FormEvent, type RefObject } from 'react'
-import logo from '../assets/vesper-logo.svg'
 import { ui } from '../lib/uiLabels'
 import type { ChromeEdge, LayoutTemplate, PopoutInfo, WatchMode } from '../types'
 import { outwardSide, Tip } from './ui/Tip'
@@ -99,7 +98,21 @@ export function ChromeBar({
   return (
     <header className="chrome-bar">
       <div className="chrome-bar__drag">
-        <img src={logo} alt="" className="chrome-logo" />
+        <span className="chrome-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M3 16c3.2-.8 5.5-3.6 9-3.6S17.8 15.2 21 16"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <path d="M4 19h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            <path
+              d="M12 4.2l.72 2.2h2.32l-1.88 1.36.72 2.2L12 8.6l-1.88 1.36.72-2.2-1.88-1.36h2.32L12 4.2z"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
         <span className="chrome-wordmark">{ui.appName}</span>
       </div>
 
