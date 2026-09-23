@@ -7,7 +7,7 @@ const SHOW_EVENT = 'stream-watcher:show-first-run-tips'
 const TIPS = [
   `${UI.focusMode} — one stream large, others in the strip.`,
   `${UI.openChat} pushes the grid. ${UI.popOutChat} is a separate window.`,
-  `${UI.lockWindow} after See desktop behind app, when you need the UI.`,
+  `${UI.seeThroughWindows} — freeze it with the Lock window hotkey (L) when you need the UI.`,
   `${UI.dockBack} returns a pop-out to the main desk.`,
 ]
 

@@ -54,6 +54,8 @@ function MainApp() {
     cycleFocus,
     muteAll,
     toggleMute,
+    setMode,
+    toggleSeeThroughWindows,
     applyPreset,
     applyTemplate,
     appearance,
@@ -63,8 +65,10 @@ function MainApp() {
     hotkeys,
     setHotkeys,
     performanceMode,
-    setPerformanceMode,
   } = useStreams()
+
+  const mode = focusMode ? 'focus' : performanceMode ? 'performance' : 'standard'
+  const seeThroughActive = appearance.seeDesktop && !windowLocked
 
   const { auth, busy, error, loginToTwitch, reconnectChat, refreshPrimeSession, logout, isLoggedIn } =
     useTwitchAuth(clientId)
@@ -364,10 +368,8 @@ function MainApp() {
           if (target) void popoutChat(target)
         }}
         layoutMode={layoutMode}
-        focusMode={focusMode}
-        onToggleFocusMode={toggleFocusMode}
-        performanceMode={performanceMode}
-        onTogglePerformanceMode={() => setPerformanceMode(!performanceMode)}
+        mode={mode}
+        onSetMode={setMode}
         onPreset={applyPreset}
         isFullscreen={isFullscreen}
         onToggleFullscreen={() => void toggleFullscreen()}
@@ -378,9 +380,8 @@ function MainApp() {
         authBusy={busy}
         authError={error}
         onLoginTwitch={loginToTwitch}
-        seeDesktop={appearance.seeDesktop}
-        windowLocked={windowLocked}
-        onToggleWindowLock={() => setWindowLocked((value) => !value)}
+        seeThroughActive={seeThroughActive}
+        onToggleSeeThroughWindows={toggleSeeThroughWindows}
         settingsOpen={settingsOpen}
         onOpenSettings={() => openSettings(error === MISSING_TWITCH_CLIENT_ID_ERROR ? 'advanced' : 'appearance')}
         openStreamsRequest={openStreamsRequest}

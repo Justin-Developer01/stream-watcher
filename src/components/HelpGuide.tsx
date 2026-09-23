@@ -23,8 +23,8 @@ const STEPS: { title: string; body: string }[] = [
     body: 'Both live on the pop-out only. Dock back returns chat or the player to the main desk.',
   },
   {
-    title: UI.lockWindow,
-    body: 'After See desktop behind app, empty stage clicks through. Lock window when you need the UI.',
+    title: UI.seeThroughWindows,
+    body: 'Empty stage clicks through to the desktop. Use the Lock window hotkey (L) to freeze it while you need the UI.',
   },
   {
     title: UI.settings,
@@ -37,7 +37,7 @@ export function HelpGuide({ onCloseSettings }: Props) {
     <section className="popover-section help-guide">
       <h2>Help</h2>
       <p className="hint">
-        Park on another monitor → {UI.lockWindow} when you need the UI → {UI.dockBack} to the main desk.
+        Park on another monitor → {UI.seeThroughWindows} when you need the UI → {UI.dockBack} to the main desk.
       </p>
       <ol className="help-guide__steps">
         {STEPS.map((step) => (

@@ -282,6 +282,40 @@ html.see-desktop .app-shell::after {
   position: relative;
 }
 
+.mode-segmented {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.menu-row:hover:not(:disabled),
+.menu-row.is-active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: transparent;
+}
+
+.menu-row + .menu-row {
+  margin-top: 2px;
+}
+
 html.chrome-left .topbar {
   top: 0;
   left: 0;

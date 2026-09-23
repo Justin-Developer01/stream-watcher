@@ -2,22 +2,23 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import {
   Columns2,
   Copy,
+  Eye,
   Focus,
   Gauge,
+  LayoutGrid,
   List,
-  Lock,
   LogIn,
   Maximize2,
+  Menu as MenuIcon,
   MessageSquare,
   Minimize2,
   Minus,
+  MoreHorizontal,
   Pin,
   RotateCcw,
   Settings,
   Square,
   SquareArrowOutUpRight,
-  LayoutTemplate as LayoutTemplateIcon,
-  Unlock,
   X,
 } from 'lucide-react'
 import type { LayoutMode, LayoutTemplate, SavedStream } from '../types'
@@ -25,7 +26,8 @@ import { IconButton } from './IconButton'
 import { MISSING_TWITCH_CLIENT_ID_ERROR } from '../lib/env'
 import { UI } from '../lib/uiLabels'
 
-type MenuId = 'streams' | 'layout' | 'templates' | null
+type MenuId = 'streams' | 'templates' | 'overflow' | 'hamburger' | 'redock' | null
+type Mode = 'standard' | 'focus' | 'performance'
 
 type Props = {
   hidden?: boolean
@@ -41,10 +43,8 @@ type Props = {
   onToggleChat: () => void
   onPopoutChat: () => void
   layoutMode: LayoutMode
-  focusMode: boolean
-  onToggleFocusMode: () => void
-  performanceMode: boolean
-  onTogglePerformanceMode: () => void
+  mode: Mode
+  onSetMode: (mode: Mode) => void
   onPreset: (preset: LayoutMode) => void
   isFullscreen: boolean
   onToggleFullscreen: () => void
@@ -55,9 +55,8 @@ type Props = {
   authBusy: boolean
   authError: string | null
   onLoginTwitch: () => void
-  seeDesktop: boolean
-  windowLocked: boolean
-  onToggleWindowLock: () => void
+  seeThroughActive: boolean
+  onToggleSeeThroughWindows: () => void
   settingsOpen: boolean
   onOpenSettings: () => void
   openStreamsRequest?: number
@@ -118,6 +117,25 @@ function Menu({
   )
 }
 
+function MenuRow({
+  icon,
+  label,
+  active = false,
+  onClick,
+}: {
+  icon: ReactNode
+  label: string
+  active?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button type="button" className={`menu-row${active ? ' is-active' : ''}`} onClick={onClick}>
+      <span aria-hidden="true">{icon}</span>
+      <span>{label}</span>
+    </button>
+  )
+}
+
 export function TopBar({
   hidden = false,
   title,
@@ -132,10 +150,8 @@ export function TopBar({
   onToggleChat,
   onPopoutChat,
   layoutMode,
-  focusMode,
-  onToggleFocusMode,
-  performanceMode,
-  onTogglePerformanceMode,
+  mode,
+  onSetMode,
   onPreset,
   isFullscreen,
   onToggleFullscreen,
@@ -146,9 +162,8 @@ export function TopBar({
   authBusy,
   authError,
   onLoginTwitch,
-  seeDesktop,
-  windowLocked,
-  onToggleWindowLock,
+  seeThroughActive,
+  onToggleSeeThroughWindows,
   settingsOpen,
   onOpenSettings,
   openStreamsRequest = 0,
@@ -225,6 +240,17 @@ export function TopBar({
     } else {
       setAddError(result.error ?? 'Could not save stream')
       setSaveMessage(null)
+    }
+  }
+
+  const handleSaveTemplate = (event: FormEvent) => {
+    event.preventDefault()
+    const result = onSaveTemplate(templateNameInput)
+    if (result.ok) {
+      setTemplateNameInput('')
+      setTemplateError(null)
+    } else {
+      setTemplateError(result.error ?? 'Could not save template')
     }
   }
 
@@ -340,49 +366,216 @@ export function TopBar({
       )}
 
       <div className="topbar__controls">
-        <IconButton
-          label={chatOpen ? UI.hideChat : UI.openChat}
-          active={chatOpen}
-          onClick={() => {
-            setOpenMenu(null)
-            onToggleChat()
-          }}
-        >
-          <MessageSquare size={16} strokeWidth={1.75} fill={chatOpen ? 'currentColor' : 'none'} />
-        </IconButton>
-
-        <IconButton
-          label={UI.focusMode}
-          active={focusMode}
-          onClick={() => {
-            setOpenMenu(null)
-            onToggleFocusMode()
-          }}
-        >
-          <Focus size={16} strokeWidth={1.75} />
-        </IconButton>
-
-        <IconButton
-          label={performanceMode ? 'Performance mode on' : 'Performance mode'}
-          tooltip={performanceMode ? 'Performance mode on — inactive tiles paused' : 'Performance mode'}
-          active={performanceMode}
-          onClick={() => {
-            setOpenMenu(null)
-            onTogglePerformanceMode()
-          }}
-        >
-          <Gauge size={16} strokeWidth={1.75} />
-        </IconButton>
+        <div className="mode-segmented" role="group" aria-label={UI.mode} data-hit>
+          <IconButton
+            label={UI.modeStandard}
+            active={mode === 'standard'}
+            onClick={() => {
+              setOpenMenu(null)
+              onSetMode('standard')
+            }}
+          >
+            <LayoutGrid size={16} strokeWidth={1.75} />
+          </IconButton>
+          <IconButton
+            label={UI.modeFocus}
+            active={mode === 'focus'}
+            onClick={() => {
+              setOpenMenu(null)
+              onSetMode('focus')
+            }}
+          >
+            <Focus size={16} strokeWidth={1.75} />
+          </IconButton>
+          <IconButton
+            label={UI.modePerformance}
+            active={mode === 'performance'}
+            onClick={() => {
+              setOpenMenu(null)
+              onSetMode('performance')
+            }}
+          >
+            <Gauge size={16} strokeWidth={1.75} />
+          </IconButton>
+        </div>
 
         <Menu
-          id="layout"
+          id="templates"
           openId={openMenu}
           setOpenId={setOpenMenu}
-          label="Change layout"
+          label={UI.changeLayout}
           icon={<Columns2 size={16} strokeWidth={1.75} />}
         >
           <section className="popover-section popover-section--flush">
-            <h2>Layouts</h2>
+            <h2>{UI.changeLayout}</h2>
+            {templates.length > 0 ? (
+              <ul className="saved-list">
+                {templates.map((item) => (
+                  <li key={item.id} className="saved-list__item">
+                    <button
+                      type="button"
+                      className="saved-list__name-btn"
+                      onClick={() => {
+                        onApplyTemplate(item)
+                        setOpenMenu(null)
+                      }}
+                      title={`Apply "${item.name}"`}
+                    >
+                      {item.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="hint">Save a layout template from the hamburger menu to see it here.</p>
+            )}
+          </section>
+        </Menu>
+
+        <IconButton
+          label={UI.dockAllPopouts}
+          tooltip={UI.dockAllPopouts}
+          desktopOnly
+          disabled={!hasPoppedOut}
+          onClick={() => {
+            setOpenMenu(null)
+            onDockAllPopouts()
+          }}
+        >
+          <RotateCcw size={16} strokeWidth={1.75} />
+        </IconButton>
+
+        <IconButton
+          label={UI.seeThroughWindows}
+          active={seeThroughActive}
+          onClick={() => {
+            setOpenMenu(null)
+            onToggleSeeThroughWindows()
+          }}
+        >
+          <Eye size={16} strokeWidth={1.75} />
+        </IconButton>
+
+        <Menu
+          id="overflow"
+          openId={openMenu}
+          setOpenId={setOpenMenu}
+          label={UI.more}
+          icon={<MoreHorizontal size={16} strokeWidth={1.75} />}
+        >
+          <section className="popover-section popover-section--flush">
+            <MenuRow
+              icon={<MessageSquare size={16} strokeWidth={1.75} />}
+              label={chatOpen ? UI.hideChat : UI.openChat}
+              active={chatOpen}
+              onClick={() => {
+                setOpenMenu(null)
+                onToggleChat()
+              }}
+            />
+            <MenuRow
+              icon={
+                isFullscreen ? (
+                  <Minimize2 size={16} strokeWidth={1.75} />
+                ) : (
+                  <Maximize2 size={16} strokeWidth={1.75} />
+                )
+              }
+              label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              active={isFullscreen}
+              onClick={() => {
+                setOpenMenu(null)
+                onToggleFullscreen()
+              }}
+            />
+            <MenuRow
+              icon={<Pin size={16} strokeWidth={1.75} />}
+              label={UI.ghostOverlay}
+              active={chromePinned}
+              onClick={() => {
+                setOpenMenu(null)
+                onTogglePin()
+              }}
+            />
+            <MenuRow
+              icon={<SquareArrowOutUpRight size={16} strokeWidth={1.75} />}
+              label={UI.popOutChat}
+              onClick={() => {
+                setOpenMenu(null)
+                onPopoutChat()
+              }}
+            />
+          </section>
+        </Menu>
+
+        <Menu
+          id="hamburger"
+          openId={openMenu}
+          setOpenId={setOpenMenu}
+          label={UI.menu}
+          icon={<MenuIcon size={16} strokeWidth={1.75} />}
+        >
+          <section className="popover-section popover-section--flush">
+            <MenuRow
+              icon={<LogIn size={16} strokeWidth={1.75} fill={isLoggedIn ? 'currentColor' : 'none'} />}
+              label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : UI.loginToTwitch}
+              active={isLoggedIn}
+              onClick={() => {
+                setOpenMenu(null)
+                if (!isLoggedIn) onLoginTwitch()
+              }}
+            />
+            <MenuRow
+              icon={<Settings size={16} strokeWidth={1.75} />}
+              label={UI.settings}
+              active={settingsOpen}
+              onClick={() => {
+                setOpenMenu(null)
+                onOpenSettings()
+              }}
+            />
+          </section>
+          {authBusy && <p className="hint">Signing in…</p>}
+
+          <section className="popover-section">
+            <h2>{UI.layoutTemplates}</h2>
+            {templates.length > 0 && (
+              <ul className="saved-list">
+                {templates.map((item) => (
+                  <li key={item.id} className="saved-list__item">
+                    <span className="saved-list__name">{item.name}</span>
+                    <div className="saved-list__actions">
+                      <button
+                        type="button"
+                        className="ghost danger saved-list__remove"
+                        onClick={() => onDeleteTemplate(item.id)}
+                        title="Delete template"
+                        aria-label={`Delete template ${item.name}`}
+                      >
+                        <X size={14} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form className="add-form__row" onSubmit={handleSaveTemplate}>
+              <input
+                value={templateNameInput}
+                onChange={(e) => setTemplateNameInput(e.target.value)}
+                placeholder="Template name"
+                autoComplete="off"
+              />
+              <button type="submit" disabled={!templateNameInput.trim()} title="Save current layout">
+                +
+              </button>
+            </form>
+            {templateError && <p className="field-error">{templateError}</p>}
+            <p className="hint">Save the current channels, focus, and chat placement as a template.</p>
+          </section>
+
+          <section className="popover-section">
+            <h2>{UI.changeLayout}</h2>
             <div className="preset-row">
               {(['1x1', '1x2', '2x2', '1+3'] as const).map((preset) => (
                 <button
@@ -401,172 +594,6 @@ export function TopBar({
             <p className="hint">Tiles always fill the window. No page scroll.</p>
           </section>
         </Menu>
-
-        <Menu
-          id="templates"
-          openId={openMenu}
-          setOpenId={setOpenMenu}
-          label={UI.layoutTemplates}
-          icon={<LayoutTemplateIcon size={16} strokeWidth={1.75} />}
-        >
-          <section className="popover-section popover-section--flush">
-            <h2>Layout templates</h2>
-            {templates.length > 0 ? (
-              <ul className="saved-list">
-                {templates.map((item) => (
-                  <li key={item.id} className="saved-list__item">
-                    <button
-                      type="button"
-                      className="saved-list__name-btn"
-                      onClick={() => {
-                        onApplyTemplate(item)
-                        setOpenMenu(null)
-                      }}
-                      title={`Apply "${item.name}"`}
-                    >
-                      {item.name}
-                    </button>
-                    <div className="saved-list__actions">
-                      <button
-                        type="button"
-                        className="ghost danger saved-list__remove"
-                        onClick={() => onDeleteTemplate(item.id)}
-                        title="Delete template"
-                        aria-label={`Delete template ${item.name}`}
-                      >
-                        <X size={14} strokeWidth={2} />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="hint">Save the current channels, focus, and chat placement as a template.</p>
-            )}
-            <form
-              className="add-form__row"
-              onSubmit={(event) => {
-                event.preventDefault()
-                const result = onSaveTemplate(templateNameInput)
-                if (result.ok) {
-                  setTemplateNameInput('')
-                  setTemplateError(null)
-                } else {
-                  setTemplateError(result.error ?? 'Could not save template')
-                }
-              }}
-            >
-              <input
-                value={templateNameInput}
-                onChange={(e) => setTemplateNameInput(e.target.value)}
-                placeholder="Template name"
-                autoComplete="off"
-              />
-              <button type="submit" disabled={!templateNameInput.trim()} title="Save current layout">
-                +
-              </button>
-            </form>
-            {templateError && <p className="field-error">{templateError}</p>}
-          </section>
-        </Menu>
-
-        <IconButton
-          label={UI.dockAllPopouts}
-          tooltip={UI.dockAllPopouts}
-          tooltipAlign="end"
-          desktopOnly
-          disabled={!hasPoppedOut}
-          onClick={() => {
-            setOpenMenu(null)
-            onDockAllPopouts()
-          }}
-        >
-          <RotateCcw size={16} strokeWidth={1.75} />
-        </IconButton>
-
-        <IconButton
-          label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          active={isFullscreen}
-          onClick={() => {
-            setOpenMenu(null)
-            onToggleFullscreen()
-          }}
-        >
-          {isFullscreen ? (
-            <Minimize2 size={16} strokeWidth={1.75} />
-          ) : (
-            <Maximize2 size={16} strokeWidth={1.75} />
-          )}
-        </IconButton>
-
-        <IconButton
-          label={chromePinned ? 'Unpin toolbar' : 'Pin toolbar'}
-          active={chromePinned}
-          onClick={() => {
-            setOpenMenu(null)
-            onTogglePin()
-          }}
-        >
-          <Pin size={16} strokeWidth={1.75} fill={chromePinned ? 'currentColor' : 'none'} />
-        </IconButton>
-
-        <IconButton
-          label={windowLocked ? UI.unlockClickThrough : UI.lockWindow}
-          tooltip={
-            !seeDesktop
-              ? UI.lockNeedsSeeDesktop
-              : windowLocked
-                ? UI.unlockClickThrough
-                : UI.lockWindow
-          }
-          tooltipAlign="end"
-          active={windowLocked}
-          disabled={!seeDesktop}
-          onClick={() => {
-            setOpenMenu(null)
-            onToggleWindowLock()
-          }}
-        >
-          {windowLocked ? <Lock size={16} strokeWidth={1.75} /> : <Unlock size={16} strokeWidth={1.75} />}
-        </IconButton>
-
-        <IconButton
-          label={UI.popOutChat}
-          desktopOnly
-          tooltipAlign="end"
-          onClick={() => {
-            setOpenMenu(null)
-            onPopoutChat()
-          }}
-        >
-          <SquareArrowOutUpRight size={16} strokeWidth={1.75} />
-        </IconButton>
-
-        <IconButton
-          label={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : UI.loginToTwitch}
-          tooltip={isLoggedIn ? `Signed in as ${displayName ?? 'you'}` : UI.loginTooltip}
-          tooltipAlign="end"
-          active={isLoggedIn}
-          disabled={authBusy}
-          onClick={() => {
-            setOpenMenu(null)
-            if (!isLoggedIn) onLoginTwitch()
-          }}
-        >
-          <LogIn size={16} strokeWidth={1.75} fill={isLoggedIn ? 'currentColor' : 'none'} />
-        </IconButton>
-
-        <IconButton
-          label={UI.settings}
-          tooltipAlign="end"
-          active={settingsOpen}
-          onClick={() => {
-            setOpenMenu(null)
-            onOpenSettings()
-          }}
-        >
-          <Settings size={16} strokeWidth={1.75} />
-        </IconButton>
       </div>
 
       <div className="topbar__window-controls">

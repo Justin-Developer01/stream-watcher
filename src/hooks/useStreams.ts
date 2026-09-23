@@ -274,6 +274,30 @@ export function useStreams() {
     })
   }, [focusedId])
 
+  const setMode = useCallback(
+    (mode: 'standard' | 'focus' | 'performance') => {
+      if (mode === 'focus') {
+        setIsDragging(false)
+        setFocusMode(true)
+        setFocusedId((id) => id ?? streams[0]?.id ?? null)
+        setPerformanceMode(false)
+      } else if (mode === 'performance') {
+        setFocusMode(false)
+        setPerformanceMode(true)
+      } else {
+        setFocusMode(false)
+        setPerformanceMode(false)
+      }
+    },
+    [streams, setPerformanceMode],
+  )
+
+  const toggleSeeThroughWindows = useCallback(() => {
+    const isOn = appearance.seeDesktop && !windowLocked
+    setAppearance((prev) => ({ ...prev, seeDesktop: !isOn }))
+    setWindowLocked(false)
+  }, [appearance.seeDesktop, windowLocked])
+
   const applyPreset = useCallback(
     (preset: LayoutMode) => {
       setLayoutMode(preset)
@@ -345,6 +369,8 @@ export function useStreams() {
     cycleFocus,
     muteAll,
     toggleMute,
+    setMode,
+    toggleSeeThroughWindows,
     applyPreset,
     applyTemplate,
     appearance,
