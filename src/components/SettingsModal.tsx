@@ -170,6 +170,7 @@ export function SettingsModal({
                   <Switch.Thumb className="switch__thumb" />
                 </Switch.Root>
               </label>
+              <div className="settings-actions">
               <button
                 type="button"
                 className="text-btn"
@@ -191,6 +192,7 @@ export function SettingsModal({
               >
                 {ui.reset}
               </button>
+              </div>
             </Tabs.Content>
 
             <Tabs.Content value="chat" className="settings-pane">
@@ -273,13 +275,15 @@ export function SettingsModal({
                   }}
                 />
               )}
-              <button
-                type="button"
-                className="text-btn"
-                onClick={() => setDraft((p) => ({ ...p, hotkeys: { ...defaultHotkeys } }))}
-              >
-                {ui.reset}
-              </button>
+              <div className="settings-actions">
+                <button
+                  type="button"
+                  className="text-btn"
+                  onClick={() => setDraft((p) => ({ ...p, hotkeys: { ...defaultHotkeys } }))}
+                >
+                  {ui.reset}
+                </button>
+              </div>
             </Tabs.Content>
 
             <Tabs.Content value="updates" className="settings-pane">

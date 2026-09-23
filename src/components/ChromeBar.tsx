@@ -127,6 +127,7 @@ export function ChromeBar({
         {error && <span className="chrome-error">{error}</span>}
       </form>
 
+      <div className="chrome-actions">
       <ToggleGroup.Root
         className="mode-group"
         type="single"
@@ -298,6 +299,7 @@ export function ChromeBar({
           {pinned ? <Pin size={13} /> : <PinOff size={13} />}
         </button>
       </Tip>
+      </div>
 
       <div className="window-controls">
         <Tip label={ui.minimize} side={flyoutSide}>

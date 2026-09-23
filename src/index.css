@@ -66,7 +66,12 @@ button {
   min-height: 26px;
 }
 
-button:disabled { opacity: 0.4; }
+button:disabled {
+  opacity: 1;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 12%, var(--btn-bg));
+  border-color: color-mix(in srgb, var(--muted) 45%, var(--btn-border));
+}
 
 .icon-btn, .text-btn, .mode-btn, .win-btn, .ghost-btn, .primary-btn, .hotkey-btn {
   display: inline-flex;
@@ -78,10 +83,12 @@ button:disabled { opacity: 0.4; }
   border: 1px solid var(--btn-border);
 }
 
-.icon-btn { width: 26px; height: 26px; padding: 0; }
+.icon-btn { width: 26px; height: 26px; padding: 0; flex: 0 0 auto; }
 .icon-btn.is-on, .mode-btn[data-state='on'] {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 24%, var(--btn-bg));
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .danger, .win-btn--close:hover { color: var(--danger); }
 
@@ -291,32 +298,43 @@ button:disabled { opacity: 0.4; }
 
 .chrome-bar {
   height: var(--chrome);
+  max-height: var(--chrome);
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0 0.4rem;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
+  justify-content: space-evenly;
+  gap: 8px;
+  padding: 0 8px;
+  overflow: visible;
   background: color-mix(in srgb, var(--surface) 72%, transparent);
   backdrop-filter: blur(16px) saturate(1.2);
   border-bottom: 1px solid var(--line);
   -webkit-app-region: no-drag;
 }
-.chrome-bar::-webkit-scrollbar { display: none; height: 0; }
 
 .desk--chrome-left .chrome-bar,
 .desk--chrome-right .chrome-bar {
   height: 100%;
+  max-height: none;
   width: var(--chrome);
   max-width: var(--chrome);
   flex-direction: column;
-  padding: 0.4rem 0.25rem;
+  justify-content: flex-start;
+  padding: 6px 4px;
   border-bottom: 0;
   border-right: 1px solid var(--line);
   writing-mode: horizontal-tb;
   overflow-x: hidden;
   overflow-y: auto;
+}
+.desk--chrome-left .chrome-actions,
+.desk--chrome-right .chrome-actions {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 6px;
 }
 .desk--chrome-left .chrome-wordmark,
 .desk--chrome-right .chrome-wordmark { display: none; }
@@ -330,11 +348,13 @@ button:disabled { opacity: 0.4; }
 .desk--chrome-right .mode-btn {
   width: 100%;
   height: auto;
+  max-height: none;
   min-height: 26px;
-  padding: 0.15rem 0.05rem;
+  padding: 2px 1px;
   white-space: normal;
-  line-height: 1.1;
+  line-height: 1.05;
   text-align: center;
+  overflow: visible;
 }
 .desk--chrome-right .chrome-bar { border-right: 0; border-left: 1px solid var(--line); }
 
@@ -343,10 +363,10 @@ button:disabled { opacity: 0.4; }
 .chrome-bar__drag {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding-right: 0.4rem;
+  gap: 8px;
   -webkit-app-region: drag;
   min-width: 0;
+  flex: 0 0 auto;
 }
 
 .chrome-mark {
@@ -381,7 +401,17 @@ button:disabled { opacity: 0.4; }
   white-space: nowrap;
 }
 
-.chrome-search { display: flex; align-items: center; min-width: 8rem; flex: 0 1 12rem; }
+.chrome-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 6.5rem;
+  flex: 0 1 11rem;
+}
+.chrome-actions,
+.mode-group,
+.window-controls { display: contents; }
+.chrome-actions > * { flex: 0 0 auto; }
 .chrome-search input,
 .menu-inline input,
 .settings-pane input,
@@ -397,24 +427,33 @@ button:disabled { opacity: 0.4; }
   min-height: 26px;
 }
 
-.chrome-error { color: var(--danger); font-size: 10px; margin-left: 0.3rem; }
-
-.mode-group { display: flex; gap: 0.2rem; }
-.mode-btn { padding: 0 0.45rem; height: 26px; }
-
-.window-controls {
-  margin-left: auto;
-  display: flex;
-  gap: 0.2rem;
-  -webkit-app-region: no-drag;
-  flex: 0 0 auto;
-  position: sticky;
-  right: 0;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: blur(16px);
+.chrome-error {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 2;
+  color: var(--danger);
+  font-size: 10px;
+  white-space: nowrap;
 }
+
+.desk--chrome-top .mode-group,
+.desk--chrome-bottom .mode-group { display: contents; }
+.mode-btn { padding: 0 0.4rem; height: 26px; max-height: 26px; flex: 0 0 auto; }
+.chrome-bar .text-btn,
+.chrome-bar .icon-btn,
+.chrome-bar .win-btn,
+.chrome-bar__drag { flex: 0 0 auto; }
+
+.window-controls { -webkit-app-region: no-drag; }
 .desk--chrome-left .window-controls,
-.desk--chrome-right .window-controls { margin-left: 0; margin-top: auto; flex-direction: column; }
+.desk--chrome-right .window-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+}
 .win-btn { width: 28px; height: 26px; }
 
 .desk-stage {
@@ -628,7 +667,8 @@ button:disabled { opacity: 0.4; }
   transform: translateX(2px);
 }
 .switch[data-state='checked'] .switch__thumb { transform: translateX(16px); }
-.hotkey-row { display: grid; grid-template-columns: 1fr auto; gap: 0.4rem; align-items: center; }
+.hotkey-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.4rem 0.75rem; align-items: center; }
+.hotkey-row .field-error { grid-column: 1 / -1; }
 .hotkey-btn.is-conflict { border-color: var(--danger); color: var(--danger); }
 .chat-preview {
   border: 1px solid var(--line);
@@ -637,10 +677,22 @@ button:disabled { opacity: 0.4; }
   background: var(--btn-bg);
   color: var(--text);
 }
+.settings-actions,
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 8px;
+}
+.settings-actions { margin-top: 0.15rem; }
+.settings-actions .text-btn,
+.modal-footer .ghost-btn,
+.modal-footer .primary-btn {
+  min-width: 88px;
+  height: 32px;
+  padding: 0 12px;
+}
+.modal-footer {
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--line);
@@ -707,8 +759,37 @@ button:disabled { opacity: 0.4; }
 
 .desk--performance .stream-tile:not(.is-focused) { backdrop-filter: none; }
 
+[data-theme='light'] .icon-btn,
+[data-theme='light'] .text-btn,
+[data-theme='light'] .mode-btn,
+[data-theme='light'] .win-btn,
+[data-theme='light'] .ghost-btn,
+[data-theme='light'] .hotkey-btn,
+[data-theme='light'] .settings-tabs__list button,
+[data-theme='light'] .chrome-search input,
+[data-theme='light'] .settings-pane input,
+[data-theme='light'] .settings-pane select {
+  background: var(--btn-bg);
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--text) 28%, var(--btn-border));
+}
+[data-theme='light'] .icon-btn.is-on,
+[data-theme='light'] .mode-btn[data-state='on'],
+[data-theme='light'] .settings-tabs__list button[data-state='active'] {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 28%, var(--btn-bg));
+}
+[data-theme='light'] button:disabled {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--text) 6%, var(--btn-bg));
+  border-color: color-mix(in srgb, var(--text) 24%, var(--btn-border));
+}
+
 @media (max-width: 1100px) {
   .chrome-wordmark { display: none; }
+  .chrome-bar { gap: 6px; }
+  .chrome-search { min-width: 5.5rem; flex-basis: 8rem; }
   .desk--chrome-top.desk--chat-right,
   .desk--chrome-top.desk--chat-left {
     grid-template-columns: minmax(0, 1fr);
