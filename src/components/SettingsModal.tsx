@@ -61,8 +61,8 @@ export function SettingsModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="modal-overlay" />
-        <Dialog.Content className="modal-card" onEscapeKeyDown={() => onOpenChange(false)}>
+        <Dialog.Overlay className="modal-overlay" data-hit />
+        <Dialog.Content className="modal-card" data-hit onEscapeKeyDown={() => onOpenChange(false)}>
           <Dialog.Title className="modal-title">{ui.settings}</Dialog.Title>
           <Tabs.Root defaultValue="appearance" className="settings-tabs">
             <Tabs.List className="settings-tabs__list">

@@ -37,7 +37,7 @@ export function StreamTile({
 
   return (
     <article className={`stream-tile${focused ? ' is-focused' : ''}${low ? ' is-low' : ''}`}>
-      <header className="stream-tile__bar">
+      <header className="stream-tile__bar" data-hit>
         <button type="button" className="stream-drag-handle" hidden={mode === 'focus'}>
           ⋮⋮
         </button>

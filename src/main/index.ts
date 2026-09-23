@@ -57,10 +57,20 @@ function broadcastPopouts() {
   }
 }
 
+function clickThroughActive() {
+  return clickThrough && !clickThroughLocked
+}
+
 function applyClickThrough() {
   if (!mainWindow || mainWindow.isDestroyed()) return
-  const ignore = clickThrough && !clickThroughLocked
-  mainWindow.setIgnoreMouseEvents(ignore, { forward: true })
+  if (clickThroughActive()) {
+    // Stay above windows that receive the passed-through clicks, so the chrome
+    // cannot drop behind the desktop when click-through unlocks.
+    mainWindow.setAlwaysOnTop(true, 'floating')
+    return
+  }
+  mainWindow.setAlwaysOnTop(false)
+  mainWindow.setIgnoreMouseEvents(false)
 }
 
 function createMainWindow() {
@@ -259,6 +269,15 @@ app.whenReady().then(() => {
   ipcMain.handle('window:set-click-through-locked', (_e, locked: boolean) => {
     clickThroughLocked = Boolean(locked)
     applyClickThrough()
+  })
+  ipcMain.handle('window:set-ignore-mouse', (_e, ignore: boolean) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    if (!clickThroughActive()) {
+      mainWindow.setIgnoreMouseEvents(false)
+      return
+    }
+    if (ignore) mainWindow.setIgnoreMouseEvents(true, { forward: true })
+    else mainWindow.setIgnoreMouseEvents(false)
   })
   ipcMain.handle('window:set-always-on-top', (event, enabled: boolean) => {
     const win = BrowserWindow.fromWebContents(event.sender)

@@ -14,6 +14,7 @@ type VesperApi = {
   quit: () => Promise<void>
   setClickThrough: (enabled: boolean) => Promise<void>
   setClickThroughLocked: (locked: boolean) => Promise<void>
+  setIgnoreMouseEvents: (ignore: boolean) => Promise<void>
   setAlwaysOnTop: (enabled: boolean) => Promise<void>
   openExternal: (url: string) => Promise<void>
   openTwitchLogin: () => Promise<void>

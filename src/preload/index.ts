@@ -21,6 +21,8 @@ const api = {
     ipcRenderer.invoke('window:set-click-through', enabled) as Promise<void>,
   setClickThroughLocked: (locked: boolean) =>
     ipcRenderer.invoke('window:set-click-through-locked', locked) as Promise<void>,
+  setIgnoreMouseEvents: (ignore: boolean) =>
+    ipcRenderer.invoke('window:set-ignore-mouse', ignore) as Promise<void>,
   setAlwaysOnTop: (enabled: boolean) =>
     ipcRenderer.invoke('window:set-always-on-top', enabled) as Promise<void>,
   openExternal: (url: string) => ipcRenderer.invoke('window:open-external', url) as Promise<void>,

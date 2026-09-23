@@ -96,7 +96,7 @@ export function ChromeBar({
   const flyoutSide = outwardSide(chromeEdge)
 
   return (
-    <header className="chrome-bar">
+    <header className="chrome-bar" data-hit>
       <div className="chrome-bar__drag">
         <span className="chrome-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
@@ -137,17 +137,17 @@ export function ChromeBar({
         }}
       >
         <Tip label={ui.standard} side={flyoutSide}>
-          <ToggleGroup.Item className="mode-btn" value="standard">
+          <ToggleGroup.Item className={`mode-btn${mode === 'standard' ? ' is-on' : ''}`} value="standard">
             {ui.standard}
           </ToggleGroup.Item>
         </Tip>
         <Tip label={ui.focus} side={flyoutSide}>
-          <ToggleGroup.Item className="mode-btn" value="focus">
+          <ToggleGroup.Item className={`mode-btn${mode === 'focus' ? ' is-on' : ''}`} value="focus">
             {ui.focus}
           </ToggleGroup.Item>
         </Tip>
         <Tip label={ui.performance} side={flyoutSide}>
-          <ToggleGroup.Item className="mode-btn" value="performance">
+          <ToggleGroup.Item className={`mode-btn${mode === 'performance' ? ' is-on' : ''}`} value="performance">
             {ui.performance}
           </ToggleGroup.Item>
         </Tip>
@@ -160,7 +160,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
+          <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
             {templates.length === 0 && <DropdownMenu.Item className="menu__item muted" disabled>No saved layouts</DropdownMenu.Item>}
             {templates.map((template) => (
               <DropdownMenu.Item key={template.id} className="menu__item" onSelect={() => onApplyTemplate(template.id)}>
@@ -195,7 +195,7 @@ export function ChromeBar({
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
+            <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
               {streamPops.map((item) => (
                 <DropdownMenu.Item
                   key={`${item.kind}-${item.channel}`}
@@ -217,7 +217,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
+          <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
             <DropdownMenu.Item className="menu__item" onSelect={onFullscreen}>
               {ui.fullscreen}
             </DropdownMenu.Item>
@@ -241,7 +241,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
+          <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
             <DropdownMenu.Item className="menu__item" onSelect={onLogin}>
               <LogIn size={13} /> {isLoggedIn ? displayName : ui.loginToTwitch}
             </DropdownMenu.Item>

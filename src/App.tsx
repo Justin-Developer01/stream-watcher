@@ -7,6 +7,7 @@ import { PopoutApp } from './components/PopoutApp'
 import { SettingsModal } from './components/SettingsModal'
 import { StreamGrid } from './components/StreamGrid'
 import { useChat } from './hooks/useChat'
+import { useClickThrough } from './hooks/useClickThrough'
 import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { formatHotkeyEvent, type HotkeyAction } from './lib/hotkeys'
@@ -32,6 +33,8 @@ function DeskApp() {
 
   const ghostHidden =
     desk.settings.ghostOverlay && !desk.settings.pinToolbar && !desk.toolbarForced && !hoverChrome && !settingsOpen
+
+  useClickThrough(desk.settings.seeThrough && !desk.windowLocked, desk.settings.chromeEdge)
 
   useEffect(() => {
     void window.vesper?.listPopouts().then(setPopped)
@@ -164,6 +167,14 @@ function DeskApp() {
     } as React.CSSProperties
   }, [desk.settings])
 
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.theme = desk.settings.theme
+    for (const [key, value] of Object.entries(style)) {
+      if (key.startsWith('--') && value != null) root.style.setProperty(key, String(value))
+    }
+  }, [desk.settings.theme, style])
+
   const chatEl = desk.chatOpen ? (
     <ChatDrawer
       dock={desk.chatDock}
@@ -211,6 +222,7 @@ function DeskApp() {
         setHoverChrome(near)
       }}
     >
+      {ghostHidden && <div className="chrome-hotzone" data-hit aria-hidden />}
       <ChromeBar
         mode={desk.mode}
         onMode={desk.setMode}
@@ -273,8 +285,16 @@ function DeskApp() {
             })
           }
         />
-        {(busy || error) && <p className="toast">{error ?? 'Signing in…'}</p>}
-        {desk.windowLocked && desk.settings.seeThrough && <p className="lock-chip">Window locked</p>}
+        {(busy || error) && (
+          <p className="toast" data-hit>
+            {error ?? 'Signing in…'}
+          </p>
+        )}
+        {desk.windowLocked && desk.settings.seeThrough && (
+          <p className="lock-chip" data-hit>
+            Window locked
+          </p>
+        )}
       </main>
 
       {desk.chatOpen && desk.chatDock === 'right' && chatEl}

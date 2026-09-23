@@ -12,7 +12,7 @@ export function FirstRunTips({
   if (!remaining.length) return null
 
   return (
-    <div className="tips-stack">
+    <div className="tips-stack" data-hit>
       {remaining.map((tip) => (
         <article key={tip.id} className="tip-card">
           <header>

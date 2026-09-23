@@ -84,7 +84,7 @@ export function ChatDrawer({
   }
 
   return (
-    <aside className={`chat-drawer chat-drawer--${dock}`} style={{ fontFamily, fontSize }}>
+    <aside className={`chat-drawer chat-drawer--${dock}`} style={{ fontFamily, fontSize }} data-hit>
       <header className="chat-drawer__bar">
         <strong>{ui.chat}</strong>
         <span className={`dot dot--${status}`} />
@@ -163,7 +163,7 @@ export function ChatDrawer({
               </button>
             </Popover.Trigger>
             <Popover.Portal container={document.body}>
-              <Popover.Content className="emote-pop" side="top" sideOffset={6} collisionPadding={12} avoidCollisions>
+              <Popover.Content className="emote-pop" data-hit side="top" sideOffset={6} collisionPadding={12} avoidCollisions>
                 {QUICK_EMOTES.map((emote) => (
                   <button key={emote} type="button" onClick={() => setDraft((d) => `${d}${d ? ' ' : ''}${emote}`)}>
                     {emote}

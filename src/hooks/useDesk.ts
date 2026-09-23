@@ -54,7 +54,7 @@ export function useDesk() {
   const [settings, setSettings] = useState<AppSettings>(initial.settings)
   const [isDragging, setIsDragging] = useState(false)
   const [windowLocked, setWindowLocked] = useState(false)
-  const [toolbarForced, setToolbarForced] = useState(true)
+  const [toolbarForced, setToolbarForced] = useState(false)
   const snapshotRef = useRef<PersistedState | null>(null)
 
   const snapshot = useMemo<PersistedState>(
