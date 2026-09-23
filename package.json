@@ -1,6 +1,6 @@
 {
   "name": "vesper-desk",
-  "version": "1.0.1-pre.18",
+  "version": "1.0.1-pre.19",
   "description": "Vesper Desk — multi-stream Twitch desktop",
   "main": "./out/main/index.js",
   "author": "Justin",
