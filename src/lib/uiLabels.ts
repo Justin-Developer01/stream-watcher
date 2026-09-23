@@ -28,4 +28,6 @@ export const UI = {
   exit: 'Exit Stream Watcher',
   emotePicker: 'Emotes',
   drawerWidth: 'Drawer width',
+  customFont: 'Custom…',
+  customFontHint: 'Type the family name as Windows lists it. If it isn’t found, chat uses System.',
 } as const

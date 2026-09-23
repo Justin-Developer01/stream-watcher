@@ -60,7 +60,7 @@ This is the **in-app drawer**. It is not a second window.
 
 **Open chat** / **Hide chat** only toggle that drawer. They do not move chat to another monitor.
 
-**Settings → Chat** sets Font, Size, and **Drawer width** (280–480px) for docked left / right. After **Login to Twitch**, Twitch emotes show in the list and a small picker sits on the composer.
+**Settings → Chat** sets Font (System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…**), Size, and **Drawer width** (280–480px) for docked left / right. **Custom…** is a family-name field with a live preview — type the name Windows lists (Word/Notepad). If it isn’t installed, chat uses System. After **Login to Twitch**, Twitch emotes show in the list and a small picker sits on the composer.
 
 ## Chat vs stream on another monitor
 
@@ -124,7 +124,7 @@ The gear opens a frosted modal (~560×480). **Esc** or **X** closes it. Left tab
 | Tab | What it holds |
 |---|---|
 | Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default). Main window is frameless. |
-| Chat | **Font** (System / Geist / Source Sans 3 / Inter / IBM Plex Sans / Mono), **Size** (12 / 13 / 14 / 16), **Drawer width** (280–480px for docked left / right). After **Login to Twitch**, emotes render in the list and the composer picker. |
+| Chat | **Font** (System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…** for a Windows-installed family), **Size** (12 / 13 / 14 / 16), **Drawer width** (280–480px for docked left / right). After **Login to Twitch**, emotes render in the list and the composer picker. |
 | Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
 | Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |

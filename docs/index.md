@@ -42,7 +42,7 @@ Then, for another monitor: park on another monitor → **Lock window (click-thro
 | Settings / Help | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc / X closes. |
 | Chrome side | Settings → Appearance → **Chrome: Top \| Left** (Top default). |
 | Ghost overlay | Settings → Appearance → **Ghost overlay**. Auto-hides the thin bar until the edge or Pin. Frameless is always on. |
-| Chat type | Settings → **Chat**: Font, Size, Drawer width 280–480. Emotes after Login to Twitch. |
+| Chat type | Settings → **Chat**: Font (incl. **Custom…**), Size, Drawer width 280–480. Emotes after Login to Twitch. |
 | Quit | Settings footer **Exit Stream Watcher**, or **Quit application** (Ctrl+Q). |
 | Check for Updates | Settings → **Updates** |
 | See the desktop | Settings → Appearance → **See desktop behind app.** |

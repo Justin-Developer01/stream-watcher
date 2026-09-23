@@ -46,12 +46,13 @@ Settings modal → **Appearance**
 
 ## Chat
 Settings → **Chat** (not buried in Appearance)
-- Font: System / Geist / Source Sans 3 / Inter / IBM Plex Sans / Mono (default System)
+- Font: System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist (default System)
+- **Custom…** — type a family already installed on Windows (the name Word/Notepad use). Live preview on the Chat tab. If it isn’t found, chat uses System and a quiet hint. No bundled font files, no OS font dialog.
 - Size: 12 / 13 / 14 / 16 (default 13)
 - **Drawer width** 280–480px for docked left / right (default 320). Bottom and Float unchanged.
 - After **Login to Twitch**, Twitch emotes render in the message list (global + channel) and a small composer picker. Fail soft to plain text if emotes cannot load. No Bits control.
 
-Chat lines use username color, badges when available, timestamps, and tighter Twitch-like density on the frosted desk.
+Chat lines stay left-aligned: badges, colored username, colon, inline emotes. Timestamp sits dim on the right and brightens on hover. Compact composer with an emote button. Frosted desk — no Twitch purple chrome.
 
 ## Click-through + Lock window (click-through)
 With See desktop on, empty-stage clicks pass through to the desktop. **Lock window (click-through)** on the top bar freezes that. Unlock to pass through again.

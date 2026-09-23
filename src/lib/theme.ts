@@ -1,6 +1,16 @@
+import { customFontStack, sanitizeFontFamily } from './localFonts'
+
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
-export type ChatFont = 'system' | 'geist' | 'sourceSans' | 'inter' | 'plex' | 'mono'
+export type ChatFont =
+  | 'system'
+  | 'plex'
+  | 'inter'
+  | 'mono'
+  | 'sourceSans'
+  | 'roboto'
+  | 'geist'
+  | 'custom'
 export type ChromePosition = 'top' | 'left'
 
 export type AppearanceTheme = {
@@ -15,37 +25,44 @@ export type AppearanceTheme = {
   seeDesktop: boolean
   ghostOverlay: boolean
   chatFont: ChatFont
+  chatFontCustom: string
   chatFontSize: number
   chatDrawerWidth: number
   chrome: ChromePosition
 }
 
-export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
+export const CHAT_FONTS: Record<Exclude<ChatFont, 'custom'>, { label: string; stack: string }> = {
   system: {
     label: 'System',
     stack: 'system-ui, -apple-system, "Segoe UI", sans-serif',
-  },
-  geist: {
-    label: 'Geist',
-    stack: 'Geist, Inter, "IBM Plex Sans", sans-serif',
-  },
-  sourceSans: {
-    label: 'Source Sans 3',
-    stack: '"Source Sans 3", Inter, sans-serif',
-  },
-  inter: {
-    label: 'Inter',
-    stack: 'Inter, "IBM Plex Sans", sans-serif',
   },
   plex: {
     label: 'IBM Plex Sans',
     stack: '"IBM Plex Sans", sans-serif',
   },
+  inter: {
+    label: 'Inter',
+    stack: 'Inter, "IBM Plex Sans", sans-serif',
+  },
   mono: {
     label: 'Mono',
     stack: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
   },
+  sourceSans: {
+    label: 'Source Sans 3',
+    stack: '"Source Sans 3", Inter, sans-serif',
+  },
+  roboto: {
+    label: 'Roboto',
+    stack: 'Roboto, "Segoe UI", sans-serif',
+  },
+  geist: {
+    label: 'Geist',
+    stack: 'Geist, Inter, "IBM Plex Sans", sans-serif',
+  },
 }
+
+export const CHAT_FONT_CHIPS = Object.keys(CHAT_FONTS) as Array<Exclude<ChatFont, 'custom'>>
 
 export const CHAT_FONT_SIZES = [12, 13, 14, 16] as const
 export type ChatFontSize = (typeof CHAT_FONT_SIZES)[number]
@@ -88,6 +105,7 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   seeDesktop: false,
   ghostOverlay: false,
   chatFont: 'system',
+  chatFontCustom: '',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
   chatDrawerWidth: CHAT_DRAWER_WIDTH_DEFAULT,
   chrome: 'top',
@@ -146,7 +164,9 @@ function normalizeChatFont(value: unknown): ChatFont {
     value === 'mono' ||
     value === 'system' ||
     value === 'geist' ||
-    value === 'sourceSans'
+    value === 'sourceSans' ||
+    value === 'roboto' ||
+    value === 'custom'
   ) {
     return value
   }
@@ -178,6 +198,7 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     seeDesktop: current?.seeDesktop ?? DEFAULT_APPEARANCE.seeDesktop,
     ghostOverlay: current?.ghostOverlay ?? DEFAULT_APPEARANCE.ghostOverlay,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
+    chatFontCustom: current?.chatFontCustom ?? DEFAULT_APPEARANCE.chatFontCustom,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
     chatDrawerWidth: current?.chatDrawerWidth ?? DEFAULT_APPEARANCE.chatDrawerWidth,
     chrome: current?.chrome ?? DEFAULT_APPEARANCE.chrome,
@@ -210,6 +231,7 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     seeDesktop: raw?.seeDesktop === true,
     ghostOverlay: raw?.ghostOverlay === true,
     chatFont: normalizeChatFont(raw?.chatFont),
+    chatFontCustom: sanitizeFontFamily(raw?.chatFontCustom),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
     chatDrawerWidth: clampChatDrawerWidth(raw?.chatDrawerWidth),
     chrome: raw?.chrome === 'left' ? 'left' : 'top',
@@ -258,7 +280,8 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
       : 'none',
   )
   root.style.setProperty('--bg-overlay', String(seeDesktop ? 0 : theme.overlayOpacity))
-  root.style.setProperty('--chat-font', CHAT_FONTS[theme.chatFont].stack)
+  const customStack = theme.chatFont === 'custom' ? customFontStack(theme.chatFontCustom) : null
+  root.style.setProperty('--chat-font', customStack ?? CHAT_FONTS[theme.chatFont === 'custom' ? 'system' : theme.chatFont].stack)
   root.style.setProperty('--chat-font-size', `${theme.chatFontSize}px`)
   root.style.setProperty('--chat-drawer-width', `${theme.chatDrawerWidth}px`)
   if (windowChrome) {

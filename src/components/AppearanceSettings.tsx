@@ -4,6 +4,7 @@ import {
   CHAT_DRAWER_WIDTH_MAX,
   CHAT_DRAWER_WIDTH_MIN,
   CHAT_FONTS,
+  CHAT_FONT_CHIPS,
   CHAT_FONT_SIZES,
   DEFAULT_APPEARANCE,
   applyAppearance,
@@ -15,8 +16,8 @@ import {
   type AppearancePreset,
   type AppearanceTheme,
   type BackgroundMode,
-  type ChatFont,
 } from '../lib/theme'
+import { customFontStack, listLocalFontFamilies, sanitizeFontFamily } from '../lib/localFonts'
 import { UI } from '../lib/uiLabels'
 
 type Props = {
@@ -274,9 +275,15 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
 }
 
 export function ChatTypographySettings({ appearance, onChange }: Props) {
+  const [localFonts, setLocalFonts] = useState<string[]>([])
   const patch = (partial: Partial<AppearanceTheme>) => {
     onChange((prev) => ({ ...prev, ...partial }))
   }
+  const customResolved = appearance.chatFont === 'custom' ? customFontStack(appearance.chatFontCustom) : null
+  const previewStack =
+    appearance.chatFont === 'custom'
+      ? (customResolved ?? CHAT_FONTS.system.stack)
+      : CHAT_FONTS[appearance.chatFont].stack
 
   return (
     <section className="popover-section">
@@ -284,7 +291,7 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
       <div className="appearance-panel">
         <p className="theme-label">Font</p>
         <div className="preset-row" role="group" aria-label="Font">
-          {(Object.keys(CHAT_FONTS) as ChatFont[]).map((font) => (
+          {CHAT_FONT_CHIPS.map((font) => (
             <button
               key={font}
               type="button"
@@ -294,7 +301,45 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
               {CHAT_FONTS[font].label}
             </button>
           ))}
+          <button
+            type="button"
+            className={appearance.chatFont === 'custom' ? 'is-active' : ''}
+            onClick={() => {
+              patch({ chatFont: 'custom' })
+              void listLocalFontFamilies().then(setLocalFonts)
+            }}
+          >
+            {UI.customFont}
+          </button>
         </div>
+        {appearance.chatFont === 'custom' && (
+          <div className="chat-custom-font">
+            <label htmlFor="chat-font-custom" className="sr-only">
+              Installed font family
+            </label>
+            <input
+              id="chat-font-custom"
+              list="chat-font-custom-list"
+              value={appearance.chatFontCustom}
+              placeholder="Font family name"
+              autoComplete="off"
+              spellCheck={false}
+              onChange={(event) => patch({ chatFontCustom: sanitizeFontFamily(event.target.value) })}
+            />
+            <datalist id="chat-font-custom-list">
+              {localFonts.map((family) => (
+                <option key={family} value={family} />
+              ))}
+            </datalist>
+            <p className="chat-font-preview" style={{ fontFamily: previewStack }}>
+              username: Kappa hello — {appearance.chatFontCustom || 'System'}
+            </p>
+            {appearance.chatFontCustom && !customResolved && (
+              <p className="hint">{UI.customFontHint}</p>
+            )}
+            {!appearance.chatFontCustom && <p className="hint">{UI.customFontHint}</p>}
+          </div>
+        )}
         <p className="theme-label">Size</p>
         <div className="preset-row" role="group" aria-label="Size">
           {CHAT_FONT_SIZES.map((size) => (
