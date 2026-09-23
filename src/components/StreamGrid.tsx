@@ -1,0 +1,190 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import GridLayout from 'react-grid-layout'
+import type { Layout } from 'react-grid-layout'
+import { layoutRows } from '../lib/layout'
+import { DEFAULT_LAYOUT_COLS } from '../types'
+import type { StreamItem } from '../types'
+import { StreamTile } from './StreamTile'
+
+type Props = {
+  streams: StreamItem[]
+  layout: Layout[]
+  onLayoutChange: (layout: Layout[]) => void
+  focusedId: string | null
+  focusMode: boolean
+  performanceMode?: boolean
+  isDragging: boolean
+  onDraggingChange: (dragging: boolean) => void
+  savedChannels: string[]
+  onFocus: (id: string) => void
+  onToggleMute: (id: string) => void
+  onRemove: (id: string) => void
+  onOpenChat: (channel: string) => void
+  onPopoutChat: (channel: string) => void
+  onPopoutStream: (channel: string) => void
+  isStreamPopped: (channel: string) => boolean
+  onToggleSave: (channel: string) => void
+}
+
+const MARGIN: [number, number] = [4, 4]
+const PADDING: [number, number] = [4, 4]
+
+function EmptyGrid() {
+  return (
+    <div className="empty-grid">
+      <h2>No streams yet</h2>
+      <p>Click the title in the top bar to add a Twitch channel.</p>
+    </div>
+  )
+}
+
+function AllPoppedOutGrid() {
+  return (
+    <div className="empty-grid">
+      <h2>All streams are on another monitor</h2>
+      <p>Dock a pop-out back to see it here again.</p>
+    </div>
+  )
+}
+
+export function StreamGrid({
+  streams,
+  layout,
+  onLayoutChange,
+  focusedId,
+  focusMode,
+  performanceMode = false,
+  isDragging,
+  onDraggingChange,
+  savedChannels,
+  onFocus,
+  onToggleMute,
+  onRemove,
+  onOpenChat,
+  onPopoutChat,
+  onPopoutStream,
+  isStreamPopped,
+  onToggleSave,
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const measure = () => {
+      setSize({ width: Math.floor(el.clientWidth), height: Math.floor(el.clientHeight) })
+    }
+    measure()
+
+    const observer = new ResizeObserver(() => measure())
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [focusMode, streams.length])
+
+  const visibleStreams = useMemo(
+    () => streams.filter((stream) => !isStreamPopped(stream.channel)),
+    [streams, isStreamPopped],
+  )
+
+  const visibleLayout = useMemo(
+    () => layout.filter((item) => visibleStreams.some((stream) => stream.id === item.i)),
+    [layout, visibleStreams],
+  )
+
+  const rows = useMemo(() => layoutRows(visibleLayout), [visibleLayout])
+  const rowHeight = useMemo(() => {
+    if (size.height <= 0) return 24
+    const available = size.height - PADDING[1] * 2 - MARGIN[1] * (rows + 1)
+    return Math.max(12, Math.floor(available / rows))
+  }, [rows, size.height])
+
+  const handleLayoutChange = (nextVisible: Layout[]) => {
+    const poppedIds = new Set(
+      streams.filter((stream) => isStreamPopped(stream.channel)).map((stream) => stream.id),
+    )
+    const preserved = layout.filter((item) => poppedIds.has(item.i))
+    onLayoutChange([...preserved, ...nextVisible])
+  }
+
+  if (!streams.length) return <EmptyGrid />
+  if (!visibleStreams.length) return <AllPoppedOutGrid />
+
+  const activeId = focusedId ?? visibleStreams[0]?.id ?? null
+  const renderTile = (stream: StreamItem, options?: { promoteOnClick?: boolean; showHandle?: boolean }) => (
+    <StreamTile
+      stream={stream}
+      focused={stream.id === activeId}
+      interactive={!isDragging && !options?.promoteOnClick}
+      showHandle={options?.showHandle ?? !focusMode}
+      isSaved={savedChannels.includes(stream.channel)}
+      promoteOnClick={options?.promoteOnClick}
+      economy={performanceMode && stream.id !== activeId}
+      onFocus={() => onFocus(stream.id)}
+      onToggleMute={() => onToggleMute(stream.id)}
+      onRemove={() => onRemove(stream.id)}
+      onOpenChat={() => onOpenChat(stream.channel)}
+      onPopoutChat={() => onPopoutChat(stream.channel)}
+      onPopoutStream={() => onPopoutStream(stream.channel)}
+      onToggleSave={() => onToggleSave(stream.channel)}
+    />
+  )
+
+  if (focusMode) {
+    const hero = visibleStreams.find((stream) => stream.id === focusedId) ?? visibleStreams[0]
+    const others = visibleStreams.filter((stream) => stream.id !== hero.id)
+    return (
+      <div className="focus-layout" ref={containerRef}>
+        <div className="focus-layout__hero">{renderTile(hero, { showHandle: false })}</div>
+        {others.length > 0 && (
+          <div className="focus-layout__strip" aria-label="Other streams">
+            {others.map((stream) => (
+              <div key={stream.id} className="focus-layout__strip-item">
+                {renderTile(stream, { promoteOnClick: true, showHandle: false })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`stream-grid${isDragging ? ' is-interacting' : ''}`}
+      ref={containerRef}
+    >
+      {size.width > 0 && size.height > 0 && (
+        <GridLayout
+          className="stream-grid__layout"
+          layout={visibleLayout}
+          cols={DEFAULT_LAYOUT_COLS}
+          rowHeight={rowHeight}
+          width={size.width}
+          margin={MARGIN}
+          containerPadding={PADDING}
+          autoSize={false}
+          compactType="vertical"
+          useCSSTransforms
+          draggableHandle=".stream-drag-handle"
+          draggableCancel=".icon-btn, .stream-tile__channel, .stream-tile__actions, input, select"
+          isDraggable
+          isResizable
+          resizeHandles={['se']}
+          onLayoutChange={handleLayoutChange}
+          onDragStart={() => onDraggingChange(true)}
+          onDragStop={() => onDraggingChange(false)}
+          onResizeStart={() => onDraggingChange(true)}
+          onResizeStop={() => onDraggingChange(false)}
+        >
+          {visibleStreams.map((stream) => (
+            <div key={stream.id} className="stream-grid__item">
+              {renderTile(stream)}
+            </div>
+          ))}
+        </GridLayout>
+      )}
+    </div>
+  )
+}

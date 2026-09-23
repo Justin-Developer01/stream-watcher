@@ -1,0 +1,61 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'cursor/**'
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+        env:
+          # Optional. Empty falls back to the public Client ID baked in vite.config.
+          VITE_TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stream-watcher-windows
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          if-no-files-found: error
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Stream Watcher ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, 'pre') || contains(github.ref_name, 'rc') }}
+          generate_release_notes: true
+          files: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+          fail_on_unmatched_files: true
+          body: |
+            Unsigned Windows build for testing. Do not expect a signed SmartScreen reputation yet.
+
+            **Install:** `Stream Watcher Setup *.exe` (one-click NSIS) or run `Stream Watcher Portable *.exe`.
+            Open the app — no setup wizard. Use **Login to Twitch** (Prime + chat OAuth) from the top bar. OAuth redirect: `http://localhost:5173/oauth/callback`.
+
+            **Docs:** [How to use](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/USAGE.md) · [Features](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/FEATURES.md) · [Docs home](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/index.md). In-app: Settings → Help.
+
+            This build includes Focus mode, Performance Mode, Settings modal (Appearance / Chat / Hotkeys / Updates / Advanced / Help), See through windows, Lock window (click-through), and Chat Font System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + Custom… (Windows-installed family) with Size 12 / 13 / 14 / 16.
+
+            **Updates:** the installed Setup app can **Check for Updates** in Settings against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.
