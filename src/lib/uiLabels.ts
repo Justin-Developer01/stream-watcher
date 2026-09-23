@@ -19,4 +19,5 @@ export const UI = {
   onAnotherMonitor: 'On another monitor',
   dockAllPopouts: 'Dock all pop-outs back',
   layoutTemplates: 'Layout templates',
+  exitApp: 'Exit Stream Watcher',
 } as const

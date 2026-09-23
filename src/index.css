@@ -220,6 +220,23 @@ html.see-desktop .app-shell::after {
   color: var(--text);
   z-index: 50;
   transition: transform 0.2s ease, opacity 0.2s ease;
+  -webkit-app-region: drag;
+}
+
+.topbar__controls,
+.topbar__window-controls,
+.topbar__title,
+.topbar-menu,
+.popover,
+.icon-btn {
+  -webkit-app-region: no-drag;
+}
+
+.topbar__window-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .topbar--hidden {
@@ -818,6 +835,13 @@ html.chrome-left .popover--title {
   grid-template-columns: 132px minmax(0, 1fr);
   min-height: 0;
   flex: 1;
+}
+
+.settings-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.55rem 0.7rem;
+  border-top: 1px solid var(--border);
 }
 
 .settings-modal__nav {

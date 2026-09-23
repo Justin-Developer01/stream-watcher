@@ -8,6 +8,7 @@ export type HotkeyId =
   | 'muteFocus'
   | 'cycleFocus'
   | 'muteAll'
+  | 'quitApp'
 
 export type HotkeyChord = {
   key: string
@@ -27,6 +28,7 @@ export const HOTKEY_ORDER: HotkeyId[] = [
   'muteFocus',
   'cycleFocus',
   'muteAll',
+  'quitApp',
 ]
 
 export const HOTKEY_LABELS: Record<HotkeyId, string> = {
@@ -39,6 +41,7 @@ export const HOTKEY_LABELS: Record<HotkeyId, string> = {
   muteFocus: 'Mute focus stream',
   cycleFocus: 'Cycle streams',
   muteAll: 'Mute all',
+  quitApp: 'Exit Stream Watcher',
 }
 
 export const DEFAULT_HOTKEYS: Record<HotkeyId, HotkeyChord> = {
@@ -51,6 +54,7 @@ export const DEFAULT_HOTKEYS: Record<HotkeyId, HotkeyChord> = {
   muteFocus: { key: 'KeyM' },
   cycleFocus: { key: 'KeyG' },
   muteAll: { key: 'KeyM', shift: true },
+  quitApp: { key: 'KeyQ', ctrl: true },
 }
 
 function isHotkeyId(value: string): value is HotkeyId {

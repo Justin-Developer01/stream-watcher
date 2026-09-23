@@ -9,6 +9,7 @@ import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
 import { usePopouts } from './hooks/usePopouts'
 import { useTemplates } from './hooks/useTemplates'
+import { useWindowControls } from './hooks/useWindowControls'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useHotkeys } from './hooks/useHotkeys'
@@ -72,6 +73,7 @@ function MainApp() {
   const { poppedChat, poppedStreams, isChatPopped, isStreamPopped, markChatPopped, markStreamPopped } =
     usePopouts()
   const { templates, saveCurrentAsTemplate, deleteTemplate } = useTemplates()
+  const windowControls = useWindowControls()
 
   const [chromeHidden, setChromeHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -224,6 +226,7 @@ function MainApp() {
       },
       cycleFocus,
       muteAll,
+      quitApp: () => void window.streamWatcher?.quitApp?.(),
     }),
     [
       appearance.seeDesktop,
@@ -389,6 +392,7 @@ function MainApp() {
         onSaveTemplate={(name) => saveCurrentAsTemplate(name, buildTemplateSnapshot())}
         onDeleteTemplate={deleteTemplate}
         chrome={appearance.chrome}
+        windowControls={windowControls}
       />
 
       <div
@@ -455,6 +459,7 @@ function MainApp() {
           onCheckForUpdates={() => void updater.check()}
           onDownloadUpdate={() => void updater.download()}
           onInstallUpdate={() => void updater.install()}
+          onQuit={() => void window.streamWatcher?.quitApp?.()}
         />
       )}
       <FirstRunTips hidden={settingsOpen} />

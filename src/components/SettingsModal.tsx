@@ -7,6 +7,7 @@ import { AppearanceSettings, ChatTypographySettings } from './AppearanceSettings
 import { HelpGuide } from './HelpGuide'
 import { HotkeysSettings } from './HotkeysSettings'
 import { IconButton } from './IconButton'
+import { UI } from '../lib/uiLabels'
 
 export type SettingsTab = 'appearance' | 'chat' | 'hotkeys' | 'updates' | 'advanced' | 'help'
 
@@ -40,6 +41,7 @@ type Props = {
   onCheckForUpdates: () => void
   onDownloadUpdate: () => void
   onInstallUpdate: () => void
+  onQuit: () => void
 }
 
 export function SettingsModal({
@@ -63,6 +65,7 @@ export function SettingsModal({
   onCheckForUpdates,
   onDownloadUpdate,
   onInstallUpdate,
+  onQuit,
 }: Props) {
   const [developerOpen, setDeveloperOpen] = useState(!hasBuiltInClientId || Boolean(authError))
 
@@ -230,6 +233,11 @@ export function SettingsModal({
             {tab === 'help' && <HelpGuide onCloseSettings={onClose} />}
           </div>
         </div>
+        <footer className="settings-modal__footer">
+          <button type="button" className="danger" onClick={onQuit}>
+            {UI.exitApp}
+          </button>
+        </footer>
       </div>
     </div>
   )

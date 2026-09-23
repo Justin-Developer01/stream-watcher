@@ -54,6 +54,13 @@ const api = {
   setFullscreen: (value: boolean) =>
     ipcRenderer.invoke('window:set-fullscreen', value) as Promise<void>,
   isFullscreen: () => ipcRenderer.invoke('window:is-fullscreen') as Promise<boolean>,
+  minimizeWindow: () => ipcRenderer.invoke('window:minimize') as Promise<void>,
+  toggleMaximizeWindow: () => ipcRenderer.invoke('window:maximize-toggle') as Promise<void>,
+  isWindowMaximized: () => ipcRenderer.invoke('window:is-maximized') as Promise<boolean>,
+  closeWindow: () => ipcRenderer.invoke('window:close') as Promise<void>,
+  quitApp: () => ipcRenderer.invoke('app:quit') as Promise<void>,
+  onMaximizedChange: (callback: (value: boolean) => void) =>
+    listen('window:maximized-changed', callback),
   setWindowTransparent: (enabled: boolean, color?: string) =>
     ipcRenderer.invoke('window:set-transparent', enabled, color) as Promise<void>,
   setIgnoreMouseEvents: (ignore: boolean) =>

@@ -70,6 +70,8 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,
+    frame: false,
+    show: false,
     webPreferences: {
       preload: resolvePreloadPath(),
       contextIsolation: true,
@@ -77,6 +79,11 @@ function createWindow() {
       sandbox: false,
       webviewTag: false,
     },
+  })
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow?.maximize()
+    mainWindow?.show()
   })
 
   mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
@@ -93,8 +100,15 @@ function createWindow() {
     mainWindow.webContents.send('window:fullscreen-changed', value)
   }
 
+  const sendMaximized = (value: boolean) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    mainWindow.webContents.send('window:maximized-changed', value)
+  }
+
   mainWindow.on('enter-full-screen', () => sendFullscreen(true))
   mainWindow.on('leave-full-screen', () => sendFullscreen(false))
+  mainWindow.on('maximize', () => sendMaximized(true))
+  mainWindow.on('unmaximize', () => sendMaximized(false))
   mainWindow.on('closed', () => {
     for (const kind of ['chat', 'stream'] as PopoutKind[]) {
       for (const win of popoutWindows[kind].values()) {
@@ -356,6 +370,26 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('window:is-fullscreen', () => mainWindow?.isFullScreen() ?? false)
+
+  ipcMain.handle('window:minimize', () => {
+    mainWindow?.minimize()
+  })
+
+  ipcMain.handle('window:maximize-toggle', () => {
+    if (!mainWindow) return
+    if (mainWindow.isMaximized()) mainWindow.unmaximize()
+    else mainWindow.maximize()
+  })
+
+  ipcMain.handle('window:is-maximized', () => mainWindow?.isMaximized() ?? false)
+
+  ipcMain.handle('window:close', () => {
+    mainWindow?.close()
+  })
+
+  ipcMain.handle('app:quit', () => {
+    app.quit()
+  })
 
   ipcMain.handle('window:set-transparent', (_event, enabled: boolean, color?: string) => {
     if (!mainWindow || mainWindow.isDestroyed()) return

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   Columns2,
+  Copy,
   Focus,
   Gauge,
   List,
@@ -9,9 +10,11 @@ import {
   Maximize2,
   MessageSquare,
   Minimize2,
+  Minus,
   Pin,
   RotateCcw,
   Settings,
+  Square,
   SquareArrowOutUpRight,
   LayoutTemplate as LayoutTemplateIcon,
   Unlock,
@@ -66,6 +69,12 @@ type Props = {
   onSaveTemplate: (name: string) => { ok: boolean; error?: string }
   onDeleteTemplate: (id: string) => void
   chrome: 'top' | 'left'
+  windowControls: {
+    isMaximized: boolean
+    minimize: () => void
+    toggleMaximize: () => void
+    close: () => void
+  }
 }
 
 function Menu({
@@ -151,6 +160,7 @@ export function TopBar({
   onSaveTemplate,
   onDeleteTemplate,
   chrome,
+  windowControls,
 }: Props) {
   const [openMenu, setOpenMenu] = useState<MenuId>(null)
   const [channelInput, setChannelInput] = useState('')
@@ -556,6 +566,26 @@ export function TopBar({
           }}
         >
           <Settings size={16} strokeWidth={1.75} />
+        </IconButton>
+      </div>
+
+      <div className="topbar__window-controls">
+        <IconButton label="Minimize" tooltipAlign="end" onClick={windowControls.minimize}>
+          <Minus size={16} strokeWidth={1.75} />
+        </IconButton>
+        <IconButton
+          label={windowControls.isMaximized ? 'Restore' : 'Maximize'}
+          tooltipAlign="end"
+          onClick={windowControls.toggleMaximize}
+        >
+          {windowControls.isMaximized ? (
+            <Copy size={15} strokeWidth={1.75} />
+          ) : (
+            <Square size={14} strokeWidth={1.75} />
+          )}
+        </IconButton>
+        <IconButton label="Close" danger tooltipAlign="end" onClick={windowControls.close}>
+          <X size={16} strokeWidth={1.75} />
         </IconButton>
       </div>
     </header>
