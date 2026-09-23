@@ -13,29 +13,33 @@ Windows desktop app for watching several Twitch streams at once. Download the EX
 1. Open the latest [GitHub Release](https://github.com/Justin-Developer01/stream-watcher/releases).
 2. Download **Stream Watcher Setup** (installer) or **Portable** (just run).
 3. Windows SmartScreen may warn because the build is unsigned. **More info → Run anyway**.
-4. You land on a thin top bar. Four short tips appear once (Focus mode, chat, Lock, Dock back).
+4. The app opens frameless and maximized — a thin bar, no Windows title bar. Four short tips appear once (Focus mode, chat, Lock, Dock back).
 
-In the app, **Settings → Help** is the short guide. Full docs links sit on that tab and under Advanced.
+In the app, the hamburger **☰** menu → Settings → Help is the short guide. Full docs links sit on that tab.
 
 To publish these pages as a site: repo **Settings → Pages → Deploy from a branch → `/docs`**.
 
 ## Quick start
 
-Park on another monitor → **Lock window (click-through)** when you need the UI → **Dock back** to the main desk.
+Park on another monitor → **See through windows** when you need the UI (or the Lock window hotkey, `L`, to freeze it) → **Dock back** to the main desk.
 
 | Do this | Where |
 |---|---|
 | Add a channel | Click the **title** in the top bar |
-| Login for Prime + chat | Log-in icon. Tooltip: **Login for Prime + chat.** |
-| Focus one stream | **Focus mode**. Click a strip tile to promote it. |
-| Open chat (in the window) | **Open chat** on the thin bar, or **Open #channel chat** on a tile. Drawer **pushes** the grid. |
-| Chat on another monitor | **Pop out chat** (bar, tile, or drawer). |
-| Stream on another monitor | Tile **Pop out stream**. Tile reads **On another monitor**. |
-| Dock / pin | **Dock back** and **Always on top** live on the pop-out only. Position is remembered. |
-| Lock the UI | **Lock window (click-through)** after See desktop, when you need to click the desk. |
-| Settings / Help | Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc / X closes. |
+| Login for Prime + chat | Hamburger **☰ → Login to Twitch**. Tooltip: **Login for Prime + chat.** |
+| Switch mode | **Mode**: Standard / Focus / Performance, mutually exclusive |
+| Open chat (in the window) | **More … → Open chat**, or **Open #channel chat** on a tile. Drawer **pushes** the grid. |
+| Chat on another monitor | **Pop out chat** (tile, drawer, or the **More …** menu). |
+| Stream on another monitor | Tile **Pop out stream**. A redock chip with a count badge appears on the bar — no tile placeholder. |
+| Dock back | The redock chip's **Dock back**, or **Dock all pop-outs** for every popped window at once. |
+| Always on top | Lives on the pop-out only. Position is remembered. |
+| See through | **See through windows** on the bar turns on See-desktop and unlocks click-through in one click. |
+| Change layout | Bar = apply a saved template. **☰ → Layout templates** to save/delete; **☰ → Change layout** for the quick 1×1/1×2/2×2/1+3 grid. |
+| Settings / Help | **☰ → Settings**. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Esc closes. Footer has **Exit Stream Watcher**. |
+| Exit the app | Settings footer's **Exit Stream Watcher**, the window's own **Close** button, or Ctrl+Q. |
 | Check for Updates | Settings → **Updates** |
-| See the desktop | Settings → Appearance → **See desktop behind app.** |
-| Save CPU | Performance gauge on the top bar. Other tiles show **paused / low**. |
+| Edge-snap the bar | Settings → Appearance → **Chrome**: Top / Left / Right / Bottom |
+| See the desktop | **See through windows** on the bar, or Settings → Appearance → **See desktop behind app.** |
+| Save CPU | **Mode → Performance**. Other tiles show **paused / low**. |
 
 Full walkthrough: [USAGE.md](USAGE.md). Everything the app does: [FEATURES.md](FEATURES.md).
