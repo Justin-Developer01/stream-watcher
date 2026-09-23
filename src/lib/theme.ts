@@ -199,6 +199,7 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   const root = document.documentElement
   const light = isLightChrome(theme)
   const muted = light ? '#5c6b7a' : '#7d8b9c'
+  const iconMuted = light ? '#3d4c5c' : `color-mix(in srgb, ${muted} 70%, transparent)`
   const border = light ? '#d5dde6' : '#1b2430'
   const scrim = light ? 'rgba(255, 255, 255, 0.58)' : 'rgba(0, 0, 0, 0.48)'
   const windowChrome = options?.windowChrome !== false
@@ -211,6 +212,7 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   root.style.setProperty('--bg-bar', theme.surface)
   root.style.setProperty('--text', theme.text)
   root.style.setProperty('--muted', muted)
+  root.style.setProperty('--icon-muted', iconMuted)
   root.style.setProperty('--border', border)
   root.classList.toggle('see-desktop', seeDesktop)
   root.classList.toggle('chrome-left', theme.chrome === 'left')

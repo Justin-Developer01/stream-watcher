@@ -14,6 +14,7 @@
   --border: #1b2430;
   --text: #e6edf5;
   --muted: #7d8b9c;
+  --icon-muted: color-mix(in srgb, #7d8b9c 70%, transparent);
   --accent: #2bb7ef;
   --accent-2: #3ecf8e;
   --danger: #e56773;
@@ -356,7 +357,7 @@ html.chrome-left .popover--title {
   border-radius: 5px;
   border-color: transparent;
   background: transparent;
-  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  color: var(--icon-muted);
 }
 
 .topbar .icon-btn {
@@ -389,7 +390,7 @@ html.chrome-left .popover--title {
 }
 
 .icon-btn.is-danger {
-  color: var(--muted);
+  color: var(--icon-muted);
 }
 
 .icon-btn.is-danger:hover:not(:disabled) {
@@ -431,6 +432,21 @@ html.chrome-left .popover--title {
 
 [data-tooltip].is-tip::after {
   transition-delay: 0s;
+}
+
+.icon-tooltip {
+  position: fixed;
+  padding: 0.22rem 0.45rem;
+  border-radius: 5px;
+  background: #10161f;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: var(--shadow);
 }
 
 [data-tooltip-align='start']::after {
