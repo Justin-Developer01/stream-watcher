@@ -220,14 +220,14 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
 
         <p className="theme-label">Chrome</p>
         <div className="preset-row" role="group" aria-label="Chrome position">
-          {(['top', 'left'] as const).map((pos) => (
+          {(['top', 'left', 'right', 'bottom'] as const).map((pos) => (
             <button
               key={pos}
               type="button"
               className={appearance.chrome === pos ? 'is-active' : ''}
               onClick={() => patch({ chrome: pos })}
             >
-              {pos === 'top' ? 'Top' : 'Left'}
+              {pos[0].toUpperCase() + pos.slice(1)}
             </button>
           ))}
         </div>

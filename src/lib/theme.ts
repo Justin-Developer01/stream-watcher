@@ -2,7 +2,7 @@ export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
 export type ChatFont = 'system' | 'plex' | 'inter' | 'mono' | 'sourceSans' | 'roboto' | 'geist' | 'custom'
 export type RealChatFont = Exclude<ChatFont, 'custom'>
-export type ChromePosition = 'top' | 'left'
+export type ChromePosition = 'top' | 'left' | 'right' | 'bottom'
 
 export type AppearanceTheme = {
   preset: AppearancePreset
@@ -226,7 +226,10 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
     chatDrawerWidth: clampDrawerWidth(raw?.chatDrawerWidth),
     chatCustomFont: normalizeCustomFont(raw?.chatCustomFont),
-    chrome: raw?.chrome === 'left' ? 'left' : 'top',
+    chrome:
+      raw?.chrome === 'left' || raw?.chrome === 'right' || raw?.chrome === 'bottom'
+        ? raw.chrome
+        : 'top',
     preset: presetKey,
   }
   next.preset = matchingPreset(next) ?? presetKey
@@ -264,6 +267,8 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   root.style.setProperty('--border', border)
   root.classList.toggle('see-desktop', seeDesktop)
   root.classList.toggle('chrome-left', theme.chrome === 'left')
+  root.classList.toggle('chrome-right', theme.chrome === 'right')
+  root.classList.toggle('chrome-bottom', theme.chrome === 'bottom')
   root.style.setProperty('--bg', seeDesktop ? 'transparent' : theme.backgroundColor)
   root.style.setProperty('--bar-scrim', scrim)
   root.style.setProperty(

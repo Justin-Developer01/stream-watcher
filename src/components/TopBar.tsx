@@ -69,7 +69,7 @@ type Props = {
   onApplyTemplate: (template: LayoutTemplate) => void
   onSaveTemplate: (name: string) => { ok: boolean; error?: string }
   onDeleteTemplate: (id: string) => void
-  chrome: 'top' | 'left'
+  chrome: 'top' | 'left' | 'right' | 'bottom'
   windowControls: {
     isMaximized: boolean
     minimize: () => void
@@ -269,10 +269,10 @@ export function TopBar({
         type="button"
         className="topbar__title"
         title={title}
-        aria-label={chrome === 'left' ? title : undefined}
+        aria-label={chrome === 'left' || chrome === 'right' ? title : undefined}
         onClick={() => setOpenMenu(openMenu === 'streams' ? null : 'streams')}
       >
-        {chrome === 'left' ? (
+        {chrome === 'left' || chrome === 'right' ? (
           <List size={16} strokeWidth={1.75} aria-hidden />
         ) : (
           <span className="topbar__title-text">{title}</span>

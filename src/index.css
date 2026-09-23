@@ -365,9 +365,13 @@ html.chrome-left .topbar__title {
   place-items: center;
 }
 
-html.chrome-left .topbar__controls {
+html.chrome-left .topbar__controls,
+html.chrome-left .topbar__window-controls {
   flex-direction: column;
   margin-left: 0;
+}
+
+html.chrome-left .topbar__controls {
   margin-top: auto;
 }
 
@@ -396,6 +400,103 @@ html.chrome-left .popover--title {
   top: 0;
   left: calc(100% + 8px);
   right: auto;
+}
+
+html.chrome-right .topbar {
+  top: 0;
+  left: auto;
+  right: 0;
+  bottom: 0;
+  width: var(--topbar-h);
+  height: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 8px 0;
+  border-bottom: none;
+  border-left: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+html.chrome-right .topbar--hidden {
+  transform: translateX(100%);
+}
+
+html.chrome-right .topbar__title {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+html.chrome-right .topbar__controls,
+html.chrome-right .topbar__window-controls {
+  flex-direction: column;
+  margin-left: 0;
+}
+
+html.chrome-right .topbar__controls {
+  margin-top: auto;
+}
+
+html.chrome-right .workspace {
+  padding-top: 0;
+  padding-right: var(--topbar-h);
+}
+
+html.chrome-right .app-shell--chrome-hidden .workspace {
+  padding-top: 0;
+  padding-right: 0;
+}
+
+html.chrome-right .app-shell--chrome-hidden .topbar-hotzone {
+  top: 0;
+  left: auto;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: auto;
+}
+
+html.chrome-right .popover,
+html.chrome-right .topbar-menu--end .popover,
+html.chrome-right .popover--title {
+  top: 0;
+  left: auto;
+  right: calc(100% + 8px);
+}
+
+html.chrome-bottom .topbar {
+  top: auto;
+  bottom: 0;
+  border-bottom: none;
+  border-top: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+html.chrome-bottom .topbar--hidden {
+  transform: translateY(100%);
+}
+
+html.chrome-bottom .workspace {
+  padding-top: 0;
+  padding-bottom: var(--topbar-h);
+}
+
+html.chrome-bottom .app-shell--chrome-hidden .workspace {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+html.chrome-bottom .app-shell--chrome-hidden .topbar-hotzone {
+  top: auto;
+  bottom: 0;
+  height: 10px;
+}
+
+html.chrome-bottom .popover,
+html.chrome-bottom .topbar-menu--end .popover,
+html.chrome-bottom .popover--title {
+  top: auto;
+  bottom: calc(100% + 8px);
 }
 
 .brand__mark {

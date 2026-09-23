@@ -260,7 +260,14 @@ function MainApp() {
 
     let timer = window.setTimeout(() => setChromeHidden(true), FULLSCREEN_IDLE_MS)
     const onMove = (event: MouseEvent) => {
-      const nearEdge = appearance.chrome === 'left' ? event.clientX <= 52 : event.clientY <= 52
+      const nearEdge =
+        appearance.chrome === 'left'
+          ? event.clientX <= 52
+          : appearance.chrome === 'right'
+            ? event.clientX >= window.innerWidth - 52
+            : appearance.chrome === 'bottom'
+              ? event.clientY >= window.innerHeight - 52
+              : event.clientY <= 52
       if (nearEdge) {
         setChromeHidden(false)
         window.clearTimeout(timer)
