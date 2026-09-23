@@ -1,6 +1,6 @@
 {
   "name": "stream-watcher",
-  "version": "1.0.1-pre.15",
+  "version": "1.0.1-pre.16",
   "description": "Multi-stream Twitch desktop viewer with custom layouts and chat",
   "main": "dist-electron/main.js",
   "author": "Justin",
@@ -64,10 +64,10 @@
       "runAfterFinish": true,
       "shortcutName": "Stream Watcher",
       "uninstallDisplayName": "Stream Watcher",
-      "artifactName": "${productName} Setup ${version}.${ext}"
+      "artifactName": "Stream-Watcher-Setup-${version}.${ext}"
     },
     "portable": {
-      "artifactName": "${productName} Portable ${version}.${ext}"
+      "artifactName": "Stream-Watcher-Portable-${version}.${ext}"
     }
   },
   "dependencies": {
