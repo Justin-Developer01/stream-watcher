@@ -1,6 +1,7 @@
 import { Pin, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChatDrawer } from './ChatDrawer'
+import { PortalThemeProvider, themeVars } from './ui/portalTheme'
 import { TwitchPlayer } from './TwitchPlayer'
 import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
@@ -25,8 +26,19 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
     await window.vesper?.dockPopout(mode, channel)
   }
 
+  const style = useMemo(() => themeVars(settings), [settings])
+
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.theme = settings.theme
+    for (const [key, value] of Object.entries(style)) {
+      if (key.startsWith('--') && value != null) root.style.setProperty(key, String(value))
+    }
+  }, [settings.theme, style])
+
   return (
-    <div className="popout-root" data-theme={settings.theme}>
+    <PortalThemeProvider theme={settings.theme} style={style}>
+    <div className="popout-root" data-theme={settings.theme} style={style}>
       <header className="popout-bar">
         <span>{mode === 'chat' ? `#${channel}` : channel}</span>
         <button
@@ -71,5 +83,6 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
         />
       )}
     </div>
+    </PortalThemeProvider>
   )
 }

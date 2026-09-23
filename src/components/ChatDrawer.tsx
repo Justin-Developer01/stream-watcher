@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import { badgeUrl, emoteUrl } from '../lib/twitch'
 import { ui } from '../lib/uiLabels'
 import type { ChatDock, ChatMessage } from '../types'
+import { usePortalThemeProps } from './ui/portalTheme'
 import { Tip } from './ui/Tip'
 
 const QUICK_EMOTES = ['Kappa', 'LUL', 'PogChamp', 'Kreygasm', 'BibleThump', 'ResidentSleeper', 'CoolStoryBob']
@@ -67,6 +68,7 @@ export function ChatDrawer({
   onHide,
   onPopout,
 }: Props) {
+  const portal = usePortalThemeProps()
   const [draft, setDraft] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -163,7 +165,7 @@ export function ChatDrawer({
               </button>
             </Popover.Trigger>
             <Popover.Portal container={document.body}>
-              <Popover.Content className="emote-pop" data-hit side="top" sideOffset={6} collisionPadding={12} avoidCollisions>
+              <Popover.Content className="emote-pop" {...portal} data-hit side="top" sideOffset={6} collisionPadding={12} avoidCollisions>
                 {QUICK_EMOTES.map((emote) => (
                   <button key={emote} type="button" onClick={() => setDraft((d) => `${d}${d ? ' ' : ''}${emote}`)}>
                     {emote}

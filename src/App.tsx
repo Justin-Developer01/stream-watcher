@@ -1,6 +1,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChatDrawer } from './components/ChatDrawer'
+import { PortalThemeProvider, themeVars } from './components/ui/portalTheme'
 import { ChromeBar } from './components/ChromeBar'
 import { FirstRunTips } from './components/FirstRunTips'
 import { PopoutApp } from './components/PopoutApp'
@@ -151,21 +152,16 @@ function DeskApp() {
     desk.applySettings(next, clientId)
   }
 
-  const style = useMemo(() => {
-    const lightFallback = desk.settings.theme === 'light'
-    const surface = lightFallback && desk.settings.surface.startsWith('#1') ? '#fff7ec' : desk.settings.surface
-    const text = lightFallback && desk.settings.text.startsWith('#f') ? '#2a2118' : desk.settings.text
-    const page = lightFallback && desk.settings.backgroundColor.startsWith('#0') ? '#f3ebe1' : desk.settings.backgroundColor
-    return {
-      '--accent': desk.settings.accent,
-      '--surface': surface,
-      '--text': text,
-      '--page-bg': page,
-      '--bg-image': desk.settings.backgroundImage ? `url(${desk.settings.backgroundImage})` : 'none',
-      '--bg-opacity': String(desk.settings.backgroundOpacity),
-      '--drawer': `${desk.settings.chat.drawerWidth}px`,
-    } as React.CSSProperties
-  }, [desk.settings])
+  const style = useMemo(
+    () =>
+      ({
+        ...themeVars(desk.settings),
+        '--bg-image': desk.settings.backgroundImage ? `url(${desk.settings.backgroundImage})` : 'none',
+        '--bg-opacity': String(desk.settings.backgroundOpacity),
+        '--drawer': `${desk.settings.chat.drawerWidth}px`,
+      }) as React.CSSProperties,
+    [desk.settings],
+  )
 
   useEffect(() => {
     const root = document.documentElement
@@ -198,6 +194,7 @@ function DeskApp() {
   ) : null
 
   return (
+    <PortalThemeProvider theme={desk.settings.theme} style={style}>
     <div
       className={[
         'desk',
@@ -311,6 +308,7 @@ function DeskApp() {
         onShowTips={() => desk.applySettings({ ...desk.settings, dismissedTips: [] })}
       />
     </div>
+    </PortalThemeProvider>
   )
 }
 

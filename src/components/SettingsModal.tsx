@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { defaultHotkeys, formatHotkeyEvent, hotkeyActions, hotkeyLabels, hotkeysConflict, type HotkeyAction } from '../lib/hotkeys'
 import { chatFontFamily } from '../lib/storage'
 import { ui } from '../lib/uiLabels'
+import { themeVars, usePortalThemeProps } from './ui/portalTheme'
 import { DEFAULT_SETTINGS, type AppSettings, type ChatFont, type ChromeEdge, type ThemeName } from '../types'
 
 type Props = {
@@ -53,6 +54,8 @@ export function SettingsModal({
   }, [open, settings, clientId])
 
   const conflicts = useMemo(() => hotkeysConflict(draft.hotkeys), [draft.hotkeys])
+  const portal = usePortalThemeProps()
+  const dialogStyle = { ...portal.style, ...themeVars(draft) }
 
   const setAppearance = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }))
@@ -61,8 +64,14 @@ export function SettingsModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="modal-overlay" data-hit />
-        <Dialog.Content className="modal-card" data-hit onEscapeKeyDown={() => onOpenChange(false)}>
+        <Dialog.Overlay className="modal-overlay" data-theme={draft.theme} data-hit />
+        <Dialog.Content
+          className="modal-card"
+          data-theme={draft.theme}
+          style={dialogStyle}
+          data-hit
+          onEscapeKeyDown={() => onOpenChange(false)}
+        >
           <Dialog.Title className="modal-title">{ui.settings}</Dialog.Title>
           <Tabs.Root defaultValue="appearance" className="settings-tabs">
             <Tabs.List className="settings-tabs__list">

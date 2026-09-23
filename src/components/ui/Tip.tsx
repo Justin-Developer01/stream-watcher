@@ -1,6 +1,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import type { ReactNode } from 'react'
 import type { ChromeEdge } from '../../types'
+import { usePortalThemeProps } from './portalTheme'
 
 export type FlyoutSide = 'top' | 'right' | 'bottom' | 'left'
 
@@ -26,12 +27,14 @@ export function Tip({
   side?: FlyoutSide
   children: ReactNode
 }) {
+  const portal = usePortalThemeProps()
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
       <Tooltip.Portal container={document.body}>
         <Tooltip.Content
           className="vd-tooltip"
+          {...portal}
           side={side}
           align="center"
           sideOffset={8}

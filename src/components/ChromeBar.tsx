@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useState, type FormEvent, type RefObject } from 'react'
 import { ui } from '../lib/uiLabels'
+import { usePortalThemeProps } from './ui/portalTheme'
 import type { ChromeEdge, LayoutTemplate, PopoutInfo, WatchMode } from '../types'
 import { outwardSide, Tip } from './ui/Tip'
 
@@ -94,6 +95,7 @@ export function ChromeBar({
 
   const streamPops = popped.filter((p) => p.kind === 'stream')
   const flyoutSide = outwardSide(chromeEdge)
+  const portal = usePortalThemeProps()
 
   return (
     <header className="chrome-bar" data-hit>
@@ -160,7 +162,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
+          <DropdownMenu.Content className="menu" {...portal} data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
             {templates.length === 0 && <DropdownMenu.Item className="menu__item muted" disabled>No saved layouts</DropdownMenu.Item>}
             {templates.map((template) => (
               <DropdownMenu.Item key={template.id} className="menu__item" onSelect={() => onApplyTemplate(template.id)}>
@@ -195,7 +197,7 @@ export function ChromeBar({
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
+            <DropdownMenu.Content className="menu" {...portal} data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
               {streamPops.map((item) => (
                 <DropdownMenu.Item
                   key={`${item.kind}-${item.channel}`}
@@ -217,7 +219,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
+          <DropdownMenu.Content className="menu" {...portal} data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
             <DropdownMenu.Item className="menu__item" onSelect={onFullscreen}>
               {ui.fullscreen}
             </DropdownMenu.Item>
@@ -241,7 +243,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
+          <DropdownMenu.Content className="menu" {...portal} data-hit side={flyoutSide} sideOffset={8} collisionPadding={12}>
             <DropdownMenu.Item className="menu__item" onSelect={onLogin}>
               <LogIn size={13} /> {isLoggedIn ? displayName : ui.loginToTwitch}
             </DropdownMenu.Item>
