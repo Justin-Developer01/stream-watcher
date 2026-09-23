@@ -183,6 +183,9 @@ function MeasuredGrid({
           margin={GRID_MARGIN}
           containerPadding={GRID_PADDING}
           draggableHandle=".stream-drag-handle"
+          draggableCancel=".stream-tile__actions, .stream-tile__actions *, .icon-btn"
+          isDraggable
+          isResizable
           onLayoutChange={emitLayout}
           onDragStart={() => onDragState(true)}
           onDragStop={() => onDragState(false)}

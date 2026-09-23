@@ -524,9 +524,16 @@ button:disabled {
   padding: 0 0.3rem;
   border-bottom: 1px solid var(--line);
 }
-.stream-drag-handle { border: 0; background: transparent; color: var(--muted); cursor: grab; }
+.stream-tile__bar.stream-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.react-draggable-dragging .stream-tile__bar.stream-drag-handle { cursor: grabbing; }
 .stream-tile__channel { border: 0; background: transparent; color: var(--btn-fg); font-weight: 600; }
-.stream-tile__actions { margin-left: auto; display: flex; gap: 0.15rem; }
+.stream-drag-handle .stream-tile__channel { cursor: grab; }
+.stream-tile__actions { margin-left: auto; display: flex; gap: 0.15rem; cursor: default; touch-action: auto; }
+.stream-tile__actions .icon-btn { cursor: pointer; touch-action: auto; }
 .stream-tile__player { flex: 1; min-height: 0; background: #000; }
 .perf-chip {
   font-size: 10px;
