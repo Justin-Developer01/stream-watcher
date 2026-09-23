@@ -4,6 +4,7 @@ import {
   CHAT_DRAWER_WIDTH_MAX,
   CHAT_DRAWER_WIDTH_MIN,
   CHAT_FONTS,
+  CHAT_FONT_CHIPS,
   CHAT_FONT_SIZES,
   DEFAULT_APPEARANCE,
   applyAppearance,
@@ -15,8 +16,9 @@ import {
   type AppearancePreset,
   type AppearanceTheme,
   type BackgroundMode,
-  type RealChatFont,
 } from '../lib/theme'
+import { customFontStack, listLocalFontFamilies, sanitizeFontFamily } from '../lib/localFonts'
+import { UI } from '../lib/uiLabels'
 
 type Props = {
   appearance: AppearanceTheme
@@ -242,9 +244,18 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
           See desktop behind app.
         </label>
         <p className="hint">
-          Empty stage shows the desktop. The frosted top bar, stream tiles, and chat stay solid. Windows may need a
-          relaunch if the desktop does not show through after toggling.
+          Empty stage shows the desktop. The frosted {appearance.chrome} bar, stream
+          tiles, and chat stay solid. Windows may need a relaunch if the desktop does not show through after toggling.
         </p>
+        <label className="theme-toggle">
+          <input
+            type="checkbox"
+            checked={appearance.ghostOverlay}
+            onChange={(event) => patch({ ghostOverlay: event.target.checked })}
+          />
+          {UI.ghostOverlay}
+        </label>
+        <p className="hint">{UI.ghostHint}</p>
 
         <button
           type="button"
@@ -264,9 +275,15 @@ export function AppearanceSettings({ appearance, onChange }: Props) {
 }
 
 export function ChatTypographySettings({ appearance, onChange }: Props) {
+  const [localFonts, setLocalFonts] = useState<string[]>([])
   const patch = (partial: Partial<AppearanceTheme>) => {
     onChange((prev) => ({ ...prev, ...partial }))
   }
+  const customResolved = appearance.chatFont === 'custom' ? customFontStack(appearance.chatFontCustom) : null
+  const previewStack =
+    appearance.chatFont === 'custom'
+      ? (customResolved ?? CHAT_FONTS.system.stack)
+      : CHAT_FONTS[appearance.chatFont].stack
 
   return (
     <section className="popover-section">
@@ -274,7 +291,7 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
       <div className="appearance-panel">
         <p className="theme-label">Font</p>
         <div className="preset-row" role="group" aria-label="Font">
-          {(Object.keys(CHAT_FONTS) as RealChatFont[]).map((font) => (
+          {CHAT_FONT_CHIPS.map((font) => (
             <button
               key={font}
               type="button"
@@ -287,28 +304,40 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
           <button
             type="button"
             className={appearance.chatFont === 'custom' ? 'is-active' : ''}
-            onClick={() => patch({ chatFont: 'custom' })}
+            onClick={() => {
+              patch({ chatFont: 'custom' })
+              void listLocalFontFamilies().then(setLocalFonts)
+            }}
           >
-            Custom…
+            {UI.customFont}
           </button>
         </div>
         {appearance.chatFont === 'custom' && (
-          <div className="theme-image-row">
+          <div className="chat-custom-font">
+            <label htmlFor="chat-font-custom" className="sr-only">
+              Installed font family
+            </label>
             <input
-              value={appearance.chatCustomFont ?? ''}
-              onChange={(e) => patch({ chatCustomFont: e.target.value })}
-              placeholder="Font family name, e.g. Segoe UI"
+              id="chat-font-custom"
+              list="chat-font-custom-list"
+              value={appearance.chatFontCustom}
+              placeholder="Font family name"
               autoComplete="off"
+              spellCheck={false}
+              onChange={(event) => patch({ chatFontCustom: sanitizeFontFamily(event.target.value) })}
             />
-            <p
-              className="hint"
-              style={{
-                fontFamily: `"${appearance.chatCustomFont || 'System'}", system-ui, sans-serif`,
-              }}
-            >
-              The quick brown fox jumps over the lazy dog.
+            <datalist id="chat-font-custom-list">
+              {localFonts.map((family) => (
+                <option key={family} value={family} />
+              ))}
+            </datalist>
+            <p className="chat-font-preview" style={{ fontFamily: previewStack }}>
+              username: Kappa hello — {appearance.chatFontCustom || 'System'}
             </p>
-            <p className="hint">Uses your system font automatically if this name isn't installed.</p>
+            {appearance.chatFontCustom && !customResolved && (
+              <p className="hint">{UI.customFontHint}</p>
+            )}
+            {!appearance.chatFontCustom && <p className="hint">{UI.customFontHint}</p>}
           </div>
         )}
         <p className="theme-label">Size</p>
@@ -325,20 +354,24 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
           ))}
         </div>
         <p className="hint">Applies to chat lines and the composer. An open chat drawer updates live.</p>
-
-        <p className="theme-label">Drawer width</p>
+        <p className="theme-label">{UI.drawerWidth}</p>
         <label className="theme-overlay" htmlFor="chat-drawer-width">
-          <span>{appearance.chatDrawerWidth}px</span>
+          <span>
+            {appearance.chatDrawerWidth}px (docked left / right)
+          </span>
           <input
             id="chat-drawer-width"
             type="range"
             min={CHAT_DRAWER_WIDTH_MIN}
             max={CHAT_DRAWER_WIDTH_MAX}
-            step={10}
             value={appearance.chatDrawerWidth}
             onChange={(event) => patch({ chatDrawerWidth: Number(event.target.value) })}
           />
         </label>
+        <p className="hint">
+          Wider docked chat without Float. {CHAT_DRAWER_WIDTH_MIN}–{CHAT_DRAWER_WIDTH_MAX}px. Bottom and Float are
+          unchanged.
+        </p>
       </div>
     </section>
   )

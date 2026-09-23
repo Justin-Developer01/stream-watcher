@@ -7,16 +7,22 @@ type Props = {
 }
 
 const STEPS: { title: string; body: string }[] = [
-  { title: 'Add streams', body: 'Click the title in the thin top bar. Paste a channel name or twitch.tv URL.' },
-  { title: UI.loginToTwitch, body: `${UI.loginTooltip} One button for Prime and chat.` },
-  { title: UI.focusMode, body: 'One stream large, others in the bottom strip. Click a strip tile to promote it.' },
+  {
+    title: 'Add streams',
+    body: 'Click the title (list icon when Chrome is Left or Right). Paste a channel name or twitch.tv URL.',
+  },
+  { title: UI.loginToTwitch, body: `${UI.loginTooltip} One button for Prime and chat, in the ${UI.menu} (☰).` },
+  {
+    title: UI.mode,
+    body: `${UI.modeStandard} · ${UI.modeFocus} · ${UI.modePerformance} — one at a time. Focus: one stream large, others in the bottom strip; click a strip tile to promote it. ${UI.switchFocus} (hotkey) promotes the next strip tile.`,
+  },
   {
     title: UI.openChat,
-    body: 'Opens the in-app drawer. It pushes the grid (Slide right / left, Dock bottom, or Float). Not another window.',
+    body: `In the ${UI.more} (…) menu. Opens the in-app drawer; it pushes the grid (Slide right / left, Dock bottom, or Float). Settings → Chat sets Font (including Custom… for a Windows-installed family), Size, and Drawer width. After Login to Twitch, emotes render in the list and the composer picker.`,
   },
   {
     title: `${UI.popOutChat} · ${UI.popOutStream}`,
-    body: 'Separate windows for another monitor. The stream tile then reads On another monitor.',
+    body: `Separate windows for another monitor. A popped stream leaves the grid; a redock menu with a count appears on the bar. ${UI.dockAllPopouts} brings everything back.`,
   },
   {
     title: `${UI.dockBack} · ${UI.alwaysOnTop}`,
@@ -28,7 +34,7 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: UI.settings,
-    body: 'Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help.',
+    body: `In the ${UI.menu} (☰). Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Appearance → Chrome: Top | Left | Right | Bottom. ${UI.ghostOverlay} auto-hides the thin bar only (frameless is always on). ${UI.exit} in the footer quits; ${UI.quitApplication} is Ctrl+Q.`,
   },
 ]
 
@@ -37,7 +43,8 @@ export function HelpGuide({ onCloseSettings }: Props) {
     <section className="popover-section help-guide">
       <h2>Help</h2>
       <p className="hint">
-        Park on another monitor → {UI.seeThroughWindows} when you need the UI → {UI.dockBack} to the main desk.
+        Add a channel → {UI.loginToTwitch} → {UI.modeFocus}. The main window is frameless — drag the thin bar. Then
+        park on another monitor → {UI.seeThroughWindows} when you need the UI → {UI.dockBack} to the main desk.
       </p>
       <ol className="help-guide__steps">
         {STEPS.map((step) => (

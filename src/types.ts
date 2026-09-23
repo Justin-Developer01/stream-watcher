@@ -58,8 +58,6 @@ export type UpdaterStatus = {
   message?: string
 }
 
-export type ChatEmoteRange = { id: string; start: number; end: number }
-
 export type ChatMessage = {
   id: string
   channel: string
@@ -67,7 +65,8 @@ export type ChatMessage = {
   color?: string
   text: string
   timestamp: number
-  emotes?: ChatEmoteRange[]
+  emotes?: Record<string, string[]>
+  badges?: Record<string, string>
 }
 
 export type AuthState = {

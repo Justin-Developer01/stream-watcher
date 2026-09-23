@@ -243,12 +243,28 @@ export function useStreams() {
     })
   }, [streams])
 
-  const cycleFocus = useCallback(() => {
-    if (streams.length < 2) return
+  const nextStream = useCallback(() => {
+    if (!streams.length) return null
     const idx = streams.findIndex((s) => s.id === focusedId)
-    const next = streams[(idx + 1) % streams.length] ?? streams[0]
-    if (next) focusStream(next.id)
-  }, [streams, focusedId, focusStream])
+    if (idx < 0) return streams[0]
+    return streams[(idx + 1) % streams.length] ?? streams[0]
+  }, [streams, focusedId])
+
+  const cycleFocus = useCallback(() => {
+    const next = nextStream()
+    if (next && next.id !== focusedId) focusStream(next.id)
+  }, [focusedId, focusStream, nextStream])
+
+  const switchFocus = useCallback(() => {
+    if (!streams.length) return
+    if (!focusMode) {
+      const current = streams.find((s) => s.id === focusedId) ?? streams[0]
+      if (current) focusStream(current.id, { enterFocusMode: true })
+      return
+    }
+    const next = nextStream()
+    if (next && next.id !== focusedId) focusStream(next.id)
+  }, [focusMode, focusedId, focusStream, nextStream, streams])
 
   const muteAll = useCallback(() => {
     setStreams((prev) => prev.map((s) => ({ ...s, muted: true })))
@@ -367,6 +383,7 @@ export function useStreams() {
     toggleSaveStream,
     focusStream,
     cycleFocus,
+    switchFocus,
     muteAll,
     toggleMute,
     setMode,

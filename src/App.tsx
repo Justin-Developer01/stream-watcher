@@ -7,7 +7,6 @@ import { StreamGrid } from './components/StreamGrid'
 import { StreamPopoutApp } from './components/StreamPopoutApp'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
-import { useGlobalEmotes } from './hooks/useGlobalEmotes'
 import { usePopouts } from './hooks/usePopouts'
 import { useTemplates } from './hooks/useTemplates'
 import { useWindowControls } from './hooks/useWindowControls'
@@ -20,7 +19,7 @@ import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { MISSING_TWITCH_CLIENT_ID_ERROR } from './lib/env'
 
 const FULLSCREEN_IDLE_MS = 2400
-const SETTINGS_ALLOWED_HOTKEYS = ['openSettings'] as const
+const SETTINGS_ALLOWED_HOTKEYS = ['openSettings', 'quitApp'] as const
 
 function MainApp() {
   const {
@@ -53,6 +52,7 @@ function MainApp() {
     toggleSaveStream,
     focusStream,
     cycleFocus,
+    switchFocus,
     muteAll,
     toggleMute,
     setMode,
@@ -98,7 +98,6 @@ function MainApp() {
     username: auth.username,
     accessToken: auth.accessToken,
   })
-  const globalEmotes = useGlobalEmotes(clientId, auth.accessToken)
 
   const popoutChat = useCallback(
     async (channel: string) => {
@@ -210,6 +209,14 @@ function MainApp() {
     setSettingsOpen(true)
   }, [])
 
+  const quitApp = useCallback(() => {
+    if (window.streamWatcher?.quitApp) {
+      void window.streamWatcher.quitApp()
+      return
+    }
+    window.close()
+  }, [])
+
   useEffect(() => {
     if (error === MISSING_TWITCH_CLIENT_ID_ERROR) {
       openSettings('advanced')
@@ -231,18 +238,22 @@ function MainApp() {
         if (focusedId) toggleMute(focusedId)
       },
       cycleFocus,
+      switchFocus,
       muteAll,
-      quitApp: () => void window.streamWatcher?.quitApp?.(),
+      toggleChrome: () => setChromePinned((value) => !value),
+      quitApp,
     }),
     [
       appearance.seeDesktop,
       focusedId,
+      quitApp,
       setWindowLocked,
       toggleChatDrawer,
       toggleFocusMode,
       toggleFullscreen,
       toggleMute,
       cycleFocus,
+      switchFocus,
       muteAll,
     ],
   )
@@ -253,7 +264,8 @@ function MainApp() {
   })
 
   useEffect(() => {
-    if (!isFullscreen || menuOpen || chatSidebarOpen || chromePinned || settingsOpen) {
+    const autoHideChrome = isFullscreen || appearance.ghostOverlay
+    if (!autoHideChrome || menuOpen || chatSidebarOpen || chromePinned || settingsOpen) {
       setChromeHidden(false)
       return
     }
@@ -290,7 +302,15 @@ function MainApp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('keydown', onKey)
     }
-  }, [chromePinned, isFullscreen, menuOpen, chatSidebarOpen, settingsOpen, appearance.chrome])
+  }, [
+    appearance.chrome,
+    appearance.ghostOverlay,
+    chromePinned,
+    isFullscreen,
+    menuOpen,
+    chatSidebarOpen,
+    settingsOpen,
+  ])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -334,12 +354,13 @@ function MainApp() {
       error={chat.error}
       canSend={isLoggedIn}
       username={auth.username}
+      clientId={clientId}
+      accessToken={auth.accessToken}
       onSend={chat.sendMessage}
       onPopout={() => {
         const target = chatChannel && !isChatPopped(chatChannel) ? chatChannel : drawerChannels[0]
         if (target) void popoutChat(target)
       }}
-      emotes={globalEmotes}
     />
   ) : null
 
@@ -385,6 +406,8 @@ function MainApp() {
         onToggleFullscreen={() => void toggleFullscreen()}
         chromePinned={chromePinned}
         onTogglePin={() => setChromePinned((value) => !value)}
+        ghostOverlay={appearance.ghostOverlay}
+        onToggleGhostOverlay={() => setAppearance((prev) => ({ ...prev, ghostOverlay: !prev.ghostOverlay }))}
         isLoggedIn={isLoggedIn}
         displayName={auth.displayName}
         authBusy={busy}
@@ -471,7 +494,7 @@ function MainApp() {
           onCheckForUpdates={() => void updater.check()}
           onDownloadUpdate={() => void updater.download()}
           onInstallUpdate={() => void updater.install()}
-          onQuit={() => void window.streamWatcher?.quitApp?.()}
+          onQuit={quitApp}
         />
       )}
       <FirstRunTips hidden={settingsOpen} />

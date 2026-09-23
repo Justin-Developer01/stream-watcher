@@ -1,7 +1,16 @@
+import { customFontStack, sanitizeFontFamily } from './localFonts'
+
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
-export type ChatFont = 'system' | 'plex' | 'inter' | 'mono' | 'sourceSans' | 'roboto' | 'geist' | 'custom'
-export type RealChatFont = Exclude<ChatFont, 'custom'>
+export type ChatFont =
+  | 'system'
+  | 'plex'
+  | 'inter'
+  | 'mono'
+  | 'sourceSans'
+  | 'roboto'
+  | 'geist'
+  | 'custom'
 export type ChromePosition = 'top' | 'left' | 'right' | 'bottom'
 
 export type AppearanceTheme = {
@@ -14,14 +23,15 @@ export type AppearanceTheme = {
   backgroundImage: string | null
   overlayOpacity: number
   seeDesktop: boolean
+  ghostOverlay: boolean
   chatFont: ChatFont
+  chatFontCustom: string
   chatFontSize: number
   chatDrawerWidth: number
-  chatCustomFont: string | null
   chrome: ChromePosition
 }
 
-export const CHAT_FONTS: Record<RealChatFont, { label: string; stack: string }> = {
+export const CHAT_FONTS: Record<Exclude<ChatFont, 'custom'>, { label: string; stack: string }> = {
   system: {
     label: 'System',
     stack: 'system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -40,22 +50,23 @@ export const CHAT_FONTS: Record<RealChatFont, { label: string; stack: string }> 
   },
   sourceSans: {
     label: 'Source Sans 3',
-    stack: '"Source Sans 3", sans-serif',
+    stack: '"Source Sans 3", Inter, sans-serif',
   },
   roboto: {
     label: 'Roboto',
-    stack: 'Roboto, sans-serif',
+    stack: 'Roboto, "Segoe UI", sans-serif',
   },
   geist: {
     label: 'Geist',
-    stack: 'Geist, sans-serif',
+    stack: 'Geist, Inter, "IBM Plex Sans", sans-serif',
   },
 }
+
+export const CHAT_FONT_CHIPS = Object.keys(CHAT_FONTS) as Array<Exclude<ChatFont, 'custom'>>
 
 export const CHAT_FONT_SIZES = [12, 13, 14, 16] as const
 export type ChatFontSize = (typeof CHAT_FONT_SIZES)[number]
 export const CHAT_FONT_SIZE_DEFAULT: ChatFontSize = 13
-
 export const CHAT_DRAWER_WIDTH_MIN = 280
 export const CHAT_DRAWER_WIDTH_MAX = 480
 export const CHAT_DRAWER_WIDTH_DEFAULT = 320
@@ -92,10 +103,11 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   backgroundImage: null,
   overlayOpacity: 40,
   seeDesktop: false,
+  ghostOverlay: false,
   chatFont: 'system',
+  chatFontCustom: '',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
   chatDrawerWidth: CHAT_DRAWER_WIDTH_DEFAULT,
-  chatCustomFont: null,
   chrome: 'top',
 }
 
@@ -124,6 +136,12 @@ function clampOpacity(value: unknown): number {
   return Math.min(100, Math.max(0, Math.round(n)))
 }
 
+function clampChatDrawerWidth(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return CHAT_DRAWER_WIDTH_DEFAULT
+  return Math.min(CHAT_DRAWER_WIDTH_MAX, Math.max(CHAT_DRAWER_WIDTH_MIN, Math.round(n)))
+}
+
 function clampChatFontSize(value: unknown): ChatFontSize {
   const n = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(n)) return CHAT_FONT_SIZE_DEFAULT
@@ -145,9 +163,9 @@ function normalizeChatFont(value: unknown): ChatFont {
     value === 'inter' ||
     value === 'mono' ||
     value === 'system' ||
+    value === 'geist' ||
     value === 'sourceSans' ||
     value === 'roboto' ||
-    value === 'geist' ||
     value === 'custom'
   ) {
     return value
@@ -155,18 +173,6 @@ function normalizeChatFont(value: unknown): ChatFont {
   if (value === 'sans') return 'inter'
   if (value === 'serif') return 'system'
   return 'system'
-}
-
-function clampDrawerWidth(value: unknown): number {
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return CHAT_DRAWER_WIDTH_DEFAULT
-  return Math.min(CHAT_DRAWER_WIDTH_MAX, Math.max(CHAT_DRAWER_WIDTH_MIN, Math.round(n)))
-}
-
-function normalizeCustomFont(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-  const trimmed = value.trim().slice(0, 120)
-  return trimmed || null
 }
 
 export function matchingPreset(theme: Pick<AppearanceTheme, 'accent' | 'surface' | 'text' | 'backgroundColor'>): AppearancePreset | null {
@@ -190,10 +196,11 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     backgroundImage: current?.backgroundImage ?? null,
     overlayOpacity: current?.overlayOpacity ?? DEFAULT_APPEARANCE.overlayOpacity,
     seeDesktop: current?.seeDesktop ?? DEFAULT_APPEARANCE.seeDesktop,
+    ghostOverlay: current?.ghostOverlay ?? DEFAULT_APPEARANCE.ghostOverlay,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
+    chatFontCustom: current?.chatFontCustom ?? DEFAULT_APPEARANCE.chatFontCustom,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
     chatDrawerWidth: current?.chatDrawerWidth ?? DEFAULT_APPEARANCE.chatDrawerWidth,
-    chatCustomFont: current?.chatCustomFont ?? DEFAULT_APPEARANCE.chatCustomFont,
     chrome: current?.chrome ?? DEFAULT_APPEARANCE.chrome,
     ...APPEARANCE_PRESETS[preset],
   }
@@ -222,10 +229,11 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     backgroundImage,
     overlayOpacity: clampOpacity(raw?.overlayOpacity),
     seeDesktop: raw?.seeDesktop === true,
+    ghostOverlay: raw?.ghostOverlay === true,
     chatFont: normalizeChatFont(raw?.chatFont),
+    chatFontCustom: sanitizeFontFamily(raw?.chatFontCustom),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
-    chatDrawerWidth: clampDrawerWidth(raw?.chatDrawerWidth),
-    chatCustomFont: normalizeCustomFont(raw?.chatCustomFont),
+    chatDrawerWidth: clampChatDrawerWidth(raw?.chatDrawerWidth),
     chrome:
       raw?.chrome === 'left' || raw?.chrome === 'right' || raw?.chrome === 'bottom'
         ? raw.chrome
@@ -266,6 +274,7 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   root.style.setProperty('--icon-muted', iconMuted)
   root.style.setProperty('--border', border)
   root.classList.toggle('see-desktop', seeDesktop)
+  root.classList.toggle('ghost-overlay', windowChrome && theme.ghostOverlay)
   root.classList.toggle('chrome-left', theme.chrome === 'left')
   root.classList.toggle('chrome-right', theme.chrome === 'right')
   root.classList.toggle('chrome-bottom', theme.chrome === 'bottom')
@@ -278,11 +287,8 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
       : 'none',
   )
   root.style.setProperty('--bg-overlay', String(seeDesktop ? 0 : theme.overlayOpacity))
-  const fontStack =
-    theme.chatFont === 'custom' && theme.chatCustomFont
-      ? `"${theme.chatCustomFont}", system-ui, -apple-system, "Segoe UI", sans-serif`
-      : CHAT_FONTS[theme.chatFont as RealChatFont]?.stack ?? CHAT_FONTS.system.stack
-  root.style.setProperty('--chat-font', fontStack)
+  const customStack = theme.chatFont === 'custom' ? customFontStack(theme.chatFontCustom) : null
+  root.style.setProperty('--chat-font', customStack ?? CHAT_FONTS[theme.chatFont === 'custom' ? 'system' : theme.chatFont].stack)
   root.style.setProperty('--chat-font-size', `${theme.chatFontSize}px`)
   root.style.setProperty('--chat-drawer-width', `${theme.chatDrawerWidth}px`)
   if (windowChrome) {

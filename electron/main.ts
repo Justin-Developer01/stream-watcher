@@ -67,6 +67,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     title: 'Stream Watcher',
+    frame: false,
     transparent: true,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,

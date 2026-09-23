@@ -5,6 +5,7 @@ import {
   Eye,
   Focus,
   Gauge,
+  Ghost,
   LayoutGrid,
   List,
   LogIn,
@@ -50,6 +51,8 @@ type Props = {
   onToggleFullscreen: () => void
   chromePinned: boolean
   onTogglePin: () => void
+  ghostOverlay: boolean
+  onToggleGhostOverlay: () => void
   isLoggedIn: boolean
   displayName: string | null
   authBusy: boolean
@@ -159,6 +162,8 @@ export function TopBar({
   onToggleFullscreen,
   chromePinned,
   onTogglePin,
+  ghostOverlay,
+  onToggleGhostOverlay,
   isLoggedIn,
   displayName,
   authBusy,
@@ -528,8 +533,17 @@ export function TopBar({
               }}
             />
             <MenuRow
-              icon={<Pin size={16} strokeWidth={1.75} />}
+              icon={<Ghost size={16} strokeWidth={1.75} />}
               label={UI.ghostOverlay}
+              active={ghostOverlay}
+              onClick={() => {
+                setOpenMenu(null)
+                onToggleGhostOverlay()
+              }}
+            />
+            <MenuRow
+              icon={<Pin size={16} strokeWidth={1.75} />}
+              label={UI.pinToolbar}
               active={chromePinned}
               onClick={() => {
                 setOpenMenu(null)

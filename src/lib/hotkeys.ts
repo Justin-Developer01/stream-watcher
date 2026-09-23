@@ -7,7 +7,9 @@ export type HotkeyId =
   | 'addStream'
   | 'muteFocus'
   | 'cycleFocus'
+  | 'switchFocus'
   | 'muteAll'
+  | 'toggleChrome'
   | 'quitApp'
 
 export type HotkeyChord = {
@@ -27,7 +29,9 @@ export const HOTKEY_ORDER: HotkeyId[] = [
   'addStream',
   'muteFocus',
   'cycleFocus',
+  'switchFocus',
   'muteAll',
+  'toggleChrome',
   'quitApp',
 ]
 
@@ -40,8 +44,10 @@ export const HOTKEY_LABELS: Record<HotkeyId, string> = {
   addStream: 'Focus search/add stream',
   muteFocus: 'Mute focus stream',
   cycleFocus: 'Cycle streams',
+  switchFocus: 'Switch Focus',
   muteAll: 'Mute all',
-  quitApp: 'Exit Stream Watcher',
+  toggleChrome: 'Toggle chrome',
+  quitApp: 'Quit application',
 }
 
 export const DEFAULT_HOTKEYS: Record<HotkeyId, HotkeyChord> = {
@@ -53,7 +59,9 @@ export const DEFAULT_HOTKEYS: Record<HotkeyId, HotkeyChord> = {
   addStream: { key: 'KeyN' },
   muteFocus: { key: 'KeyM' },
   cycleFocus: { key: 'KeyG' },
+  switchFocus: { key: 'KeyS' },
   muteAll: { key: 'KeyM', shift: true },
+  toggleChrome: { key: 'KeyB' },
   quitApp: { key: 'KeyQ', ctrl: true },
 }
 

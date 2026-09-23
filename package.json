@@ -1,6 +1,6 @@
 {
   "name": "stream-watcher",
-  "version": "1.0.1-pre.11",
+  "version": "1.0.1-pre.14",
   "description": "Multi-stream Twitch desktop viewer with custom layouts and chat",
   "main": "dist-electron/main.js",
   "author": "Justin",

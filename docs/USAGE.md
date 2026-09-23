@@ -12,16 +12,18 @@ Start here if you just downloaded the Windows EXE. The same pages open from **Se
 6. [Mode](#mode)
 7. [Chat in the main window](#chat-in-the-main-window)
 8. [Chat vs stream on another monitor](#chat-vs-stream-on-another-monitor)
-9. [Settings](#settings)
-10. [See through windows](#see-through-windows)
-11. [Edge-snap position](#edge-snap-position)
-12. [Check for Updates](#check-for-updates)
+9. [Layout templates](#layout-templates)
+10. [Settings](#settings)
+11. [See through windows](#see-through-windows)
+12. [Ghost overlay](#ghost-overlay)
+13. [Edge-snap position](#edge-snap-position)
+14. [Check for Updates](#check-for-updates)
 
 ## Install (Windows)
 
 1. Download **Stream Watcher Setup** or **Portable** from a [GitHub Release](https://github.com/Justin-Developer01/stream-watcher/releases).
 2. Open the app. SmartScreen may warn because the build is unsigned — **More info → Run anyway**.
-3. The app opens **frameless and maximized** — a thin bar, no Windows title bar, no setup wizard.
+3. The app opens **frameless and maximized** — a thin bar, no Windows title bar, no setup wizard. Drag empty space on the thin bar to move the window.
 
 OAuth redirect used by Login to Twitch: `http://localhost:5173/oauth/callback`.
 
@@ -29,7 +31,7 @@ OAuth redirect used by Login to Twitch: `http://localhost:5173/oauth/callback`.
 
 Frameless means Windows draws no title bar, so the app draws its own: three small icons at the far end of the bar — **Minimize**, **Maximize/Restore**, and **Close**. The window still launches maximized and is still resizable from any edge once restored, with the same sensible minimum size as before.
 
-**Exit Stream Watcher** is a separate, danger-styled button in the Settings modal's footer, and the same action is bound to **Ctrl+Q**. Either quits the whole app (and any open pop-outs); the window's own **Close** button does the same. Esc still only closes whatever modal or drawer is open — it never quits.
+**Exit Stream Watcher** is a separate, danger-styled button in the Settings modal's footer, and the same action is the **Quit application** hotkey (**Ctrl+Q**, remappable in Settings → Hotkeys). Either quits the whole app (and any open pop-outs); the window's own **Close** button does the same. Esc still only closes whatever modal or drawer is open — it never quits.
 
 ## First run
 
@@ -39,7 +41,7 @@ Four short tips appear once: **Focus mode**, **Open chat** vs **Pop out chat**, 
 
 ## Add streams
 
-Click the **title** in the top bar. Paste a channel name or `twitch.tv/...` URL. Save channels for later from the same popover.
+Click the **title** in the chrome (a list icon when Appearance → Chrome is **Left** or **Right**). Paste a channel name or `twitch.tv/...` URL. Save channels for later from the same popover.
 
 ## Login to Twitch
 
@@ -50,6 +52,8 @@ If that only half-works: **Settings → Advanced → Reconnect chat** or **Refre
 ## Mode
 
 **Mode** on the bar is a three-way switch — **Standard**, **Focus**, **Performance** — and only one is on at a time; picking one turns the other off. **Focus** makes one stream large with the rest in a bottom strip (click a strip tile to promote it; drag/resize is off while Focus is on). **Performance** keeps the focused stream at full quality and unmuted while every other tile pauses at low quality (shown as **paused / low**), easing the frosted-glass blur so the thin bar stays cheap to draw. **Standard** is neither — the regular drag/resize grid.
+
+**Switch Focus** (hotkey, remappable in Settings → Hotkeys) enters Focus mode on the current stream, then promotes the next strip tile to the hero. **Cycle streams** moves the focused/unmuted stream in list order without changing the layout. **Focus search/add stream** opens the add-channel popover. **Mute all** mutes every tile.
 
 ## Chat in the main window
 
@@ -62,13 +66,15 @@ This is the **in-app drawer**. It is not a second window.
 
 **Open chat** / **Hide chat** only toggle that drawer. They do not move chat to another monitor.
 
-Twitch emotes render inline in messages you receive. Once logged in, an emote button next to Send opens a small picker (Twitch's global emote set) — click one to insert its name into your message. Each line also shows a timestamp on hover.
+**Settings → Chat** sets Font (System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…**), Size, and **Drawer width** (280–480px) for docked left / right. **Custom…** is a family-name field with a live preview — type the name Windows lists (Word/Notepad). If it isn’t installed, chat uses System.
+
+After **Login to Twitch**, Twitch emotes (global + the channel’s own) and badges render in the list, and an emote picker sits next to the composer — click one to insert its name. Each line shows a dim timestamp on the right. No Bits.
 
 ## Chat vs stream on another monitor
 
 Pop-outs are **separate desktop windows** (Windows EXE / `npm run dev:desktop` only). In the browser the same icons stay visible; hover or click shows **Desktop app only**.
 
-**Quick start:** park on another monitor → **See through windows** when you need the UI (or the Lock window hotkey, `L`, to freeze click-through) → **Dock back** to the main desk.
+**Quick start:** add a channel → **Login to Twitch** → **Mode → Focus**. Then park on another monitor → **See through windows** when you need the UI (or the Lock window hotkey, `L`, to freeze click-through) → **Dock back** to the main desk.
 
 The thin top bar does **not** grow extra monitor controls beyond a compact **redock** menu. Stream pop-out lives on the tile. Chat pop-out is on the tile, in the chat drawer, and in the **More …** menu.
 
@@ -113,20 +119,28 @@ The main desk starts on the **primary** display. If that screen goes away, the m
 
 If a pop-out’s monitor is gone, that window clamps onto a remaining display. The next time you pop it out, Stream Watcher uses the saved size and always-on-top, on a monitor that still exists.
 
+## Layout templates
+
+Two controls, both small popovers (never a sidebar). Templates persist locally.
+
+- **Change layout** on the thin bar lists your saved templates — pick one to apply it (channels, Focus, chat placement).
+- **☰ → Layout templates** is where you save: **+** saves the current channels, Focus mode, and chat placement under a name. Each row has a delete control.
+- **☰ → Change layout** is the separate quick grid — **1 / 1×2 / 2×2 / 1+3** — not tied to templates.
+
 ## Settings
 
 **☰ → Settings** opens a frosted modal (~560×480). **Esc** closes it (never quits the app). Left tabs:
 
 | Tab | What it holds |
 |---|---|
-| Appearance | Dark / Dim / Light, colors, background, **See desktop behind app**, Chrome edge (Top/Left/Right/Bottom) |
-| Chat | Font (7 fonts + Custom…), Size (12 / 13 / 14 / 16), Drawer width (280–480px) |
-| Hotkeys | Label + keychip. **Click to rebind.** Reset defaults. |
+| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left \| Right \| Bottom** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default). Main window is frameless. |
+| Chat | **Font** (System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + **Custom…** for a Windows-installed family), **Size** (12 / 13 / 14 / 16), **Drawer width** (280–480px for docked left / right). After **Login to Twitch**, emotes render in the list and the composer picker. |
+| Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
 | Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |
 | Help | Short in-app guide + Show tips + full docs links |
 
-A footer below the tabs has a danger-styled **Exit Stream Watcher** button — see [Window controls](#window-controls).
+A footer below the tabs has a danger-styled **Exit Stream Watcher** button — see [Window controls](#window-controls). **Esc** only closes Settings.
 
 ## See through windows
 
@@ -136,13 +150,17 @@ To click near a gap without turning the whole thing off, use the **Lock window**
 
 Windows may need a relaunch if the desktop does not show through after the first toggle.
 
+## Ghost overlay
+
+**Ghost overlay** is off by default. Turn it on from the **More …** menu or **Settings → Appearance**. It auto-hides the thin bar until you move to the edge it’s snapped to (or use **Pin toolbar** in **More …**, or the **Toggle chrome** hotkey, `B`). It works with **See through windows**. Ghost does **not** change the icon stack or the window frame — the main window is always frameless. **Chrome** edge position stays a separate control.
+
 ## Edge-snap position
 
-Settings → Appearance → **Chrome**: **Top** (default), **Left**, **Right**, or **Bottom**. The bar becomes a full-height 42px strip on Left/Right (title collapses to an icon) or a full-width strip on Top/Bottom (title keeps its text). Popovers always open toward the free side of the screen. Fullscreen's auto-hide reveals the bar again from whichever edge it's snapped to.
+Settings → Appearance → **Chrome**: **Top** (default), **Left**, **Right**, or **Bottom**. The bar becomes a full-height 42px strip on Left/Right (title collapses to an icon) or a full-width strip on Top/Bottom (title keeps its text). Popovers always open toward the free side of the screen. Fullscreen and Ghost overlay auto-hide reveal the bar again from whichever edge it's snapped to.
 
 ## Check for Updates
 
-**Settings → Updates**. Looks at GitHub Releases, including pre-releases. Works for the NSIS Setup app. Portable users download a new EXE.
+**Settings → Updates**. Looks at GitHub Releases, including pre-releases. Works for the NSIS Setup app. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.
 
 ## Developers
 
