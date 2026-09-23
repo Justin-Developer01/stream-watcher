@@ -56,6 +56,6 @@ jobs:
 
             **Docs:** [How to use](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/USAGE.md) · [Features](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/FEATURES.md) · [Docs home](https://github.com/Justin-Developer01/stream-watcher/blob/main/docs/index.md). In-app: Settings → Help.
 
-            This build includes Focus mode, Performance Mode, Settings modal (Appearance / Chat / Hotkeys / Updates / Advanced / Help), See desktop behind app, Lock window (click-through), and Chat Font System / IBM Plex Sans / Inter / Mono with Size 12 / 13 / 14 / 16.
+            This build includes Focus mode, Performance Mode, Settings modal (Appearance / Chat / Hotkeys / Updates / Advanced / Help), See desktop behind app, Lock window (click-through), and Chat Font System / IBM Plex Sans / Inter / Mono / Source Sans 3 / Roboto / Geist + Custom… (Windows-installed family) with Size 12 / 13 / 14 / 16.
 
             **Updates:** the installed Setup app can **Check for Updates** in Settings against this GitHub Release (pre-releases included). SmartScreen may warn on unsigned downloads — More info → Run anyway. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.
