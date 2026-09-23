@@ -1,6 +1,9 @@
 import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const moduleDir = dirname(fileURLToPath(import.meta.url))
 
 type PopoutKind = 'stream' | 'chat'
 
@@ -23,9 +26,12 @@ function popoutKey(kind: PopoutKind, channel: string) {
 }
 
 function preloadPath() {
-  const mjs = join(__dirname, '../preload/index.mjs')
-  const js = join(__dirname, '../preload/index.js')
-  return existsSync(mjs) ? mjs : js
+  // `"type": "module"` emits ESM preload as index.mjs and requires sandbox: false.
+  for (const name of ['index.mjs', 'index.js', 'index.cjs']) {
+    const candidate = join(moduleDir, '../preload', name)
+    if (existsSync(candidate)) return candidate
+  }
+  return join(moduleDir, '../preload/index.mjs')
 }
 
 function loadRenderer(win: BrowserWindow, search = '') {
@@ -34,7 +40,7 @@ function loadRenderer(win: BrowserWindow, search = '') {
     void win.loadURL(`${process.env.ELECTRON_RENDERER_URL}${q}`)
     return
   }
-  void win.loadFile(join(__dirname, '../renderer/index.html'), {
+  void win.loadFile(join(moduleDir, '../renderer/index.html'), {
     search: q.replace(/^\?/, ''),
   })
 }

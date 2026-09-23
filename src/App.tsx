@@ -145,8 +145,7 @@ function DeskApp() {
   }, [desk.settings.hotkeys, runHotkey])
 
   const saveSettings = (next: AppSettings, clientId: string) => {
-    desk.applySettings(next)
-    desk.setClientId(clientId)
+    desk.applySettings(next, clientId)
   }
 
   const style = useMemo(() => {
@@ -239,6 +238,7 @@ function DeskApp() {
         isLoggedIn={isLoggedIn}
         displayName={auth.displayName}
         searchRef={searchRef}
+        chromeEdge={desk.settings.chromeEdge}
       />
 
       {desk.chatOpen && desk.chatDock === 'left' && chatEl}

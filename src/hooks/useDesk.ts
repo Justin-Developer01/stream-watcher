@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
 import {
   createDefaultLayout,
@@ -7,7 +7,7 @@ import {
   normalizeChannel,
   saveState,
 } from '../lib/storage'
-import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type SavedStream, type StreamItem, type WatchMode } from '../types'
+import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type PersistedState, type SavedStream, type StreamItem, type WatchMode } from '../types'
 
 const DEFAULT_STREAMS: StreamItem[] = [
   { id: newStreamId(), channel: 'xqc', muted: false },
@@ -55,9 +55,10 @@ export function useDesk() {
   const [isDragging, setIsDragging] = useState(false)
   const [windowLocked, setWindowLocked] = useState(false)
   const [toolbarForced, setToolbarForced] = useState(true)
+  const snapshotRef = useRef<PersistedState | null>(null)
 
-  useEffect(() => {
-    saveState({
+  const snapshot = useMemo<PersistedState>(
+    () => ({
       streams,
       layout,
       focusedId,
@@ -70,21 +71,38 @@ export function useDesk() {
       mode,
       templates,
       settings,
-    })
-  }, [
-    streams,
-    layout,
-    focusedId,
-    chatChannel,
-    clientId,
-    savedStreams,
-    chatOpen,
-    chatDock,
-    chatFloat,
-    mode,
-    templates,
-    settings,
-  ])
+    }),
+    [
+      streams,
+      layout,
+      focusedId,
+      chatChannel,
+      clientId,
+      savedStreams,
+      chatOpen,
+      chatDock,
+      chatFloat,
+      mode,
+      templates,
+      settings,
+    ],
+  )
+  snapshotRef.current = snapshot
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (snapshotRef.current) saveState(snapshotRef.current)
+    }, 200)
+    return () => window.clearTimeout(timer)
+  }, [snapshot])
+
+  useEffect(() => {
+    const flush = () => {
+      if (snapshotRef.current) saveState(snapshotRef.current)
+    }
+    window.addEventListener('beforeunload', flush)
+    return () => window.removeEventListener('beforeunload', flush)
+  }, [])
 
   const visibleStreams = useMemo(() => streams.filter((s) => !s.popped), [streams])
 
@@ -228,8 +246,18 @@ export function useDesk() {
     setStreams((prev) => prev.map((s) => (s.channel === channel ? { ...s, popped: false } : s)))
   }, [])
 
-  const applySettings = useCallback((next: AppSettings) => {
+  const applySettings = useCallback((next: AppSettings, nextClientId?: string) => {
     setSettings(next)
+    if (nextClientId !== undefined) setClientId(nextClientId)
+    const current = snapshotRef.current
+    if (!current) return
+    const committed: PersistedState = {
+      ...current,
+      settings: next,
+      clientId: nextClientId ?? current.clientId,
+    }
+    snapshotRef.current = committed
+    saveState(committed)
   }, [])
 
   return {

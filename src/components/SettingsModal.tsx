@@ -170,7 +170,25 @@ export function SettingsModal({
                   <Switch.Thumb className="switch__thumb" />
                 </Switch.Root>
               </label>
-              <button type="button" className="text-btn" onClick={() => setDraft(DEFAULT_SETTINGS)}>
+              <button
+                type="button"
+                className="text-btn"
+                onClick={() =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    theme: DEFAULT_SETTINGS.theme,
+                    accent: DEFAULT_SETTINGS.accent,
+                    surface: DEFAULT_SETTINGS.surface,
+                    text: DEFAULT_SETTINGS.text,
+                    backgroundColor: DEFAULT_SETTINGS.backgroundColor,
+                    backgroundImage: DEFAULT_SETTINGS.backgroundImage,
+                    backgroundOpacity: DEFAULT_SETTINGS.backgroundOpacity,
+                    chromeEdge: DEFAULT_SETTINGS.chromeEdge,
+                    seeThrough: DEFAULT_SETTINGS.seeThrough,
+                    ghostOverlay: DEFAULT_SETTINGS.ghostOverlay,
+                  }))
+                }
+              >
                 {ui.reset}
               </button>
             </Tabs.Content>

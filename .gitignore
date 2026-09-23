@@ -10,3 +10,8 @@ release
 *.log
 .vscode/*
 !.vscode/extensions.json
+
+# TypeScript / Vite caches — do not commit
+*.tsbuildinfo
+.vite
+.cache

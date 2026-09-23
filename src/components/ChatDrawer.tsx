@@ -162,8 +162,8 @@ export function ChatDrawer({
                 <Smile size={14} />
               </button>
             </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content className="emote-pop" sideOffset={6}>
+            <Popover.Portal container={document.body}>
+              <Popover.Content className="emote-pop" side="top" sideOffset={6} collisionPadding={12} avoidCollisions>
                 {QUICK_EMOTES.map((emote) => (
                   <button key={emote} type="button" onClick={() => setDraft((d) => `${d}${d ? ' ' : ''}${emote}`)}>
                     {emote}

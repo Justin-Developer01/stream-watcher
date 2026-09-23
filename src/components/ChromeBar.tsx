@@ -17,8 +17,8 @@ import {
 import { useState, type FormEvent, type RefObject } from 'react'
 import logo from '../assets/vesper-logo.svg'
 import { ui } from '../lib/uiLabels'
-import type { LayoutTemplate, PopoutInfo, WatchMode } from '../types'
-import { Tip } from './ui/Tip'
+import type { ChromeEdge, LayoutTemplate, PopoutInfo, WatchMode } from '../types'
+import { outwardSide, Tip } from './ui/Tip'
 
 type Props = {
   mode: WatchMode
@@ -47,6 +47,7 @@ type Props = {
   isLoggedIn: boolean
   displayName: string | null
   searchRef: RefObject<HTMLInputElement | null>
+  chromeEdge: ChromeEdge
 }
 
 export function ChromeBar({
@@ -76,6 +77,7 @@ export function ChromeBar({
   isLoggedIn,
   displayName,
   searchRef,
+  chromeEdge,
 }: Props) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -92,6 +94,7 @@ export function ChromeBar({
   }
 
   const streamPops = popped.filter((p) => p.kind === 'stream')
+  const flyoutSide = outwardSide(chromeEdge)
 
   return (
     <header className="chrome-bar">
@@ -119,17 +122,17 @@ export function ChromeBar({
           if (value) onMode(value as WatchMode)
         }}
       >
-        <Tip label={ui.standard}>
+        <Tip label={ui.standard} side={flyoutSide}>
           <ToggleGroup.Item className="mode-btn" value="standard">
             {ui.standard}
           </ToggleGroup.Item>
         </Tip>
-        <Tip label={ui.focus}>
+        <Tip label={ui.focus} side={flyoutSide}>
           <ToggleGroup.Item className="mode-btn" value="focus">
             {ui.focus}
           </ToggleGroup.Item>
         </Tip>
-        <Tip label={ui.performance}>
+        <Tip label={ui.performance} side={flyoutSide}>
           <ToggleGroup.Item className="mode-btn" value="performance">
             {ui.performance}
           </ToggleGroup.Item>
@@ -143,7 +146,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" sideOffset={8}>
+          <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
             {templates.length === 0 && <DropdownMenu.Item className="menu__item muted" disabled>No saved layouts</DropdownMenu.Item>}
             {templates.map((template) => (
               <DropdownMenu.Item key={template.id} className="menu__item" onSelect={() => onApplyTemplate(template.id)}>
@@ -154,13 +157,13 @@ export function ChromeBar({
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
 
-      <Tip label={ui.dockAllPopouts}>
+      <Tip label={ui.dockAllPopouts} side={flyoutSide}>
         <button type="button" className="text-btn" onClick={onDockAll} disabled={!popped.length}>
           {ui.dockAllPopouts}
         </button>
       </Tip>
 
-      <Tip label={ui.seeThroughWindows}>
+      <Tip label={ui.seeThroughWindows} side={flyoutSide}>
         <button
           type="button"
           className={`icon-btn${seeThrough ? ' is-on' : ''}`}
@@ -178,7 +181,7 @@ export function ChromeBar({
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content className="menu" sideOffset={8}>
+            <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
               {streamPops.map((item) => (
                 <DropdownMenu.Item
                   key={`${item.kind}-${item.channel}`}
@@ -200,7 +203,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" sideOffset={8}>
+          <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
             <DropdownMenu.Item className="menu__item" onSelect={onFullscreen}>
               {ui.fullscreen}
             </DropdownMenu.Item>
@@ -224,7 +227,7 @@ export function ChromeBar({
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="menu" sideOffset={8}>
+          <DropdownMenu.Content className="menu" side={flyoutSide} sideOffset={8} collisionPadding={12}>
             <DropdownMenu.Item className="menu__item" onSelect={onLogin}>
               <LogIn size={13} /> {isLoggedIn ? displayName : ui.loginToTwitch}
             </DropdownMenu.Item>
@@ -277,19 +280,19 @@ export function ChromeBar({
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
 
-      <Tip label={pinned ? 'Unpin toolbar' : ui.pinToolbar}>
+      <Tip label={pinned ? 'Unpin toolbar' : ui.pinToolbar} side={flyoutSide}>
         <button type="button" className={`icon-btn${pinned ? ' is-on' : ''}`} onClick={() => onPinned(!pinned)}>
           {pinned ? <Pin size={13} /> : <PinOff size={13} />}
         </button>
       </Tip>
 
       <div className="window-controls">
-        <Tip label={ui.minimize}>
+        <Tip label={ui.minimize} side={flyoutSide}>
           <button type="button" className="win-btn" onClick={() => window.vesper?.minimize()}>
             <Minus size={13} />
           </button>
         </Tip>
-        <Tip label={maximized ? ui.restore : ui.maximize}>
+        <Tip label={maximized ? ui.restore : ui.maximize} side={flyoutSide}>
           <button
             type="button"
             className="win-btn"
@@ -301,7 +304,7 @@ export function ChromeBar({
             {maximized ? <Square size={11} /> : <Maximize2 size={12} />}
           </button>
         </Tip>
-        <Tip label={ui.close}>
+        <Tip label={ui.close} side={flyoutSide}>
           <button type="button" className="win-btn win-btn--close" onClick={() => window.vesper?.close()}>
             <X size={13} />
           </button>
