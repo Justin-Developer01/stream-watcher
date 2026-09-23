@@ -7,6 +7,7 @@ import { StreamGrid } from './components/StreamGrid'
 import { StreamPopoutApp } from './components/StreamPopoutApp'
 import { TopBar } from './components/TopBar'
 import { useChat } from './hooks/useChat'
+import { useGlobalEmotes } from './hooks/useGlobalEmotes'
 import { usePopouts } from './hooks/usePopouts'
 import { useTemplates } from './hooks/useTemplates'
 import { useWindowControls } from './hooks/useWindowControls'
@@ -97,6 +98,7 @@ function MainApp() {
     username: auth.username,
     accessToken: auth.accessToken,
   })
+  const globalEmotes = useGlobalEmotes(clientId, auth.accessToken)
 
   const popoutChat = useCallback(
     async (channel: string) => {
@@ -330,6 +332,7 @@ function MainApp() {
         const target = chatChannel && !isChatPopped(chatChannel) ? chatChannel : drawerChannels[0]
         if (target) void popoutChat(target)
       }}
+      emotes={globalEmotes}
     />
   ) : null
 

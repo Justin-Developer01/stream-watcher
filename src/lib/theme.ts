@@ -1,6 +1,7 @@
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
-export type ChatFont = 'system' | 'plex' | 'inter' | 'mono'
+export type ChatFont = 'system' | 'plex' | 'inter' | 'mono' | 'sourceSans' | 'roboto' | 'geist' | 'custom'
+export type RealChatFont = Exclude<ChatFont, 'custom'>
 export type ChromePosition = 'top' | 'left'
 
 export type AppearanceTheme = {
@@ -15,10 +16,12 @@ export type AppearanceTheme = {
   seeDesktop: boolean
   chatFont: ChatFont
   chatFontSize: number
+  chatDrawerWidth: number
+  chatCustomFont: string | null
   chrome: ChromePosition
 }
 
-export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
+export const CHAT_FONTS: Record<RealChatFont, { label: string; stack: string }> = {
   system: {
     label: 'System',
     stack: 'system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -35,11 +38,27 @@ export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
     label: 'Mono',
     stack: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
   },
+  sourceSans: {
+    label: 'Source Sans 3',
+    stack: '"Source Sans 3", sans-serif',
+  },
+  roboto: {
+    label: 'Roboto',
+    stack: 'Roboto, sans-serif',
+  },
+  geist: {
+    label: 'Geist',
+    stack: 'Geist, sans-serif',
+  },
 }
 
 export const CHAT_FONT_SIZES = [12, 13, 14, 16] as const
 export type ChatFontSize = (typeof CHAT_FONT_SIZES)[number]
 export const CHAT_FONT_SIZE_DEFAULT: ChatFontSize = 13
+
+export const CHAT_DRAWER_WIDTH_MIN = 280
+export const CHAT_DRAWER_WIDTH_MAX = 480
+export const CHAT_DRAWER_WIDTH_DEFAULT = 320
 
 type PresetColors = Pick<AppearanceTheme, 'preset' | 'accent' | 'surface' | 'text' | 'backgroundColor'>
 
@@ -75,6 +94,8 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   seeDesktop: false,
   chatFont: 'system',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
+  chatDrawerWidth: CHAT_DRAWER_WIDTH_DEFAULT,
+  chatCustomFont: null,
   chrome: 'top',
 }
 
@@ -119,10 +140,33 @@ function clampChatFontSize(value: unknown): ChatFontSize {
 }
 
 function normalizeChatFont(value: unknown): ChatFont {
-  if (value === 'plex' || value === 'inter' || value === 'mono' || value === 'system') return value
+  if (
+    value === 'plex' ||
+    value === 'inter' ||
+    value === 'mono' ||
+    value === 'system' ||
+    value === 'sourceSans' ||
+    value === 'roboto' ||
+    value === 'geist' ||
+    value === 'custom'
+  ) {
+    return value
+  }
   if (value === 'sans') return 'inter'
   if (value === 'serif') return 'system'
   return 'system'
+}
+
+function clampDrawerWidth(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return CHAT_DRAWER_WIDTH_DEFAULT
+  return Math.min(CHAT_DRAWER_WIDTH_MAX, Math.max(CHAT_DRAWER_WIDTH_MIN, Math.round(n)))
+}
+
+function normalizeCustomFont(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim().slice(0, 120)
+  return trimmed || null
 }
 
 export function matchingPreset(theme: Pick<AppearanceTheme, 'accent' | 'surface' | 'text' | 'backgroundColor'>): AppearancePreset | null {
@@ -148,6 +192,8 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     seeDesktop: current?.seeDesktop ?? DEFAULT_APPEARANCE.seeDesktop,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
+    chatDrawerWidth: current?.chatDrawerWidth ?? DEFAULT_APPEARANCE.chatDrawerWidth,
+    chatCustomFont: current?.chatCustomFont ?? DEFAULT_APPEARANCE.chatCustomFont,
     chrome: current?.chrome ?? DEFAULT_APPEARANCE.chrome,
     ...APPEARANCE_PRESETS[preset],
   }
@@ -178,6 +224,8 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     seeDesktop: raw?.seeDesktop === true,
     chatFont: normalizeChatFont(raw?.chatFont),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
+    chatDrawerWidth: clampDrawerWidth(raw?.chatDrawerWidth),
+    chatCustomFont: normalizeCustomFont(raw?.chatCustomFont),
     chrome: raw?.chrome === 'left' ? 'left' : 'top',
     preset: presetKey,
   }
@@ -225,8 +273,13 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
       : 'none',
   )
   root.style.setProperty('--bg-overlay', String(seeDesktop ? 0 : theme.overlayOpacity))
-  root.style.setProperty('--chat-font', CHAT_FONTS[theme.chatFont].stack)
+  const fontStack =
+    theme.chatFont === 'custom' && theme.chatCustomFont
+      ? `"${theme.chatCustomFont}", system-ui, -apple-system, "Segoe UI", sans-serif`
+      : CHAT_FONTS[theme.chatFont as RealChatFont]?.stack ?? CHAT_FONTS.system.stack
+  root.style.setProperty('--chat-font', fontStack)
   root.style.setProperty('--chat-font-size', `${theme.chatFontSize}px`)
+  root.style.setProperty('--chat-drawer-width', `${theme.chatDrawerWidth}px`)
   if (windowChrome) {
     void window.streamWatcher?.setWindowTransparent?.(theme.seeDesktop, theme.backgroundColor)
   }

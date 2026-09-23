@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   APPEARANCE_PRESETS,
+  CHAT_DRAWER_WIDTH_MAX,
+  CHAT_DRAWER_WIDTH_MIN,
   CHAT_FONTS,
   CHAT_FONT_SIZES,
   DEFAULT_APPEARANCE,
@@ -13,7 +15,7 @@ import {
   type AppearancePreset,
   type AppearanceTheme,
   type BackgroundMode,
-  type ChatFont,
+  type RealChatFont,
 } from '../lib/theme'
 
 type Props = {
@@ -272,7 +274,7 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
       <div className="appearance-panel">
         <p className="theme-label">Font</p>
         <div className="preset-row" role="group" aria-label="Font">
-          {(Object.keys(CHAT_FONTS) as ChatFont[]).map((font) => (
+          {(Object.keys(CHAT_FONTS) as RealChatFont[]).map((font) => (
             <button
               key={font}
               type="button"
@@ -282,7 +284,33 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
               {CHAT_FONTS[font].label}
             </button>
           ))}
+          <button
+            type="button"
+            className={appearance.chatFont === 'custom' ? 'is-active' : ''}
+            onClick={() => patch({ chatFont: 'custom' })}
+          >
+            Custom…
+          </button>
         </div>
+        {appearance.chatFont === 'custom' && (
+          <div className="theme-image-row">
+            <input
+              value={appearance.chatCustomFont ?? ''}
+              onChange={(e) => patch({ chatCustomFont: e.target.value })}
+              placeholder="Font family name, e.g. Segoe UI"
+              autoComplete="off"
+            />
+            <p
+              className="hint"
+              style={{
+                fontFamily: `"${appearance.chatCustomFont || 'System'}", system-ui, sans-serif`,
+              }}
+            >
+              The quick brown fox jumps over the lazy dog.
+            </p>
+            <p className="hint">Uses your system font automatically if this name isn't installed.</p>
+          </div>
+        )}
         <p className="theme-label">Size</p>
         <div className="preset-row" role="group" aria-label="Size">
           {CHAT_FONT_SIZES.map((size) => (
@@ -297,6 +325,20 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
           ))}
         </div>
         <p className="hint">Applies to chat lines and the composer. An open chat drawer updates live.</p>
+
+        <p className="theme-label">Drawer width</p>
+        <label className="theme-overlay" htmlFor="chat-drawer-width">
+          <span>{appearance.chatDrawerWidth}px</span>
+          <input
+            id="chat-drawer-width"
+            type="range"
+            min={CHAT_DRAWER_WIDTH_MIN}
+            max={CHAT_DRAWER_WIDTH_MAX}
+            step={10}
+            value={appearance.chatDrawerWidth}
+            onChange={(event) => patch({ chatDrawerWidth: Number(event.target.value) })}
+          />
+        </label>
       </div>
     </section>
   )

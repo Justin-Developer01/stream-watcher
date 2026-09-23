@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import { Smile } from 'lucide-react'
 import type { ChatDock, ChatFloatPosition, ChatMessage } from '../types'
 import { IconButton } from './IconButton'
 import { CloseIcon, PinIcon, PopoutIcon } from './icons'
 import { UI } from '../lib/uiLabels'
+import { emoteImageUrl, renderMessageWithEmotes } from '../lib/chatEmotes'
+import type { TwitchEmote } from '../lib/twitch'
+
+function formatTime(timestamp: number) {
+  return new Date(timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+}
 
 type Props = {
   collapsed: boolean
@@ -25,6 +32,7 @@ type Props = {
   alwaysOnTop?: boolean
   onToggleAlwaysOnTop?: () => void
   onDockBack?: () => void
+  emotes?: TwitchEmote[]
 }
 
 export function ChatPanel({
@@ -48,9 +56,11 @@ export function ChatPanel({
   alwaysOnTop = false,
   onToggleAlwaysOnTop,
   onDockBack,
+  emotes = [],
 }: Props) {
   const [draft, setDraft] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
+  const [emotePickerOpen, setEmotePickerOpen] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{
     ox: number
@@ -234,7 +244,21 @@ export function ChatPanel({
             <span className="chat-line__user" style={{ color: message.color || '#8fd3ff' }}>
               {message.user}
             </span>
-            <span className="chat-line__text">{message.text}</span>
+            <span className="chat-line__text">
+              {renderMessageWithEmotes(message.text, message.emotes).map((segment, index) =>
+                segment.type === 'emote' ? (
+                  <img
+                    key={index}
+                    className="chat-emote"
+                    src={emoteImageUrl(segment.id)}
+                    alt={segment.alt}
+                  />
+                ) : (
+                  <span key={index}>{segment.text}</span>
+                ),
+              )}
+            </span>
+            <span className="chat-line__time">{formatTime(message.timestamp)}</span>
           </div>
         ))}
         {!messages.length && <p className="muted chat-empty">No messages yet.</p>}
@@ -256,6 +280,35 @@ export function ChatPanel({
           disabled={!canSend || !activeChannel}
           maxLength={500}
         />
+        {canSend && emotes.length > 0 && (
+          <div className="topbar-menu topbar-menu--end">
+            <IconButton
+              label="Emotes"
+              active={emotePickerOpen}
+              onClick={() => setEmotePickerOpen((open) => !open)}
+            >
+              <Smile size={16} strokeWidth={1.75} />
+            </IconButton>
+            {emotePickerOpen && (
+              <div className="popover emote-picker" role="dialog" aria-label="Emotes">
+                {emotes.map((emote) => (
+                  <button
+                    type="button"
+                    key={emote.id}
+                    className="emote-picker__item"
+                    title={emote.name}
+                    onClick={() => {
+                      setDraft((prev) => (prev ? `${prev} ${emote.name} ` : `${emote.name} `))
+                      setEmotePickerOpen(false)
+                    }}
+                  >
+                    <img src={emoteImageUrl(emote.id)} alt={emote.name} />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <button type="submit" disabled={!canSend || !activeChannel || !draft.trim()}>
           Send
         </button>

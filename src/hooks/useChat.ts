@@ -1,6 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import tmi from 'tmi.js'
-import type { ChatMessage } from '../types'
+import type { ChatEmoteRange, ChatMessage } from '../types'
+
+function parseEmoteTag(raw: unknown): ChatEmoteRange[] | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const ranges: ChatEmoteRange[] = []
+  for (const [id, positions] of Object.entries(raw as Record<string, string[]>)) {
+    if (!Array.isArray(positions)) continue
+    for (const position of positions) {
+      const [startStr, endStr] = position.split('-')
+      const start = Number(startStr)
+      const end = Number(endStr)
+      if (Number.isInteger(start) && Number.isInteger(end) && start >= 0 && end >= start) {
+        ranges.push({ id, start, end })
+      }
+    }
+  }
+  return ranges.length ? ranges : undefined
+}
 
 export function useChat(options: {
   channels: string[]
@@ -59,6 +76,7 @@ export function useChat(options: {
             color: tags.color || undefined,
             text: message,
             timestamp: Date.now(),
+            emotes: parseEmoteTag(tags.emotes),
           },
         ]
         return next.slice(-300)

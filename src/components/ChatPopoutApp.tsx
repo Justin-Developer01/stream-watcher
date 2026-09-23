@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { ChatPanel } from './ChatPanel'
 import { useChat } from '../hooks/useChat'
+import { useGlobalEmotes } from '../hooks/useGlobalEmotes'
 import { usePopoutChrome } from '../hooks/usePopoutChrome'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { loadState } from '../lib/storage'
@@ -27,6 +28,7 @@ export function ChatPopoutApp() {
   }, [channel])
 
   const { auth, isLoggedIn } = useTwitchAuth(clientId)
+  const globalEmotes = useGlobalEmotes(clientId, auth.accessToken)
   const chat = useChat({
     channels,
     activeChannel: channel || null,
@@ -53,6 +55,7 @@ export function ChatPopoutApp() {
         username={auth.username}
         onSend={chat.sendMessage}
         onPopout={() => undefined}
+        emotes={globalEmotes}
         compact
         alwaysOnTop={alwaysOnTop}
         onToggleAlwaysOnTop={() => void toggleAlwaysOnTop()}
