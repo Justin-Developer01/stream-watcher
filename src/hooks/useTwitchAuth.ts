@@ -11,12 +11,7 @@ export function useTwitchAuth(clientId: string) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const unsubscribe = window.streamWatcher?.onTwitchSessionUpdated(() => {
-      // Session cookies updated for embeds (Prime/Turbo path)
-    })
-    return () => {
-      unsubscribe?.()
-    }
+    return window.vesper?.onTwitchSessionUpdated(() => undefined)
   }, [])
 
   const loginForChat = useCallback(async () => {
@@ -24,25 +19,22 @@ export function useTwitchAuth(clientId: string) {
       setError('Add your Twitch Client ID in Settings first')
       return
     }
-    if (!window.streamWatcher) {
-      setError('Twitch login requires the desktop Electron app')
+    if (!window.vesper) {
+      setError('Twitch login requires the desktop app')
       return
     }
-
     setBusy(true)
     setError(null)
     try {
-      const result = await window.streamWatcher.startTwitchOAuth({
+      const result = await window.vesper.startTwitchOAuth({
         clientId: clientId.trim(),
         redirectUri: DEFAULT_REDIRECT,
         scopes: CHAT_SCOPES,
       })
-
       if (!result?.accessToken) {
         setError('Login was cancelled')
         return
       }
-
       const user = await fetchTwitchUser(clientId.trim(), result.accessToken)
       const next: AuthState = {
         accessToken: result.accessToken,
@@ -60,18 +52,23 @@ export function useTwitchAuth(clientId: string) {
   }, [clientId])
 
   const loginForPrime = useCallback(async () => {
-    if (!window.streamWatcher) {
-      setError('Twitch session login requires the desktop Electron app')
+    if (!window.vesper) {
+      setError('Twitch session login requires the desktop app')
       return
     }
     setError(null)
-    await window.streamWatcher.openTwitchLogin()
+    await window.vesper.openTwitchLogin()
   }, [])
+
+  const loginToTwitch = useCallback(async () => {
+    await loginForPrime()
+    await loginForChat()
+  }, [loginForPrime, loginForChat])
 
   const logout = useCallback(async () => {
     clearAuth()
     setAuth({ accessToken: null, username: null, displayName: null, scopes: [] })
-    await window.streamWatcher?.clearTwitchSession()
+    await window.vesper?.clearTwitchSession()
   }, [])
 
   return {
@@ -80,6 +77,7 @@ export function useTwitchAuth(clientId: string) {
     error,
     loginForChat,
     loginForPrime,
+    loginToTwitch,
     logout,
     isLoggedIn: Boolean(auth.accessToken && auth.username),
   }

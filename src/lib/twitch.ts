@@ -24,8 +24,15 @@ export async function fetchTwitchUser(clientId: string, accessToken: string) {
 }
 
 export function getEmbedParent(): string {
-  // Electron loads localhost in dev; file:// in production needs a parent too.
   if (typeof window === 'undefined') return 'localhost'
   const host = window.location.hostname
   return host || 'localhost'
+}
+
+export function badgeUrl(set: string, version: string) {
+  return `https://static-cdn.jtvnw.net/badges/v1/${set}/${version}/1`
+}
+
+export function emoteUrl(id: string) {
+  return `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/1.0`
 }
