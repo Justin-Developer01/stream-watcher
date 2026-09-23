@@ -71,7 +71,6 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#0b0f14',
     autoHideMenuBar: true,
-    frame: false,
     show: false,
     webPreferences: {
       preload: resolvePreloadPath(),
