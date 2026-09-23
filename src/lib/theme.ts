@@ -1,6 +1,6 @@
 export type AppearancePreset = 'dark' | 'dim' | 'light'
 export type BackgroundMode = 'color' | 'image'
-export type ChatFont = 'system' | 'plex' | 'inter' | 'mono'
+export type ChatFont = 'system' | 'geist' | 'sourceSans' | 'inter' | 'plex' | 'mono'
 export type ChromePosition = 'top' | 'left'
 
 export type AppearanceTheme = {
@@ -16,6 +16,7 @@ export type AppearanceTheme = {
   ghostOverlay: boolean
   chatFont: ChatFont
   chatFontSize: number
+  chatDrawerWidth: number
   chrome: ChromePosition
 }
 
@@ -24,13 +25,21 @@ export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
     label: 'System',
     stack: 'system-ui, -apple-system, "Segoe UI", sans-serif',
   },
-  plex: {
-    label: 'IBM Plex Sans',
-    stack: '"IBM Plex Sans", sans-serif',
+  geist: {
+    label: 'Geist',
+    stack: 'Geist, Inter, "IBM Plex Sans", sans-serif',
+  },
+  sourceSans: {
+    label: 'Source Sans 3',
+    stack: '"Source Sans 3", Inter, sans-serif',
   },
   inter: {
     label: 'Inter',
     stack: 'Inter, "IBM Plex Sans", sans-serif',
+  },
+  plex: {
+    label: 'IBM Plex Sans',
+    stack: '"IBM Plex Sans", sans-serif',
   },
   mono: {
     label: 'Mono',
@@ -41,6 +50,9 @@ export const CHAT_FONTS: Record<ChatFont, { label: string; stack: string }> = {
 export const CHAT_FONT_SIZES = [12, 13, 14, 16] as const
 export type ChatFontSize = (typeof CHAT_FONT_SIZES)[number]
 export const CHAT_FONT_SIZE_DEFAULT: ChatFontSize = 13
+export const CHAT_DRAWER_WIDTH_MIN = 280
+export const CHAT_DRAWER_WIDTH_MAX = 480
+export const CHAT_DRAWER_WIDTH_DEFAULT = 320
 
 type PresetColors = Pick<AppearanceTheme, 'preset' | 'accent' | 'surface' | 'text' | 'backgroundColor'>
 
@@ -77,6 +89,7 @@ export const DEFAULT_APPEARANCE: AppearanceTheme = {
   ghostOverlay: false,
   chatFont: 'system',
   chatFontSize: CHAT_FONT_SIZE_DEFAULT,
+  chatDrawerWidth: CHAT_DRAWER_WIDTH_DEFAULT,
   chrome: 'top',
 }
 
@@ -105,6 +118,12 @@ function clampOpacity(value: unknown): number {
   return Math.min(100, Math.max(0, Math.round(n)))
 }
 
+function clampChatDrawerWidth(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return CHAT_DRAWER_WIDTH_DEFAULT
+  return Math.min(CHAT_DRAWER_WIDTH_MAX, Math.max(CHAT_DRAWER_WIDTH_MIN, Math.round(n)))
+}
+
 function clampChatFontSize(value: unknown): ChatFontSize {
   const n = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(n)) return CHAT_FONT_SIZE_DEFAULT
@@ -121,7 +140,16 @@ function clampChatFontSize(value: unknown): ChatFontSize {
 }
 
 function normalizeChatFont(value: unknown): ChatFont {
-  if (value === 'plex' || value === 'inter' || value === 'mono' || value === 'system') return value
+  if (
+    value === 'plex' ||
+    value === 'inter' ||
+    value === 'mono' ||
+    value === 'system' ||
+    value === 'geist' ||
+    value === 'sourceSans'
+  ) {
+    return value
+  }
   if (value === 'sans') return 'inter'
   if (value === 'serif') return 'system'
   return 'system'
@@ -151,6 +179,7 @@ export function applyPreset(preset: AppearancePreset, current?: AppearanceTheme)
     ghostOverlay: current?.ghostOverlay ?? DEFAULT_APPEARANCE.ghostOverlay,
     chatFont: current?.chatFont ?? DEFAULT_APPEARANCE.chatFont,
     chatFontSize: current?.chatFontSize ?? DEFAULT_APPEARANCE.chatFontSize,
+    chatDrawerWidth: current?.chatDrawerWidth ?? DEFAULT_APPEARANCE.chatDrawerWidth,
     chrome: current?.chrome ?? DEFAULT_APPEARANCE.chrome,
     ...APPEARANCE_PRESETS[preset],
   }
@@ -182,6 +211,7 @@ export function normalizeAppearance(raw?: Partial<AppearanceTheme> & { bar?: str
     ghostOverlay: raw?.ghostOverlay === true,
     chatFont: normalizeChatFont(raw?.chatFont),
     chatFontSize: clampChatFontSize(raw?.chatFontSize),
+    chatDrawerWidth: clampChatDrawerWidth(raw?.chatDrawerWidth),
     chrome: raw?.chrome === 'left' ? 'left' : 'top',
     preset: presetKey,
   }
@@ -230,6 +260,7 @@ export function applyAppearance(theme: AppearanceTheme, options?: { windowChrome
   root.style.setProperty('--bg-overlay', String(seeDesktop ? 0 : theme.overlayOpacity))
   root.style.setProperty('--chat-font', CHAT_FONTS[theme.chatFont].stack)
   root.style.setProperty('--chat-font-size', `${theme.chatFontSize}px`)
+  root.style.setProperty('--chat-drawer-width', `${theme.chatDrawerWidth}px`)
   if (windowChrome) {
     void window.streamWatcher?.setWindowTransparent?.(theme.seeDesktop, theme.backgroundColor)
   }

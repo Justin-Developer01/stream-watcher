@@ -341,6 +341,8 @@ function MainApp() {
       error={chat.error}
       canSend={isLoggedIn}
       username={auth.username}
+      clientId={clientId}
+      accessToken={auth.accessToken}
       onSend={chat.sendMessage}
       onPopout={() => {
         const target = chatChannel && !isChatPopped(chatChannel) ? chatChannel : drawerChannels[0]

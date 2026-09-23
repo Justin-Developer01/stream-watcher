@@ -12,6 +12,15 @@ function uniqueChannels(channels: string[]) {
   return [...new Set(channels.map(normChannel).filter(Boolean))]
 }
 
+function normalizeBadges(raw: tmi.ChatUserstate['badges']): Record<string, string> | undefined {
+  if (!raw) return undefined
+  const next: Record<string, string> = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === 'string' && value) next[key] = value
+  }
+  return Object.keys(next).length ? next : undefined
+}
+
 function appendCapped(prev: ChatMessage[], incoming: ChatMessage) {
   const key = normChannel(incoming.channel)
   const kept: ChatMessage[] = []
@@ -113,6 +122,8 @@ export function useChat(options: {
           color: tags.color || undefined,
           text: message,
           timestamp: Date.now(),
+          emotes: tags.emotes ?? undefined,
+          badges: normalizeBadges(tags.badges),
         }),
       )
     })
@@ -171,7 +182,7 @@ export function useChat(options: {
   }, [channelKey, hasChannels, identityKey])
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, emotes?: Record<string, string[]>) => {
       const body = text.trim()
       if (!body || !activeChannel) return { ok: false as const, error: 'No active channel' }
       if (!username || !accessToken) {
@@ -189,6 +200,7 @@ export function useChat(options: {
             user: username,
             text: body,
             timestamp: Date.now(),
+            emotes,
           }),
         )
         return { ok: true as const }

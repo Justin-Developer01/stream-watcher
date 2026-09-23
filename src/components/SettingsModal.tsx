@@ -235,7 +235,7 @@ export function SettingsModal({
           </div>
         </div>
         <footer className="settings-modal__footer">
-          <button type="button" className="ghost settings-exit" onClick={onQuit}>
+          <button type="button" className="danger settings-exit" onClick={onQuit}>
             {UI.exit}
           </button>
         </footer>

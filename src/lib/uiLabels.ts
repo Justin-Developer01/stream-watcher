@@ -25,5 +25,7 @@ export const UI = {
     'Auto-hide the thin bar until you move to the edge (or use Pin). Works with See desktop and Lock window.',
   toggleChrome: 'Toggle chrome',
   quitApplication: 'Quit application',
-  exit: 'Exit',
+  exit: 'Exit Stream Watcher',
+  emotePicker: 'Emotes',
+  drawerWidth: 'Drawer width',
 } as const

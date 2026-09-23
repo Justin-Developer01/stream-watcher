@@ -65,6 +65,8 @@ export type ChatMessage = {
   color?: string
   text: string
   timestamp: number
+  emotes?: Record<string, string[]>
+  badges?: Record<string, string>
 }
 
 export type AuthState = {

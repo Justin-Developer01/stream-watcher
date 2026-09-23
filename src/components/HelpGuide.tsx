@@ -15,7 +15,7 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: UI.openChat,
-    body: 'Opens the in-app drawer. It pushes the grid (Slide right / left, Dock bottom, or Float). Not another window.',
+    body: 'Opens the in-app drawer. It pushes the grid (Slide right / left, Dock bottom, or Float). Settings → Chat sets Font, Size, and Drawer width. After Login to Twitch, emotes render in the list and the composer picker.',
   },
   {
     title: `${UI.popOutChat} · ${UI.popOutStream}`,
@@ -31,7 +31,7 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: UI.settings,
-    body: `Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Appearance → Chrome: Top | Left. ${UI.ghostOverlay} auto-hides the thin bar (Pin or the edge brings it back). ${UI.layoutTemplates} and ${UI.dockAllPopouts} live on the thin bar. ${UI.exit} in the footer quits; ${UI.quitApplication} is Ctrl+Q (remappable).`,
+    body: `Gear. Tabs: Appearance · Chat · Hotkeys · Updates · Advanced · Help. Appearance → Chrome: Top | Left. ${UI.ghostOverlay} auto-hides the thin bar only (frameless is always on). Chat tab: Font, Size, Drawer width. ${UI.exit} in the footer quits; ${UI.quitApplication} is Ctrl+Q.`,
   },
 ]
 

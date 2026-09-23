@@ -60,6 +60,8 @@ This is the **in-app drawer**. It is not a second window.
 
 **Open chat** / **Hide chat** only toggle that drawer. They do not move chat to another monitor.
 
+**Settings → Chat** sets Font, Size, and **Drawer width** (280–480px) for docked left / right. After **Login to Twitch**, Twitch emotes show in the list and a small picker sits on the composer.
+
 ## Chat vs stream on another monitor
 
 Pop-outs are **separate desktop windows** (Windows EXE / `npm run dev:desktop` only). In the browser the same icons stay visible; hover or click shows **Desktop app only**.
@@ -121,14 +123,14 @@ The gear opens a frosted modal (~560×480). **Esc** or **X** closes it. Left tab
 
 | Tab | What it holds |
 |---|---|
-| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default) |
-| Chat | Font (System / IBM Plex Sans / Inter / Mono) and Size (12 / 13 / 14 / 16) |
+| Appearance | Dark / Dim / Light, colors, background, **Chrome: Top \| Left** (Top default), **See desktop behind app.**, **Ghost overlay** (off by default). Main window is frameless. |
+| Chat | **Font** (System / Geist / Source Sans 3 / Inter / IBM Plex Sans / Mono), **Size** (12 / 13 / 14 / 16), **Drawer width** (280–480px for docked left / right). After **Login to Twitch**, emotes render in the list and the composer picker. |
 | Hotkeys | Label + keychip. **Click to rebind.** Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application**. Reset defaults. |
 | Updates | Check for Updates, download, install and restart |
 | Advanced | Developer Client ID, Reconnect / Refresh Prime, full docs links |
 | Help | Short in-app guide + Show tips + full docs links |
 
-**Exit** in the Settings footer quits the app (needed because the main window has no OS close button).
+**Exit Stream Watcher** in the Settings footer (danger-styled) quits the app. **Esc** only closes Settings. Needed because the main window has no OS close button.
 
 ## See desktop + Lock window (click-through)
 
@@ -144,7 +146,7 @@ Windows may need a relaunch if the desktop does not show through after the first
 
 ## Quit
 
-The main window has no OS caption or close box. Use **Settings → Exit** or the **Quit application** hotkey (**Ctrl+Q**, remappable in Settings → Hotkeys).
+The main window has no OS caption or close box. Use **Settings → Exit Stream Watcher** or the **Quit application** hotkey (**Ctrl+Q**, remappable in Settings → Hotkeys). **Esc** closes Settings only.
 
 ## Performance Mode
 

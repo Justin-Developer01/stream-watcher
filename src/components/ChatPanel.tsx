@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import { Smile } from 'lucide-react'
 import type { ChatDock, ChatFloatPosition, ChatMessage } from '../types'
+import { inferEmotesFromCatalog } from '../lib/chatMarkup'
+import { useTwitchChatAssets } from '../hooks/useTwitchChatAssets'
 import { IconButton } from './IconButton'
+import { ChatLine } from './ChatLine'
+import { EmotePicker } from './EmotePicker'
 import { CloseIcon, PinIcon, PopoutIcon } from './icons'
 import { UI } from '../lib/uiLabels'
 
@@ -19,8 +24,10 @@ type Props = {
   error: string | null
   canSend: boolean
   username: string | null
-  onSend: (text: string) => Promise<{ ok: boolean; error?: string }>
+  onSend: (text: string, emotes?: Record<string, string[]>) => Promise<{ ok: boolean; error?: string }>
   onPopout: () => void
+  clientId?: string
+  accessToken?: string | null
   compact?: boolean
   alwaysOnTop?: boolean
   onToggleAlwaysOnTop?: () => void
@@ -44,6 +51,8 @@ export function ChatPanel({
   username,
   onSend,
   onPopout,
+  clientId = '',
+  accessToken = null,
   compact = false,
   alwaysOnTop = false,
   onToggleAlwaysOnTop,
@@ -51,6 +60,13 @@ export function ChatPanel({
 }: Props) {
   const [draft, setDraft] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const { pickerEmotes, badgeLookup } = useTwitchChatAssets({
+    clientId,
+    accessToken: canSend ? accessToken : null,
+    channels,
+    activeChannel,
+  })
   const listRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{
     ox: number
@@ -109,7 +125,7 @@ export function ChatPanel({
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setSendError(null)
-    const result = await onSend(draft)
+    const result = await onSend(draft, inferEmotesFromCatalog(draft, pickerEmotes))
     if (result.ok) {
       setDraft('')
     } else {
@@ -230,36 +246,53 @@ export function ChatPanel({
 
       <div className="chat-panel__messages" ref={listRef}>
         {messages.map((message) => (
-          <div key={message.id} className="chat-line">
-            <span className="chat-line__user" style={{ color: message.color || '#8fd3ff' }}>
-              {message.user}
-            </span>
-            <span className="chat-line__text">{message.text}</span>
-          </div>
+          <ChatLine key={message.id} message={message} badges={badgeLookup} />
         ))}
         {!messages.length && <p className="muted chat-empty">No messages yet.</p>}
       </div>
 
       {(error || sendError) && <p className="chat-error">{sendError || error}</p>}
 
-      <form className="chat-panel__composer" onSubmit={handleSubmit}>
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={
-            canSend
-              ? activeChannel
-                ? `#${activeChannel}`
-                : 'Select channel'
-              : 'Login to chat'
-          }
-          disabled={!canSend || !activeChannel}
-          maxLength={500}
-        />
-        <button type="submit" disabled={!canSend || !activeChannel || !draft.trim()}>
-          Send
-        </button>
-      </form>
+      <div className="chat-panel__compose">
+        {pickerOpen && canSend && (
+          <EmotePicker
+            emotes={pickerEmotes}
+            onPick={(name) => {
+              setDraft((value) => (value ? `${value} ${name}` : name))
+              setPickerOpen(false)
+            }}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
+        <form className="chat-panel__composer" onSubmit={handleSubmit}>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={
+              canSend
+                ? activeChannel
+                  ? `Send a message in #${activeChannel}`
+                  : 'Select channel'
+                : 'Login to Twitch to chat'
+            }
+            disabled={!canSend || !activeChannel}
+            maxLength={500}
+          />
+          {canSend && (
+            <IconButton
+              label={UI.emotePicker}
+              active={pickerOpen}
+              disabled={!activeChannel}
+              onClick={() => setPickerOpen((open) => !open)}
+            >
+              <Smile size={16} strokeWidth={1.75} />
+            </IconButton>
+          )}
+          <button type="submit" disabled={!canSend || !activeChannel || !draft.trim()}>
+            Chat
+          </button>
+        </form>
+      </div>
     </aside>
   )
 }

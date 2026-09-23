@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   APPEARANCE_PRESETS,
+  CHAT_DRAWER_WIDTH_MAX,
+  CHAT_DRAWER_WIDTH_MIN,
   CHAT_FONTS,
   CHAT_FONT_SIZES,
   DEFAULT_APPEARANCE,
@@ -307,6 +309,24 @@ export function ChatTypographySettings({ appearance, onChange }: Props) {
           ))}
         </div>
         <p className="hint">Applies to chat lines and the composer. An open chat drawer updates live.</p>
+        <p className="theme-label">{UI.drawerWidth}</p>
+        <label className="theme-overlay" htmlFor="chat-drawer-width">
+          <span>
+            {appearance.chatDrawerWidth}px (docked left / right)
+          </span>
+          <input
+            id="chat-drawer-width"
+            type="range"
+            min={CHAT_DRAWER_WIDTH_MIN}
+            max={CHAT_DRAWER_WIDTH_MAX}
+            value={appearance.chatDrawerWidth}
+            onChange={(event) => patch({ chatDrawerWidth: Number(event.target.value) })}
+          />
+        </label>
+        <p className="hint">
+          Wider docked chat without Float. {CHAT_DRAWER_WIDTH_MIN}–{CHAT_DRAWER_WIDTH_MAX}px. Bottom and Float are
+          unchanged.
+        </p>
       </div>
     </section>
   )

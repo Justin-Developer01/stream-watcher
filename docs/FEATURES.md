@@ -44,11 +44,14 @@ Settings modal → **Appearance**
 - **Window → Ghost overlay** (off by default). Auto-hides the thin bar until you move to the edge (or use Pin / Toggle chrome). Works with See desktop and Lock window. Does **not** toggle frameless — the main window is always frameless.
 - Reset restores Dark.
 
-## Chat type
-Settings → **Chat**
-- Font: System / IBM Plex Sans / Inter / Mono
+## Chat
+Settings → **Chat** (not buried in Appearance)
+- Font: System / Geist / Source Sans 3 / Inter / IBM Plex Sans / Mono (default System)
 - Size: 12 / 13 / 14 / 16 (default 13)
-- Applies to chat lines and the composer only. An open drawer updates live.
+- **Drawer width** 280–480px for docked left / right (default 320). Bottom and Float unchanged.
+- After **Login to Twitch**, Twitch emotes render in the message list (global + channel) and a small composer picker. Fail soft to plain text if emotes cannot load. No Bits control.
+
+Chat lines use username color, badges when available, timestamps, and tighter Twitch-like density on the frosted desk.
 
 ## Click-through + Lock window (click-through)
 With See desktop on, empty-stage clicks pass through to the desktop. **Lock window (click-through)** on the top bar freezes that. Unlock to pass through again.
@@ -60,13 +63,13 @@ With several streams open, turn on Performance mode (gauge on the thin bar) so o
 Settings → **Hotkeys**. Click a keychip to rebind. Conflict warning. Reset defaults. Includes **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application** (Ctrl+Q), plus Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus.
 
 ## Quit
-The main window has no OS close box. **Settings → Exit** (footer) or **Quit application** (Ctrl+Q, remappable) quits the app.
+The main window has no OS close box. **Settings → Exit Stream Watcher** (danger footer) or **Quit application** (Ctrl+Q, remappable) quits the app. **Esc** closes Settings only.
 
 ## Updates
 Settings → **Updates**. Checks GitHub Releases, including pre-releases. NSIS Setup can install and restart. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE.
 
 ## Help
-Settings → **Help**. Short in-app panel (add streams, Focus mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **Lock window (click-through)**, Settings, **Ghost overlay**, **Exit** / **Quit application**, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
+Settings → **Help**. Short in-app panel (add streams, Focus mode, chat dock vs pop-out, multi-monitor + **Dock back** + **Always on top**, **Lock window (click-through)**, Settings, **Ghost overlay**, **Exit Stream Watcher** / **Quit application**, **Login to Twitch**). **Show tips** replays the four first-run tips. Links out to these docs.
 
 ## First run
 No wizard. Four dismissible tips once: Focus mode, Open chat vs Pop out chat, Lock window (click-through), Dock back.

@@ -7,15 +7,15 @@ Desktop multi-stream Twitch viewer. The **primary “just works” path is the W
 You do **not** need Node, Git, or `npm install`.
 
 1. Get the unsigned installer from a GitHub Actions artifact or a Release:
-   - **Stream Watcher Setup 1.0.1-pre.13.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
-   - **Stream Watcher Portable 1.0.1-pre.13.exe** — no install, just run
+   - **Stream Watcher Setup 1.0.1-pre.14.exe** — one-click NSIS installer (desktop + Start Menu shortcuts)
+   - **Stream Watcher Portable 1.0.1-pre.14.exe** — no install, just run
 2. Open **Stream Watcher**. You land on the thin chrome — no wizard, no OS title bar. Drag the thin bar to move the window. Four short tips appear once (Focus mode, Open chat vs Pop out chat, Lock window, Dock back); Skip / Done dismisses them.
 3. Click the title to add Twitch channels.
 4. **Login to Twitch** (log-in icon) — tooltip **Login for Prime + chat.** One OAuth flow (`chat:read` + `chat:edit`) that also shares the Electron cookie session with embeds. Release builds bake in the public Client ID, so this is just the one button. Redirect URL: `http://localhost:5173/oauth/callback`.
 5. Use **Focus mode** for one large stream and a bottom strip. **Switch Focus** (hotkey) promotes the next strip tile.
 6. If that login only half-works, Settings → **Advanced** has **Reconnect chat** and **Refresh Prime session**. The Client ID field is under **Settings → Advanced → Developer**.
 7. **Check for Updates** is in **Settings → Updates**. It looks at GitHub Releases, including pre-releases. Download, then **Install and restart** (NSIS). Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE. Unsigned SmartScreen prompts are expected.
-8. The gear opens a **Settings modal** (Esc / X to close) with left tabs: **Appearance · Chat · Hotkeys · Updates · Advanced · Help**. Appearance → **Chrome: Top | Left** (Top default) and optional **Ghost overlay**. Footer **Exit** quits the app (or **Quit application**, Ctrl+Q).
+8. The gear opens a **Settings modal** (Esc / X to close) with left tabs: **Appearance · Chat · Hotkeys · Updates · Advanced · Help**. Appearance → **Chrome: Top | Left** and optional **Ghost overlay** (auto-hide only; the main window is always frameless). **Chat** has Font, Size, and Drawer width. Footer **Exit Stream Watcher** quits (or **Quit application**, Ctrl+Q).
 9. With several streams open, turn on **Performance mode** (gauge on the thin bar) so only the focused stream stays full quality — other tiles show **paused / low** and use less CPU.
 10. **Multi-monitor** — **Open chat** is the in-app drawer (pushes the grid). **Pop out chat** and **Pop out stream** are separate windows. **Dock back** and **Always on top** live on the pop-out. Reset icon tooltip: **Dock all pop-outs back**. How-to: [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 
@@ -35,11 +35,11 @@ Windows SmartScreen may warn because the build is **unsigned**. “More info” 
 - **Login to Twitch** — one top-bar control for Prime + chat OAuth (no Client ID field on first run)
 - **Check for Updates** — Settings → Updates; GitHub Releases (pre-releases included) for the installed Setup app
 - **Settings modal** — top-bar gear opens a frosted ~560×480 modal with left nav: Appearance · Chat · Hotkeys · Updates · Advanced · Help
-- **Appearance** — Dark / Dim / Light, Accent / Surface / Text, Color or Image background, **Chrome: Top | Left** (Top default), **See desktop behind app.**, and **Ghost overlay** (off by default; auto-hides the thin bar only). Empty stage can show the desktop; chrome, tiles, and chat stay solid. Twitch players are not rethemed.
-- **Chat type** — Settings → Chat. Font chips System / IBM Plex Sans / Inter / Mono and Size 12 / 13 / 14 / 16 (default 13) apply only to `.chat-line` and the composer. An open drawer live-updates.
+- **Appearance** — Dark / Dim / Light, Accent / Surface / Text, Color or Image background, **Chrome: Top | Left** (Top default), **See desktop behind app.**, and **Ghost overlay** (off by default; auto-hides the thin bar only). The main window is frameless. Empty stage can show the desktop; chrome, tiles, and chat stay solid. Twitch players are not rethemed.
+- **Chat** — Settings → Chat. Font: System / Geist / Source Sans 3 / Inter / IBM Plex Sans / Mono. Size 12–16 (default 13). **Drawer width** 280–480px for docked side chat. After **Login to Twitch**, emotes render in the list and a composer picker. No Bits control.
 - **Click-through** — with See desktop on, empty stage clicks pass through to the desktop. **Lock window (click-through)** on the top bar freezes that. Unlock to pass through again.
 - **Hotkeys** — remappable chords including **Switch Focus**, **Cycle streams**, **Mute all**, **Focus search/add stream**, **Toggle chrome**, **Quit application** (Ctrl+Q), Focus mode, Fullscreen, Toggle chat, Lock window, Open Settings, Mute focus. Click a keychip to rebind; Reset defaults.
-- **Quit** — Settings footer **Exit**, or **Quit application**. Required because the main window is frameless.
+- **Quit** — Settings footer **Exit Stream Watcher**, or **Quit application** (Ctrl+Q). **Esc** closes Settings only. Required because the main window is frameless.
 - **Performance mode** — With several streams open, turn on Performance mode (gauge on the thin bar) so only the focused stream stays full quality — other tiles show paused / low and use less CPU.
 - **Layout templates** — thin-bar popover: pick a saved layout, **+** saves the current channels/focus/chat placement, per-row delete removes one. Local persist.
 - **Dock all pop-outs back** — reset icon near layout/templates. Docks every chat and stream pop-out.
@@ -98,7 +98,7 @@ npm run dist
 # same as: npm run build:win
 ```
 
-electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.13.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.13.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
+electron-builder writes unsigned **NSIS** (`Stream Watcher Setup 1.0.1-pre.14.exe`) and **portable** (`Stream Watcher Portable 1.0.1-pre.14.exe`) files to `release/`, plus `latest.yml` / `.blockmap` for `electron-updater`. `appId` is `com.justin.streamwatcher`; product name is **Stream Watcher**. Binaries are gitignored — do not commit them.
 
 `npm run dist` uses `--publish never` so CI does not need a GitHub token for electron-builder. GitHub Actions on `windows-latest` uploads the `stream-watcher-windows` artifact; pushing a `v*` tag attaches those EXEs **and** `latest.yml` to a GitHub Release so **Check for Updates** can find them. Pre-release tags (`pre` / `rc`) are marked as GitHub pre-releases; the app still checks them.
 
@@ -111,7 +111,7 @@ This Linux/macOS checkout can package the app, but the NSIS/portable EXEs need W
 - **Pop out chat** (thin bar, tile, or drawer) opens a chat window. **Pop out stream** (tile) opens the player. **Dock back** and **Always on top** are on the pop-out only. Browser icons say **Desktop app only**. Full how-to: [docs/USAGE.md](docs/USAGE.md#chat-vs-stream-on-another-monitor).
 - **Login to Twitch** is one OAuth control (`chat:read` + `chat:edit`). In the desktop app that window uses the same Electron session as the embeds, so Prime/ads follow. Settings → Advanced has **Reconnect chat** / **Refresh Prime session** if the combined flow fails. Client ID lives under **Settings → Advanced → Developer**.
 - **Check for Updates** lives in Settings → Updates (not the thin top-bar icon row). It queries GitHub Releases (including pre-releases). Download, then Install and restart. Works for the NSIS Setup app. Portable builds can’t auto-update. Check for Updates opens the GitHub Releases page in your browser so you can download a new Setup or Portable EXE. No code-signing cert is required; SmartScreen may still warn.
-- **Settings** (gear) opens the modal. Appearance includes **See desktop behind app.** and **Ghost overlay**. Chat tab has Font + Size. Hotkeys are remappable. Lock window on the top bar disables click-through. **Exit** in the footer quits.
+- **Settings** (gear) opens the modal. Appearance includes **See desktop behind app.** and **Ghost overlay**. Chat tab has Font, Size, and Drawer width. Hotkeys are remappable. Lock window on the top bar disables click-through. **Exit Stream Watcher** in the footer quits.
 - **F11** fullscreen (remappable), **Escape** closes Settings then exits fullscreen / chat; pin the bar if you do not want it to auto-hide. **Ctrl+Q** quits (remappable).
 
 ## Scripts

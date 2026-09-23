@@ -51,6 +51,8 @@ export function ChatPopoutApp() {
         error={chat.error}
         canSend={isLoggedIn}
         username={auth.username}
+        clientId={clientId}
+        accessToken={auth.accessToken}
         onSend={chat.sendMessage}
         onPopout={() => undefined}
         compact
