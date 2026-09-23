@@ -63,6 +63,8 @@ type Props = {
   onMenuOpenChange?: (open: boolean) => void
   onDockAllPopouts: () => void
   hasPoppedOut: boolean
+  poppedStreamChannels: string[]
+  onDockStreamChannel: (channel: string) => void
   templates: LayoutTemplate[]
   onApplyTemplate: (template: LayoutTemplate) => void
   onSaveTemplate: (name: string) => { ok: boolean; error?: string }
@@ -170,6 +172,8 @@ export function TopBar({
   onMenuOpenChange,
   onDockAllPopouts,
   hasPoppedOut,
+  poppedStreamChannels,
+  onDockStreamChannel,
   templates,
   onApplyTemplate,
   onSaveTemplate,
@@ -431,6 +435,41 @@ export function TopBar({
             )}
           </section>
         </Menu>
+
+        {poppedStreamChannels.length > 0 && (
+          <Menu
+            id="redock"
+            openId={openMenu}
+            setOpenId={setOpenMenu}
+            label={`${poppedStreamChannels.length} stream${poppedStreamChannels.length === 1 ? '' : 's'} on another monitor`}
+            icon={
+              <span className="redock-trigger">
+                <SquareArrowOutUpRight size={16} strokeWidth={1.75} />
+                <span className="redock-badge">{poppedStreamChannels.length}</span>
+              </span>
+            }
+          >
+            <section className="popover-section popover-section--flush">
+              <h2>On another monitor</h2>
+              <ul className="saved-list">
+                {poppedStreamChannels.map((channel) => (
+                  <li key={channel} className="saved-list__item">
+                    <span className="saved-list__name">#{channel}</span>
+                    <div className="saved-list__actions">
+                      <button
+                        type="button"
+                        className="dock-back-btn"
+                        onClick={() => onDockStreamChannel(channel)}
+                      >
+                        {UI.dockBack}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </Menu>
+        )}
 
         <IconButton
           label={UI.dockAllPopouts}

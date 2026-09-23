@@ -388,6 +388,8 @@ function MainApp() {
         onMenuOpenChange={setMenuOpen}
         onDockAllPopouts={() => void dockAllPopouts()}
         hasPoppedOut={poppedChat.length + poppedStreams.length > 0}
+        poppedStreamChannels={poppedStreams}
+        onDockStreamChannel={dockStream}
         templates={templates}
         onApplyTemplate={applyTemplate}
         onSaveTemplate={(name) => saveCurrentAsTemplate(name, buildTemplateSnapshot())}
@@ -428,7 +430,6 @@ function MainApp() {
             onPopoutStream={(channel) => {
               void popoutStream(channel)
             }}
-            onDockStream={dockStream}
             isStreamPopped={isStreamPopped}
             onToggleSave={toggleSaveStream}
             savedChannels={savedStreams.map((s) => s.channel)}

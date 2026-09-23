@@ -282,6 +282,28 @@ html.see-desktop .app-shell::after {
   position: relative;
 }
 
+.redock-trigger {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.redock-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #041018;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+}
+
 .mode-segmented {
   display: flex;
   align-items: center;

@@ -22,14 +22,12 @@ type Props = {
   showHandle?: boolean
   promoteOnClick?: boolean
   economy?: boolean
-  poppedOut?: boolean
   onFocus: () => void
   onToggleMute: () => void
   onRemove: () => void
   onOpenChat: () => void
   onPopoutChat: () => void
   onPopoutStream: () => void
-  onDockStream: () => void
   onToggleSave: () => void
 }
 
@@ -41,14 +39,12 @@ export function StreamTile({
   showHandle = true,
   promoteOnClick = false,
   economy = false,
-  poppedOut = false,
   onFocus,
   onToggleMute,
   onRemove,
   onOpenChat,
   onPopoutChat,
   onPopoutStream,
-  onDockStream,
   onToggleSave,
 }: Props) {
   return (
@@ -69,15 +65,9 @@ export function StreamTile({
           <IconButton label={UI.popOutChat} desktopOnly onClick={onPopoutChat}>
             <PopoutIcon />
           </IconButton>
-          {poppedOut ? (
-            <IconButton label={UI.dockBack} desktopOnly onClick={onDockStream}>
-              <MonitorIcon />
-            </IconButton>
-          ) : (
-            <IconButton label={UI.popOutStream} desktopOnly onClick={onPopoutStream}>
-              <MonitorIcon />
-            </IconButton>
-          )}
+          <IconButton label={UI.popOutStream} desktopOnly onClick={onPopoutStream}>
+            <MonitorIcon />
+          </IconButton>
           <IconButton
             label={isSaved ? 'Unsave stream' : 'Save stream'}
             active={isSaved}
@@ -101,31 +91,13 @@ export function StreamTile({
         onClick={promoteOnClick ? onFocus : undefined}
         onDoubleClick={onFocus}
       >
-        {poppedOut ? (
-          <div className="stream-tile__away">
-            <p>{UI.onAnotherMonitor}</p>
-            <button
-              type="button"
-              className="dock-back-btn"
-              onClick={(event) => {
-                event.stopPropagation()
-                onDockStream()
-              }}
-            >
-              {UI.dockBack}
-            </button>
-          </div>
-        ) : (
-          <>
-            {economy && <span className="stream-tile__chip">paused / low</span>}
-            <TwitchPlayer
-              channel={stream.channel}
-              muted={stream.muted || economy}
-              interactive={interactive}
-              paused={economy}
-            />
-          </>
-        )}
+        {economy && <span className="stream-tile__chip">paused / low</span>}
+        <TwitchPlayer
+          channel={stream.channel}
+          muted={stream.muted || economy}
+          interactive={interactive}
+          paused={economy}
+        />
       </div>
     </article>
   )

@@ -22,7 +22,6 @@ type Props = {
   onOpenChat: (channel: string) => void
   onPopoutChat: (channel: string) => void
   onPopoutStream: (channel: string) => void
-  onDockStream: (channel: string) => void
   isStreamPopped: (channel: string) => boolean
   onToggleSave: (channel: string) => void
 }
@@ -35,6 +34,15 @@ function EmptyGrid() {
     <div className="empty-grid">
       <h2>No streams yet</h2>
       <p>Click the title in the top bar to add a Twitch channel.</p>
+    </div>
+  )
+}
+
+function AllPoppedOutGrid() {
+  return (
+    <div className="empty-grid">
+      <h2>All streams are on another monitor</h2>
+      <p>Dock a pop-out back to see it here again.</p>
     </div>
   )
 }
@@ -55,7 +63,6 @@ export function StreamGrid({
   onOpenChat,
   onPopoutChat,
   onPopoutStream,
-  onDockStream,
   isStreamPopped,
   onToggleSave,
 }: Props) {
@@ -76,16 +83,35 @@ export function StreamGrid({
     return () => observer.disconnect()
   }, [focusMode, streams.length])
 
-  const rows = useMemo(() => layoutRows(layout), [layout])
+  const visibleStreams = useMemo(
+    () => streams.filter((stream) => !isStreamPopped(stream.channel)),
+    [streams, isStreamPopped],
+  )
+
+  const visibleLayout = useMemo(
+    () => layout.filter((item) => visibleStreams.some((stream) => stream.id === item.i)),
+    [layout, visibleStreams],
+  )
+
+  const rows = useMemo(() => layoutRows(visibleLayout), [visibleLayout])
   const rowHeight = useMemo(() => {
     if (size.height <= 0) return 24
     const available = size.height - PADDING[1] * 2 - MARGIN[1] * (rows + 1)
     return Math.max(12, Math.floor(available / rows))
   }, [rows, size.height])
 
-  if (!streams.length) return <EmptyGrid />
+  const handleLayoutChange = (nextVisible: Layout[]) => {
+    const poppedIds = new Set(
+      streams.filter((stream) => isStreamPopped(stream.channel)).map((stream) => stream.id),
+    )
+    const preserved = layout.filter((item) => poppedIds.has(item.i))
+    onLayoutChange([...preserved, ...nextVisible])
+  }
 
-  const activeId = focusedId ?? streams[0]?.id ?? null
+  if (!streams.length) return <EmptyGrid />
+  if (!visibleStreams.length) return <AllPoppedOutGrid />
+
+  const activeId = focusedId ?? visibleStreams[0]?.id ?? null
   const renderTile = (stream: StreamItem, options?: { promoteOnClick?: boolean; showHandle?: boolean }) => (
     <StreamTile
       stream={stream}
@@ -94,22 +120,20 @@ export function StreamGrid({
       showHandle={options?.showHandle ?? !focusMode}
       isSaved={savedChannels.includes(stream.channel)}
       promoteOnClick={options?.promoteOnClick}
-      economy={performanceMode && stream.id !== activeId && !isStreamPopped(stream.channel)}
-      poppedOut={isStreamPopped(stream.channel)}
+      economy={performanceMode && stream.id !== activeId}
       onFocus={() => onFocus(stream.id)}
       onToggleMute={() => onToggleMute(stream.id)}
       onRemove={() => onRemove(stream.id)}
       onOpenChat={() => onOpenChat(stream.channel)}
       onPopoutChat={() => onPopoutChat(stream.channel)}
       onPopoutStream={() => onPopoutStream(stream.channel)}
-      onDockStream={() => onDockStream(stream.channel)}
       onToggleSave={() => onToggleSave(stream.channel)}
     />
   )
 
   if (focusMode) {
-    const hero = streams.find((stream) => stream.id === focusedId) ?? streams[0]
-    const others = streams.filter((stream) => stream.id !== hero.id)
+    const hero = visibleStreams.find((stream) => stream.id === focusedId) ?? visibleStreams[0]
+    const others = visibleStreams.filter((stream) => stream.id !== hero.id)
     return (
       <div className="focus-layout" ref={containerRef}>
         <div className="focus-layout__hero">{renderTile(hero, { showHandle: false })}</div>
@@ -134,7 +158,7 @@ export function StreamGrid({
       {size.width > 0 && size.height > 0 && (
         <GridLayout
           className="stream-grid__layout"
-          layout={layout}
+          layout={visibleLayout}
           cols={DEFAULT_LAYOUT_COLS}
           rowHeight={rowHeight}
           width={size.width}
@@ -148,13 +172,13 @@ export function StreamGrid({
           isDraggable
           isResizable
           resizeHandles={['se']}
-          onLayoutChange={onLayoutChange}
+          onLayoutChange={handleLayoutChange}
           onDragStart={() => onDraggingChange(true)}
           onDragStop={() => onDraggingChange(false)}
           onResizeStart={() => onDraggingChange(true)}
           onResizeStop={() => onDraggingChange(false)}
         >
-          {streams.map((stream) => (
+          {visibleStreams.map((stream) => (
             <div key={stream.id} className="stream-grid__item">
               {renderTile(stream)}
             </div>
