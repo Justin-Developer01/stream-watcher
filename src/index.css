@@ -374,7 +374,7 @@ button:disabled { cursor: not-allowed; }
   max-height: var(--chrome);
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   gap: 8px;
   padding: 0 8px;
   overflow: visible;
@@ -412,9 +412,11 @@ button:disabled { cursor: not-allowed; }
   width: 100%;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   gap: 6px;
 }
+.desk--chrome-left .chrome-menu-btn,
+.desk--chrome-right .chrome-menu-btn { margin-top: auto; }
 .desk--chrome-left .chrome-wordmark,
 .desk--chrome-right .chrome-wordmark { display: none; }
 .desk--chrome-left .chrome-search,
@@ -487,10 +489,18 @@ button:disabled { cursor: not-allowed; }
   min-width: 6.5rem;
   flex: 0 1 11rem;
 }
-.chrome-actions,
-.mode-group,
-.window-controls { display: contents; }
+/* Compact chrome: controls grouped after the search, ☰ and the window controls at the far end. */
+.chrome-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .chrome-actions > * { flex: 0 0 auto; }
+.mode-group { display: inline-flex; align-items: center; gap: 3px; }
+.chrome-menu-btn { margin-left: auto; }
+.window-controls { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
 .chrome-search input,
 .menu-inline input,
 .settings-pane input,
@@ -516,8 +526,6 @@ button:disabled { cursor: not-allowed; }
   white-space: nowrap;
 }
 
-.desk--chrome-top .mode-group,
-.desk--chrome-bottom .mode-group { display: contents; }
 .mode-btn { padding: 0 0.4rem; height: 26px; max-height: 26px; flex: 0 0 auto; }
 .chrome-bar .text-btn,
 .chrome-bar .icon-btn,
@@ -531,8 +539,10 @@ button:disabled { cursor: not-allowed; }
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-top: auto;
+  margin-top: 6px;
 }
+.desk--chrome-left .chrome-menu-btn,
+.desk--chrome-right .chrome-menu-btn { margin-left: 0; }
 .win-btn { width: 28px; height: 26px; }
 
 .desk-stage {
@@ -1184,3 +1194,28 @@ optgroup {
   margin: 0 auto 0.25rem;
   border-radius: 10px;
 }
+
+/* Compact chrome menus: preset chips, checked rows, destructive rows. */
+.menu-presets { display: flex; gap: 4px; padding: 0.15rem 0.3rem 0.3rem; }
+.menu__item--preset {
+  flex: 1 1 0;
+  justify-content: center;
+  border: 1px solid var(--btn-border);
+  font-variant-numeric: tabular-nums;
+}
+.menu__item[data-state='checked'] { box-shadow: inset 3px 0 0 var(--accent); }
+.menu__item[data-state='checked']::after { content: '✓'; margin-left: auto; padding-left: 1rem; color: var(--accent); }
+[data-theme='light'] .menu__item[data-state='checked']::after,
+[data-theme='light'].menu .menu__item[data-state='checked']::after { color: #2a2118; }
+.menu__item.danger { color: var(--danger); }
+[data-theme='light'] .menu__item.danger { color: #b42318; }
+.menu__item[data-disabled] { opacity: 0.6; }
+/* Left/Right chrome: the same controls as square icon chips, nothing clipped. */
+.desk--chrome-left .mode-btn--icon,
+.desk--chrome-right .mode-btn--icon { width: 26px; height: 26px; min-height: 26px; padding: 0; }
+.desk--chrome-left .chrome-search input,
+.desk--chrome-right .chrome-search input { padding: 0.2rem; text-align: center; }
+.desk--chrome-left .icon-btn .badge,
+.desk--chrome-right .icon-btn .badge { position: absolute; top: -4px; right: -4px; }
+.desk--chrome-left .icon-btn,
+.desk--chrome-right .icon-btn { position: relative; }

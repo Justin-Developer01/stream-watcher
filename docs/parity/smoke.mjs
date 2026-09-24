@@ -164,8 +164,8 @@ await step('light: controls cream with dark text; hover lift; no black buttons',
   )
   return { ok: blacks === 0 && idle['background-color'] !== hov['background-color'], detail: `idle=${JSON.stringify(idle)} hover=${JSON.stringify(hov)} blackButtons=${blacks}` }
 })
-await step('light: portaled ⋯ menu is cream with dark text', async () => {
-  await page.click('.chrome-bar button[aria-label="More"]')
+await step('light: portaled ☰ menu is cream with dark text', async () => {
+  await page.click('.chrome-bar button[aria-label="Menu"]')
   await page.waitForSelector('.menu', { timeout: 2000 })
   const m = await styleOf(page, '.menu', ['background-color', 'color'])
   const item = page.locator('.menu .menu__item').first()
@@ -175,7 +175,7 @@ await step('light: portaled ⋯ menu is cream with dark text', async () => {
   const theme = await page.getAttribute('.menu', 'data-theme')
   const hit = await page.getAttribute('.menu', 'data-hit')
   await shot(page, 'light-more-menu')
-  await page.keyboard.press('Escape')
+  await page.mouse.click(700, 600) // close it the way a mouse user does
   return { ok: theme === 'light' && hit !== null && m.color === 'rgb(42, 33, 24)', detail: `menu=${JSON.stringify(m)} highlighted=${JSON.stringify(it)} data-theme=${theme} data-hit=${hit !== null}` }
 })
 await step('light: tooltip is cream', async () => {
@@ -302,11 +302,15 @@ await step('chat: drawer pushes the grid for Slide R / Slide L / Dock bottom; Fl
   const pushOk = !out['Slide R'].overlap && !out['Slide L'].overlap && !out['Dock bottom'].overlap && out['Slide R'].stageW < full
   return { ok: pushOk && out.Float.overlap, detail: `fullStage=${Math.round(full)} ${JSON.stringify(out)}` }
 })
-await step('chat: ⋯ Open chat keeps Float', async () => {
+await step('dark: dropdown list uses the dark surface with light text', async () => {
+  const o = await page.locator('.chat-drawer select').evaluate((s) => { const oc = getComputedStyle(s.options[0]); return [oc.backgroundColor, oc.color, getComputedStyle(s).colorScheme] })
+  const lum = (c) => { const m = c.match(/\d+/g).map(Number); return (m[0] * 0.299 + m[1] * 0.587 + m[2] * 0.114) / 255 }
+  return { ok: lum(o[0]) < 0.25 && lum(o[1]) > 0.75 && o[2] === 'dark', detail: JSON.stringify(o) }
+})
+await step('chat: toolbar Open chat keeps Float', async () => {
   await page.locator('.chat-drawer button[aria-label], .chat-drawer .icon-btn').last().click() // Hide chat
   await sleep(200)
-  await page.click('.chrome-bar button[aria-label="More"]')
-  await page.locator('.menu .menu__item', { hasText: /Open/ }).click()
+  await page.click('.chrome-bar button[aria-label="Open chat"]')
   await sleep(300)
   const s = await state(page)
   return { ok: s.chatDock === 'float', detail: `dock after menu Open chat=${s.chatDock}` }
@@ -315,6 +319,7 @@ await step('chat: Pop out chat opens a separate window and closes the drawer', a
   await page.selectOption('.chat-drawer select', 'right')
   await sleep(200)
   const channel = (await page.locator('.chat-chips .chip.is-on').textContent()).replace('#', '')
+  globalThis.__redockBefore = await page.locator('.chrome-bar button[aria-label="Redock"]').count()
   const winP = app.waitForEvent('window', { timeout: 5000 })
   await page.locator('.chat-drawer .chat-drawer__tools .icon-btn').first().click()
   const pop = await winP
@@ -325,7 +330,8 @@ await step('chat: Pop out chat opens a separate window and closes the drawer', a
   const selects = await pop.locator('.chat-drawer select').count()
   globalThis.__pop = pop
   globalThis.__popChannel = channel
-  return { ok: drawerOpen === 0 && selects === 0, detail: `popped #${channel}; mainDrawerOpen=${drawerOpen} popoutMoveChatSelect=${selects}` }
+  const redockAfter = await page.locator('.chrome-bar button[aria-label="Redock"]').count()
+  return { ok: drawerOpen === 0 && selects === 0 && globalThis.__redockBefore === 0 && redockAfter === 1, detail: `popped #${channel}; mainDrawerOpen=${drawerOpen} popoutMoveChatSelect=${selects} redockButton ${globalThis.__redockBefore}→${redockAfter}` }
 })
 await step('chat: Dock back closes the pop-out and reopens the drawer on that channel', async () => {
   const pop = globalThis.__pop
@@ -352,7 +358,9 @@ for (const [edge, text] of [['left', 'Left'], ['right', 'Right'], ['bottom', 'Bo
     const vw = await page.evaluate(() => [innerWidth, innerHeight])
     const clipped = await page.$$eval('.chrome-bar button, .chrome-bar input', (els, vw) =>
       els.filter((e) => { const r = e.getBoundingClientRect(); return r.width && (r.left < -1 || r.top < -1 || r.right > vw[0] + 1 || r.bottom > vw[1] + 1) }).length, vw)
-    return { ok: !overlap && clipped === 0, detail: `bar=${JSON.stringify(bar)} overlap=${overlap} clippedControls=${clipped}` }
+    const cutText = await page.$$eval('.chrome-bar button, .chrome-bar input', (els) =>
+      els.filter((e) => e.getBoundingClientRect().width && e.scrollWidth > e.clientWidth + 1).map((e) => e.getAttribute('aria-label') || e.textContent.trim()))
+    return { ok: !overlap && clipped === 0 && cutText.length === 0, detail: `bar=${JSON.stringify(bar)} overlap=${overlap} outsideWindow=${clipped} textCutOff=${JSON.stringify(cutText)}` }
   })
 }
 
@@ -384,7 +392,7 @@ await app.evaluate(({ BrowserWindow }) => {
 })
 const lastIgnore = () => app.evaluate(() => globalThis.__ignore.at(-1))
 await step('see-through: bar on top; empty stage ignores mouse; bar + tiles stay interactive', async () => {
-  await page.locator('.chrome-bar .icon-btn').filter({ has: page.locator('svg') }).nth(0).click() // See through windows (eye)
+  await page.click('.chrome-bar button[aria-label="See through windows"]')
   await sleep(400)
   const onTop = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isAlwaysOnTop())
   const cls = await page.getAttribute('.desk', 'class')
@@ -416,15 +424,17 @@ await step('see-through: Lock window (Ctrl+Shift+L) stops click-through, shows c
   const cls = await page.getAttribute('.desk', 'class')
   await page.keyboard.press('Control+Shift+L')
   await sleep(200)
-  await page.locator('.chrome-bar .icon-btn.is-on').first().click() // see-through off
+  await page.click('.chrome-bar button[aria-label="See through windows"]') // see-through off
   await sleep(300)
   return { ok: chip === 1 && cls.includes('desk--see-through') && (await lastIgnore()) === false, detail: `lockChip=${chip} stillSeeThrough=${cls.includes('desk--see-through')} alwaysOnTopWhileLocked=${onTop} lastIgnore=${await lastIgnore()}` }
 })
 
 // ---------- Ghost overlay + Pin ----------
 await step('ghost: bar hides after idle, hidden bar is no-drag, edge reveals; Pin keeps it', async () => {
-  await page.click('.chrome-bar button[aria-label="More"]')
+  const pinBefore = await page.locator('.chrome-bar button[aria-label="Pin toolbar"]').count()
+  await page.click('.chrome-bar button[aria-label="Menu"]')
   await page.locator('.menu .menu__item', { hasText: 'Ghost overlay' }).click()
+  const pinWithGhost = await page.locator('.chrome-bar button[aria-label="Pin toolbar"]').count()
   await page.mouse.move(700, 600)
   await sleep(3000)
   const ghost = (await page.getAttribute('.desk', 'class')).includes('desk--ghost')
@@ -440,9 +450,9 @@ await step('ghost: bar hides after idle, hidden bar is no-drag, edge reveals; Pi
   await page.keyboard.press('Control+Backslash')
   await page.mouse.move(700, 3)
   await sleep(200)
-  await page.click('.chrome-bar button[aria-label="More"]')
+  await page.click('.chrome-bar button[aria-label="Menu"]')
   await page.locator('.menu .menu__item', { hasText: 'Ghost overlay' }).click()
-  return { ok: ghost && region === 'no-drag' && revealed && pinnedStays, detail: `hidden=${ghost} hiddenBarRegion=${region} edgeReveals=${revealed} pinnedStaysVisible=${pinnedStays}` }
+  return { ok: ghost && region === 'no-drag' && revealed && pinnedStays && pinBefore === 0 && pinWithGhost === 1, detail: `pinButton off=${pinBefore} ghost=${pinWithGhost} hidden=${ghost} hiddenBarRegion=${region} edgeReveals=${revealed} pinnedStaysVisible=${pinnedStays}` }
 })
 
 // ---------- Twitch login window ----------
@@ -464,6 +474,20 @@ await step('twitch: Login to Twitch opens ONE window with a built-in client_id',
   const alive = !page.isClosed()
   const clientOk = info.some((w) => /client_id=dqxba57by77shem4jb9nzz39rtah2x/.test(w.url || ''))
   return { ok: opened === 1 && alive && clientOk, detail: `mainAliveAfterClosingAuth=${alive} newWindows=${opened} clientIdInUrl=${clientOk} toast=${toast} windows=${JSON.stringify(info.map((i) => i.title))}` }
+})
+
+// ---------- Error log ----------
+await step('log: main.log records startup, windows, and warnings with tokens redacted', async () => {
+  await page.evaluate(() => { setTimeout(() => { throw new Error('smoke oauth:secret123') }, 0) })
+  await sleep(800)
+  const { readdirSync, readFileSync, existsSync } = await import('node:fs')
+  const dir = readdirSync(cfgHome).find((d) => existsSync(join(cfgHome, d, 'logs', 'main.log')))
+  const text = dir ? readFileSync(join(cfgHome, dir, 'logs', 'main.log'), 'utf8') : ''
+  const has = (re) => re.test(text)
+  return {
+    ok: has(/starting \(Electron/) && has(/desk window loaded/) && has(/see-through on/) && has(/pop-out open/) && has(/oauth:\[redacted\]/) && !has(/secret123/),
+    detail: `${dir}/logs/main.log, ${text.split('\n').length} lines; last: ${text.trim().split('\n').slice(-2).join(' | ').slice(0, 160)}`,
+  }
 })
 
 // ---------- Quit with pop-outs open ----------

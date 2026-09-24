@@ -319,13 +319,16 @@ function DeskApp() {
         onDock={(channel, kind) => void dockPop(channel, kind)}
         seeThrough={desk.settings.seeThrough}
         onSeeThrough={(value) => desk.applySettings({ ...desk.settings, seeThrough: value })}
+        windowLocked={desk.windowLocked}
+        onWindowLocked={desk.setWindowLocked}
         ghost={desk.settings.ghostOverlay}
         onGhost={(value) => desk.applySettings({ ...desk.settings, ghostOverlay: value })}
         pinned={desk.settings.pinToolbar}
         onPinned={(value) => desk.applySettings({ ...desk.settings, pinToolbar: value })}
+        autoHideMode={fullscreen || desk.settings.ghostOverlay}
+        fullscreen={fullscreen}
         chatOpen={desk.chatOpen}
-        chatChannel={desk.chatChannel}
-        onOpenChat={() => (desk.chatOpen ? desk.setChatOpen(false) : openChat())}
+        onToggleChat={() => (desk.chatOpen ? desk.setChatOpen(false) : openChat())}
         onFullscreen={() => runHotkey('fullscreen')}
         onAddStream={desk.addStream}
         onLogin={() => void loginToTwitch()}
