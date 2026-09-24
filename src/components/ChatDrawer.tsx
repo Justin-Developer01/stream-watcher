@@ -144,6 +144,11 @@ export function ChatDrawer({
                   className="chat-badge"
                   src={badgeUrl(badge.set, badge.version)}
                   alt={badge.set}
+                  // set/version is not a CDN badge id, so most of these 404. Hide the broken-image
+                  // glyph until badges resolve through Helix again (pre.17 useTwitchChatAssets).
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none'
+                  }}
                 />
               ))}
             </span>
