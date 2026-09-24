@@ -100,6 +100,39 @@ button:disabled {
 }
 .danger, .win-btn--close:hover { color: var(--danger); }
 
+/* Frosted chip hover (pre.17 desk): lift the border and frost slightly, never an opaque plate. */
+button:not(:disabled),
+.menu__item:not([data-disabled]) { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:is(.icon-btn, .text-btn, .mode-btn, .win-btn, .ghost-btn, .hotkey-btn, .chip, .settings-tabs__list button, .emote-pop button) {
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+:is(.icon-btn, .text-btn, .mode-btn, .win-btn, .ghost-btn, .hotkey-btn, .chip, .settings-tabs__list button, .emote-pop button):hover:not(:disabled) {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--text) 34%, var(--btn-border));
+  background-color: color-mix(in srgb, var(--text) 7%, var(--btn-bg));
+}
+:is(.icon-btn, .text-btn, .mode-btn, .win-btn, .ghost-btn, .hotkey-btn, .chip, .settings-tabs__list button, .emote-pop button):active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--text) 11%, var(--btn-bg));
+}
+/* Selected stays soft cyan under the pointer. */
+:is(.icon-btn.is-on, .mode-btn.is-on, .mode-btn[data-state='on'], .chip.is-on, .settings-tabs__list button[data-state='active']):hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 32%, var(--btn-bg));
+}
+:is(.win-btn.win-btn--close, .icon-btn.danger):hover:not(:disabled) {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--btn-border));
+  background-color: color-mix(in srgb, var(--danger) 10%, var(--btn-bg));
+}
+.primary-btn:hover:not(:disabled) { filter: brightness(1.06); }
+:is(button, .menu__item, input, select):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 1px;
+}
+.stream-tile__channel:hover { color: var(--accent); }
+
 .primary-btn {
   background: var(--accent);
   color: #2a2118;
