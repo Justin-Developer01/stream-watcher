@@ -48,7 +48,7 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
         <span>{mode === 'chat' ? `#${channel}` : channel}</span>
         <button
           type="button"
-          className={`icon-btn${alwaysOnTop ? ' is-on' : ''}`}
+          className={`text-btn${alwaysOnTop ? ' is-on' : ''}`}
           onClick={async () => {
             const next = !alwaysOnTop
             setAlwaysOnTop(next)

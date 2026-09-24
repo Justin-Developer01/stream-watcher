@@ -93,7 +93,7 @@ button:disabled {
 }
 
 .icon-btn { width: 26px; height: 26px; padding: 0; flex: 0 0 auto; }
-.icon-btn.is-on, .mode-btn.is-on, .mode-btn[data-state='on'] {
+.icon-btn.is-on, .text-btn.is-on, .mode-btn.is-on, .mode-btn[data-state='on'] {
   border-color: var(--accent);
   color: var(--text);
   background: color-mix(in srgb, var(--accent) 24%, var(--btn-bg));
@@ -117,7 +117,7 @@ button:disabled { cursor: not-allowed; }
   background-color: color-mix(in srgb, var(--text) 11%, var(--btn-bg));
 }
 /* Selected stays soft cyan under the pointer. */
-:is(.icon-btn.is-on, .mode-btn.is-on, .mode-btn[data-state='on'], .chip.is-on, .settings-tabs__list button[data-state='active']):hover:not(:disabled) {
+:is(.icon-btn.is-on, .text-btn.is-on, .mode-btn.is-on, .mode-btn[data-state='on'], .chip.is-on, .settings-tabs__list button[data-state='active']):hover:not(:disabled) {
   color: var(--text);
   border-color: var(--accent);
   background-color: color-mix(in srgb, var(--accent) 32%, var(--btn-bg));
@@ -889,6 +889,7 @@ button:disabled { cursor: not-allowed; }
   border-color: #c9b8a4;
 }
 [data-theme='light'] .icon-btn.is-on,
+[data-theme='light'] .text-btn.is-on,
 [data-theme='light'] .mode-btn.is-on,
 [data-theme='light'] .mode-btn[data-state='on'],
 [data-theme='light'] .chip.is-on,
