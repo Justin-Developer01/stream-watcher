@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { log } from '../lib/log'
 import { getEmbedParent } from '../lib/twitch'
 
 type Props = {
@@ -26,7 +27,12 @@ function loadTwitchScript() {
     script.async = true
     script.dataset.twitchEmbed = 'true'
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Twitch embed failed to load'))
+    script.onerror = () => {
+      // Forget the failure so the next tile (or a reconnect) tries the script again.
+      twitchScriptPromise = null
+      script.remove()
+      reject(new Error('Twitch embed failed to load'))
+    }
     document.body.appendChild(script)
   })
   return twitchScriptPromise
@@ -39,7 +45,7 @@ export function TwitchPlayer({ channel, muted, interactive, paused, lowQuality }
 
   useEffect(() => {
     let disposed = false
-    void loadTwitchScript().then(() => {
+    loadTwitchScript().then(() => {
       if (disposed || !containerRef.current || !window.Twitch?.Player) return
       containerRef.current.innerHTML = ''
       const mount = document.createElement('div')
@@ -54,6 +60,8 @@ export function TwitchPlayer({ channel, muted, interactive, paused, lowQuality }
         muted,
         autoplay: !paused,
       })
+    }, (err: unknown) => {
+      if (!disposed) log.warn(`#${channel} player not started:`, err)
     })
     return () => {
       disposed = true
