@@ -26,7 +26,7 @@ export function redact(value: unknown): unknown {
 }
 
 /**
- * File log at %APPDATA%\Vesper Desk\logs\main.log (5 MB, then main.old.log). Captures uncaught
+ * File log at %APPDATA%\vesper-desk\logs\main.log (the app name is the package name) (5 MB, then main.old.log). Captures uncaught
  * errors in main and every renderer, crashed/unresponsive processes, and failed loads.
  */
 export function setupLogging() {

@@ -143,6 +143,8 @@ Preserve these unless Justin asks to remove one:
 - First-run tips (Focus, Open chat vs Pop out chat, See through windows, Dock back).
 - Hotkeys in `defaultHotkeys` (Ctrl+Q quit, Ctrl+, Settings, Ctrl+K search, Ctrl+Shift+C chat, Ctrl+Shift+L lock, Ctrl+\\ toolbar, F11 fullscreen, and the rest of that map).
 
+App data (Chromium storage, pop-out bounds, and the error log `logs/main.log`) lives in `%APPDATA%\vesper-desk\` on Windows: Electron uses the package `name`, since `productName` is only in the electron-builder config. Do not add a top-level `productName` without migrating that folder, or existing installs lose their settings. Settings → Advanced / Help and ☰ have Open log folder.
+
 Desk state persists to `localStorage` key `vesper-desk:v1` (auth: `vesper-desk:auth:v1`). `stream-watcher:v1` and `stream-watcher:auth:v1` are read-only legacy fallbacks. New writes use the Vesper keys. Logout clears Twitch cookies, not the desk layout.
 
 ## Branding

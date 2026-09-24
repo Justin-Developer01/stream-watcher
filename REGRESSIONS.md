@@ -56,7 +56,7 @@ The chat items that were open here (Helix emotes and badges, reconnecting on eve
 
 ## Still open (not fixed here)
 
-- **Left/Right chrome clips text chips.** "Standard", "Performance", and "Change layout" are cut off inside the 42px side bar ([`after-edge-left.png`](docs/parity/after-edge-left.png)). Fixing it needs icon forms of those chips, which is new UI, so it needs a design decision.
+- ~~**Left/Right chrome clips text chips.**~~ Fixed by the compact toolbar (`c05e860`): side chrome shows icon chips, and the smoke test asserts that no chrome control's text is cut off.
 - **Login error toast has no dismiss.** "Login was cancelled" stays until the next attempt.
 - **Pop-outs load the theme once** and don't follow a theme saved in the main window until they reopen.
 
