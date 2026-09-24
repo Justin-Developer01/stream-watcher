@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import tmi from 'tmi.js'
+import { log } from '../lib/log'
 import { formatDuration, ircToAction, nextLocalId, buildFragments, type IrcMessage, type ParseOptions } from '../lib/chat/parse'
 import {
   DEFAULT_ROOM_STATE,
@@ -149,12 +150,14 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
       if (disposed) return
       setStatus('connected')
       setError(null)
+      log.info(`chat connected (${username ? 'logged in' : 'anonymous'})`)
       sync()
     })
     client.on('disconnected', (reason: string) => {
       if (disposed) return
       setStatus('connecting')
       if (reason) setError(reason)
+      log.warn(`chat disconnected: ${reason || 'no reason given'}`)
     })
     client.on('reconnect', () => {
       if (!disposed) setStatus('connecting')
@@ -165,6 +168,7 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
     void client.connect().catch((err: unknown) => {
       if (disposed) return
       setStatus('error')
+      log.error('chat connection failed:', err)
       setError(err instanceof Error ? err.message : typeof err === 'string' ? err : 'Chat connection failed')
     })
     syncRef.current = sync
@@ -208,6 +212,7 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
         if (isAction) await client.action(key, body)
         else await client.say(key, body)
       } catch (err) {
+        log.warn(`chat send failed in #${key}:`, err)
         return { ok: false as const, error: typeof err === 'string' ? err : err instanceof Error ? err.message : 'Failed to send' }
       }
       lastSentRef.current.set(key, Date.now())

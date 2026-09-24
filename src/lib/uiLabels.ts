@@ -65,6 +65,7 @@ export const ui = {
   developerClientId: 'Developer Client ID',
   showTips: 'Show tips',
   checkUpdates: 'Check for updates',
+  openLogFolder: 'Open log folder',
   saveLayout: 'Save layout',
   deleteLayout: 'Delete',
   layoutName: 'Layout name',

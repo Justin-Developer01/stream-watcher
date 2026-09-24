@@ -34,6 +34,7 @@ const api = {
   openTwitchLogin: () => ipcRenderer.invoke('twitch:open-login') as Promise<void>,
   startTwitchOAuth: (payload: { clientId: string; redirectUri: string; scopes: string[] }) =>
     ipcRenderer.invoke('twitch:oauth', payload) as Promise<TwitchOAuthResult | null>,
+  openLogFolder: () => ipcRenderer.invoke('log:open-folder') as Promise<string>,
   clearTwitchSession: () => ipcRenderer.invoke('twitch:clear-session') as Promise<void>,
   openPopout: (kind: 'stream' | 'chat', channel: string) =>
     ipcRenderer.invoke('popout:open', { kind, channel }) as Promise<void>,

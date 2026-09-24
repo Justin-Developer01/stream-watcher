@@ -1,3 +1,4 @@
+import { log } from '../log'
 import { emoteUrl } from './parse'
 import type { BadgeLookup, CheermoteLookup, CheermoteTier, Emote } from './types'
 
@@ -15,9 +16,13 @@ async function helixPage<T>(path: string, auth: HelixAuth): Promise<HelixPage<T>
     const res = await fetch(`${HELIX}${path}`, {
       headers: { 'Client-ID': auth.clientId, Authorization: `Bearer ${auth.accessToken}` },
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      log.warn(`helix ${path.split('?')[0]} failed: HTTP ${res.status}`)
+      return null
+    }
     return (await res.json()) as HelixPage<T>
-  } catch {
+  } catch (err) {
+    log.warn(`helix ${path.split('?')[0]} failed:`, err)
     return null
   }
 }

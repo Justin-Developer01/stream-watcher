@@ -2,9 +2,12 @@ import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { log, logMemory, openLogFolder, setupLogging } from './logging'
 import { readPopoutStore, recordFromWindow, resolvePopoutBounds, writePopoutStore, type SavedPopout } from './popoutStore'
 
 const moduleDir = dirname(fileURLToPath(import.meta.url))
+
+setupLogging()
 
 type PopoutKind = 'stream' | 'chat'
 
@@ -150,6 +153,7 @@ function openPopout(kind: PopoutKind, channel: string) {
     return
   }
 
+  log.info(`pop-out open ${key}`)
   const saved = resolvePopoutBounds(popoutDisk[key])
   const win = new BrowserWindow({
     width: saved?.width ?? (kind === 'chat' ? 340 : 960),
@@ -192,6 +196,7 @@ function dockPopout(kind: PopoutKind, channel: string) {
   const key = popoutKey(kind, channel)
   const rec = popouts.get(key)
   if (!rec) return
+  log.info(`pop-out dock ${key}`)
   if (!rec.win.isDestroyed()) {
     persistPopoutWindow(key)
     rec.win.destroy()
@@ -249,6 +254,7 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
     force_verify: 'true',
   })
   const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`
+  log.info(`twitch oauth start (scopes: ${scopes.join(' ')})`)
 
   return new Promise<{ accessToken: string; scope: string } | null>((resolve) => {
     const authWin = new BrowserWindow({
@@ -266,9 +272,11 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
       settled = true
       if (!authWin.isDestroyed()) authWin.close()
       if (!result) {
+        log.warn('twitch oauth cancelled or closed before a token arrived')
         resolve(null)
         return
       }
+      log.info(`twitch oauth ok (granted: ${result.scope})`)
       void warmTwitchCookies().finally(() => {
         mainWindow?.webContents.send('twitch-session-updated')
         resolve(result)
@@ -325,10 +333,12 @@ app.whenReady().then(() => {
     app.quit()
   })
   ipcMain.handle('window:set-click-through', (_e, enabled: boolean) => {
+    if (clickThrough !== Boolean(enabled)) log.info(`see-through ${enabled ? 'on' : 'off'}`)
     clickThrough = Boolean(enabled)
     applyClickThrough()
   })
   ipcMain.handle('window:set-click-through-locked', (_e, locked: boolean) => {
+    if (clickThroughLocked !== Boolean(locked)) log.info(`window lock ${locked ? 'on' : 'off'}`)
     clickThroughLocked = Boolean(locked)
     applyClickThrough()
   })
@@ -399,11 +409,23 @@ app.whenReady().then(() => {
     })),
   )
 
+  ipcMain.handle('log:open-folder', async () => {
+    const error = await openLogFolder()
+    if (error) log.warn(`open log folder failed: ${error}`)
+    return error
+  })
+
   popoutDisk = readPopoutStore()
   createMainWindow()
+  setTimeout(() => logMemory('startup'), 60_000)
+  setInterval(() => logMemory('periodic'), 10 * 60_000)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
+})
+
+app.on('before-quit', () => {
+  log.info('quitting')
 })
 
 app.on('window-all-closed', () => {

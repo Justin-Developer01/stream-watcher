@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { log } from '../lib/log'
 import { clearAuth, loadAuth, saveAuth } from '../lib/storage'
 import { CHAT_SCOPES, fetchTwitchUser } from '../lib/twitch'
 import type { AuthState } from '../types'
@@ -32,6 +33,7 @@ export function useTwitchAuth(clientId: string) {
         scopes: CHAT_SCOPES,
       })
       if (!result?.accessToken) {
+        log.warn('twitch login cancelled')
         setError('Login was cancelled')
         return
       }
@@ -45,6 +47,7 @@ export function useTwitchAuth(clientId: string) {
       saveAuth(next)
       setAuth(next)
     } catch (err) {
+      log.error('twitch login failed:', err)
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setBusy(false)

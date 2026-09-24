@@ -322,6 +322,9 @@ export function SettingsModal({
               <button type="button" className="text-btn" onClick={onRefreshPrime}>
                 {ui.refreshPrimeSession}
               </button>
+              <button type="button" className="text-btn" onClick={() => void window.vesper?.openLogFolder()}>
+                {ui.openLogFolder}
+              </button>
               <label>
                 {ui.developerClientId}
                 <input
@@ -340,6 +343,9 @@ export function SettingsModal({
               </p>
               <button type="button" className="text-btn" onClick={onShowTips}>
                 {ui.showTips}
+              </button>
+              <button type="button" className="text-btn" onClick={() => void window.vesper?.openLogFolder()}>
+                {ui.openLogFolder}
               </button>
               <button
                 type="button"

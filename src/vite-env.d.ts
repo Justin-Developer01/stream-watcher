@@ -30,6 +30,7 @@ type VesperApi = {
     redirectUri: string
     scopes: string[]
   }) => Promise<{ accessToken: string; scope: string } | null>
+  openLogFolder: () => Promise<string>
   clearTwitchSession: () => Promise<void>
   openPopout: (kind: 'stream' | 'chat', channel: string) => Promise<void>
   dockPopout: (kind: 'stream' | 'chat', channel: string) => Promise<void>
