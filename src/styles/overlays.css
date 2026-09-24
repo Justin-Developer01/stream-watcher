@@ -1,0 +1,278 @@
+/* Portaled surfaces and windows: tooltips, menus, the Settings dialog, first-run tips, toasts,
+   the pop-out window, and the emote picker. */
+
+[data-radix-popper-content-wrapper] {
+  z-index: 80;
+  background: transparent;
+  color: var(--text);
+}
+.vd-tooltip {
+  z-index: 80;
+  max-width: min(240px, calc(100vw - 24px));
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  color: var(--text);
+  border: 1px solid var(--btn-border);
+  padding: 0.28rem 0.45rem;
+  border-radius: 6px;
+  font-size: 12px;
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 8px 24px rgba(42, 33, 24, 0.18);
+}
+.vd-tooltip__arrow { fill: var(--surface); }
+
+.menu {
+  z-index: 80;
+  min-width: 200px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  color: var(--text);
+  border: 1px solid var(--btn-border);
+  border-radius: 8px;
+  padding: 0.3rem;
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 16px 40px rgba(42, 33, 24, 0.16);
+}
+.menu__item, .menu__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  color: var(--text);
+}
+.menu__item:hover, .menu__item[data-highlighted] {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  color: var(--text);
+}
+.menu__sep { height: 1px; background: var(--line); margin: 0.25rem 0; }
+.menu-inline { display: flex; gap: 0.3rem; padding: 0.3rem; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 10, 16, 0.45);
+  z-index: 100;
+}
+.modal-card {
+  position: fixed;
+  inset: 8% 50% auto 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(80vh, 760px);
+  overflow: auto;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--text);
+  border: 1px solid var(--btn-border);
+  border-radius: 12px;
+  padding: 1rem;
+  z-index: 110;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+.modal-title { margin: 0 0 0.75rem; font-size: 1.05rem; }
+.settings-tabs__list { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.8rem; }
+.settings-tabs__list button {
+  padding: 0.3rem 0.55rem;
+  color: var(--btn-fg);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+}
+.settings-tabs__list button[data-state='active'] {
+  border-color: var(--accent);
+  color: var(--text);
+  background-color: color-mix(in srgb, var(--accent) 28%, var(--btn-bg));
+}
+.settings-pane { display: grid; gap: 0.65rem; }
+.settings-pane fieldset { border: 1px solid var(--line); border-radius: 8px; }
+.choice { display: inline-flex; gap: 0.3rem; margin-right: 0.7rem; color: var(--text); }
+.switch-row { display: flex; justify-content: space-between; align-items: center; }
+.switch {
+  width: 34px;
+  height: 20px;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: 99px;
+}
+.switch[data-state='checked'] { background: color-mix(in srgb, var(--accent) 50%, var(--btn-bg)); }
+.switch__thumb {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: var(--btn-fg);
+  border-radius: 50%;
+  transform: translateX(2px);
+}
+.switch[data-state='checked'] .switch__thumb { transform: translateX(16px); }
+.hotkey-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.4rem 0.75rem; align-items: center; }
+.hotkey-row .field-error { grid-column: 1 / -1; }
+.hotkey-btn.is-conflict { border-color: var(--danger); color: var(--danger); }
+.chat-preview {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem;
+  background: var(--btn-bg);
+  color: var(--text);
+}
+.settings-actions,
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.settings-actions { margin-top: 0.15rem; }
+.settings-actions .text-btn,
+.modal-footer .ghost-btn,
+.modal-footer .primary-btn {
+  min-width: 88px;
+  height: 32px;
+  padding: 0 12px;
+}
+.modal-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+.field-error { color: var(--danger); margin: 0; font-size: 12px; }
+
+.tips-stack {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  gap: 0.45rem;
+  width: min(280px, calc(100% - 24px));
+  z-index: 6;
+}
+.tip-card {
+  background: var(--surface);
+  border: 1px solid var(--btn-border);
+  border-radius: 10px;
+  padding: 0.6rem;
+  color: var(--text);
+}
+.tip-card header { display: flex; justify-content: space-between; align-items: center; }
+.tip-card h3 { margin: 0; font-size: 0.85rem; }
+.tip-card p { margin: 0.3rem 0 0; color: var(--muted); }
+
+.toast, .lock-chip {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  background: var(--surface);
+  border: 1px solid var(--btn-border);
+  color: var(--text);
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+}
+
+.popout-root { height: 100%; display: flex; flex-direction: column; background: var(--page-bg); color: var(--text); }
+.popout-bar {
+  height: var(--chrome);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.5rem;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border-bottom: 1px solid var(--line);
+  -webkit-app-region: drag;
+}
+.popout-bar button { -webkit-app-region: no-drag; }
+.popout-player { flex: 1; min-height: 0; }
+.popout-root .chat-drawer { border: 0; flex: 1; }
+
+.emote-pop {
+  display: flex;
+  flex-direction: column;
+  width: min(320px, calc(100vw - 24px));
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  color: var(--text);
+  border: 1px solid var(--btn-border);
+  border-radius: 8px;
+  padding: 0.4rem;
+  z-index: 70;
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+.emote-pop button { color: var(--btn-fg); background: var(--btn-bg); border: 1px solid var(--btn-border); }
+.emote-picker { display: flex; flex-direction: column; gap: 0.35rem; min-height: 0; }
+.emote-picker__search {
+  width: 100%;
+  min-height: 28px;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--btn-border);
+  border-radius: 6px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+.emote-picker__scroll { max-height: 300px; overflow-y: auto; overscroll-behavior: contain; }
+.emote-picker__title { margin: 0.35rem 0 0.2rem; font-size: 11px; color: var(--muted); font-weight: 600; }
+.emote-picker__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 2px; }
+.emote-pop .emote-picker__item {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  min-height: 0;
+  padding: 2px;
+  border-color: transparent;
+  background: transparent;
+}
+.emote-pop .emote-picker__item img { max-width: 28px; max-height: 28px; }
+.emote-pop .emote-picker__item.is-locked img { filter: grayscale(1); opacity: 0.4; }
+
+.desk--performance .stream-tile:not(.is-focused) { backdrop-filter: none; }
+
+/* Compact chrome menus: preset chips, checked rows, destructive rows. */
+.menu-presets { display: flex; gap: 4px; padding: 0.15rem 0.3rem 0.3rem; }
+.menu__item--preset {
+  flex: 1 1 0;
+  justify-content: center;
+  border: 1px solid var(--btn-border);
+  font-variant-numeric: tabular-nums;
+}
+.menu__item[data-state='checked'] { box-shadow: inset 3px 0 0 var(--accent); }
+.menu__item[data-state='checked']::after { content: '✓'; margin-left: auto; padding-left: 1rem; color: var(--accent); }
+[data-theme='light'] .menu__item[data-state='checked']::after,
+[data-theme='light'].menu .menu__item[data-state='checked']::after { color: #2a2118; }
+.menu__item.danger { color: var(--danger); }
+[data-theme='light'] .menu__item.danger { color: #b42318; }
+.menu__item[data-disabled] { opacity: 0.6; }
+
+/* The global appearance: none reset erased radio dots and the range track, so Settings never
+   showed which Theme or Chrome edge is picked. Keep native controls, tinted with the accent. */
+:is(.settings-pane, [data-theme='light'] .settings-pane) input:is([type='radio'], [type='checkbox']) {
+  appearance: auto;
+  -webkit-appearance: auto;
+  width: auto;
+  min-height: 0;
+  margin: 0 0.1rem 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--accent);
+}
+:is(.settings-pane, [data-theme='light'] .settings-pane) input[type='range'] {
+  appearance: auto;
+  -webkit-appearance: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--accent);
+}
+.choice { align-items: center; }
+/* Radix Switch is a <button>: drop the button padding/min-height so off and on read differently. */
+.switch { padding: 0; min-height: 0; display: inline-flex; align-items: center; flex: 0 0 auto; }
+
+.desk > .chat-drawer--float { grid-area: auto; }
+[data-theme='light'] .chat-line__user {
+  background: transparent;
+  border-color: transparent;
+}
+.help-logo {
+  display: block;
+  width: min(320px, 100%);
+  height: auto;
+  margin: 0 auto 0.25rem;
+  border-radius: 10px;
+}

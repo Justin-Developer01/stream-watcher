@@ -1,0 +1,83 @@
+/* The stage, stream grid, Focus layout, stream tiles, and players. */
+
+.desk-stage {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-grid-measure { flex: 1 1 auto; min-width: 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; }
+.stream-grid, .focus-stage { min-height: 0; width: 100%; }
+.stream-grid { height: 100%; }
+.focus-stage { flex: 1; display: grid; grid-template-columns: minmax(0, 72%) minmax(0, 28%); gap: 8px; padding: 8px; }
+.focus-strip { display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: auto; }
+.focus-strip__item { padding: 0; border: 0; background: none; height: 28%; min-height: 120px; cursor: pointer; }
+.focus-strip__item:hover .stream-tile { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.focus-hero, .focus-strip__item, .stream-grid__item { min-width: 0; min-height: 0; overflow: hidden; }
+
+.stream-tile {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--surface) 88%, #000);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.stream-tile.is-focused { border-color: var(--accent); }
+.stream-tile.is-low { filter: saturate(0.7); }
+.stream-tile__bar {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.3rem;
+  border-bottom: 1px solid var(--line);
+}
+.stream-tile__bar.stream-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.react-draggable-dragging .stream-tile__bar.stream-drag-handle { cursor: grabbing; }
+.stream-tile__channel { border: 0; background: transparent; color: var(--btn-fg); font-weight: 600; }
+.stream-drag-handle .stream-tile__channel { cursor: grab; }
+.stream-tile__actions { margin-left: auto; display: flex; gap: 0.15rem; cursor: default; touch-action: auto; }
+.stream-tile__actions .icon-btn { cursor: pointer; touch-action: auto; }
+.stream-tile__player { flex: 1; min-height: 0; background: #000; }
+.perf-chip {
+  font-size: 10px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 99px;
+  padding: 0 0.35rem;
+}
+
+.twitch-player, .twitch-player > div, .twitch-player iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}
+.twitch-player.is-blocked { pointer-events: none; }
+
+.empty-grid {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Grid drag/resize feedback in the accent (pre.17), not react-grid-layout's default red plate. */
+.react-grid-item.react-grid-placeholder {
+  background: color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  border-radius: 10px;
+  opacity: 0.4;
+}
+.react-grid-item > .react-resizable-handle { z-index: 3; }
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--accent) !important;
+}

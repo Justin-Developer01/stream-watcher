@@ -1,0 +1,188 @@
+/* The chrome bar (toolbar): drag region, mark and wordmark, search, grouped controls, window
+   controls, and the Left/Right icon layout. */
+
+.chrome-bar {
+  height: var(--chrome);
+  max-height: var(--chrome);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 8px;
+  overflow: visible;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+/* The bar drags the frameless window; every control inside stays a click (pre.17 .topbar). */
+.chrome-bar :is(button, input, select, a, form, [data-hit], .menu-inline) {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.desk--chrome-left .chrome-bar,
+.desk--chrome-right .chrome-bar {
+  height: 100%;
+  max-height: none;
+  width: var(--chrome);
+  max-width: var(--chrome);
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 6px 4px;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+  writing-mode: horizontal-tb;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.desk--chrome-left .chrome-actions,
+.desk--chrome-right .chrome-actions {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+.desk--chrome-left .chrome-menu-btn,
+.desk--chrome-right .chrome-menu-btn { margin-top: auto; }
+.desk--chrome-left .chrome-wordmark,
+.desk--chrome-right .chrome-wordmark { display: none; }
+.desk--chrome-left .chrome-search,
+.desk--chrome-right .chrome-search { min-width: 0; width: 100%; flex: 0 0 auto; }
+.desk--chrome-left .mode-group,
+.desk--chrome-right .mode-group { flex-direction: column; width: 100%; }
+.desk--chrome-left .text-btn,
+.desk--chrome-right .text-btn,
+.desk--chrome-left .mode-btn,
+.desk--chrome-right .mode-btn {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  min-height: 26px;
+  padding: 2px 1px;
+  white-space: normal;
+  line-height: 1.05;
+  text-align: center;
+  overflow: visible;
+}
+.desk--chrome-right .chrome-bar { border-right: 0; border-left: 1px solid var(--line); }
+
+.desk--chrome-bottom .chrome-bar { border-bottom: 0; border-top: 1px solid var(--line); }
+
+.chrome-bar__drag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: drag;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.chrome-mark {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+.chrome-mark::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 70%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+.chrome-mark svg {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: block;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 75%, transparent));
+}
+.chrome-wordmark {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.chrome-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 6.5rem;
+  flex: 0 1 11rem;
+}
+/* Compact chrome: controls grouped after the search, ☰ and the window controls at the far end. */
+.chrome-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.chrome-actions > * { flex: 0 0 auto; }
+.mode-group { display: inline-flex; align-items: center; gap: 3px; }
+.chrome-menu-btn { margin-left: auto; }
+.window-controls { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.chrome-search input,
+.menu-inline input,
+.settings-pane input,
+.settings-pane select,
+.chrome-select,
+.chat-composer input {
+  width: 100%;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+  min-height: 26px;
+}
+
+.chrome-error {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 2;
+  color: var(--danger);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.mode-btn { padding: 0 0.4rem; height: 26px; max-height: 26px; flex: 0 0 auto; }
+.chrome-bar .text-btn,
+.chrome-bar .icon-btn,
+.chrome-bar .win-btn,
+.chrome-bar__drag { flex: 0 0 auto; }
+
+.window-controls { -webkit-app-region: no-drag; }
+.desk--chrome-left .window-controls,
+.desk--chrome-right .window-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.desk--chrome-left .chrome-menu-btn,
+.desk--chrome-right .chrome-menu-btn { margin-left: 0; }
+.win-btn { width: 28px; height: 26px; }
+
+/* Left/Right chrome: the same controls as square icon chips, nothing clipped. */
+.desk--chrome-left .mode-btn--icon,
+.desk--chrome-right .mode-btn--icon { width: 26px; height: 26px; min-height: 26px; padding: 0; }
+.desk--chrome-left .chrome-search input,
+.desk--chrome-right .chrome-search input { padding: 0.2rem; text-align: center; }
+.desk--chrome-left .icon-btn .badge,
+.desk--chrome-right .icon-btn .badge { position: absolute; top: -4px; right: -4px; }
+.desk--chrome-left .icon-btn,
+.desk--chrome-right .icon-btn { position: relative; }
