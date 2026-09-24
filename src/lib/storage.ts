@@ -6,14 +6,24 @@ import {
   type AuthState,
   type PersistedState,
   type PlatformId,
+  type ProviderAuthState,
   type SavedStream,
   type StreamItem,
 } from '../types'
 
 const STATE_KEY = 'vesper-desk:v1'
 const LEGACY_KEY = 'stream-watcher:v1'
-const AUTH_KEY = 'vesper-desk:auth:v1'
-const LEGACY_AUTH = 'stream-watcher:auth:v1'
+const AUTH_KEY = 'vesper-desk:auth:v2'
+// v1 was a flat ProviderAuthState (Twitch-only, no provider wrapper).
+const LEGACY_AUTH_V1 = 'vesper-desk:auth:v1'
+const LEGACY_AUTH_STREAM_WATCHER = 'stream-watcher:auth:v1'
+
+const DEFAULT_PROVIDER_AUTH: ProviderAuthState = {
+  accessToken: null,
+  username: null,
+  displayName: null,
+  scopes: [],
+}
 
 export type GridLayout = Layout[]
 
@@ -66,11 +76,15 @@ export function saveState(state: PersistedState) {
 
 export function loadAuth(): AuthState {
   try {
-    const raw = localStorage.getItem(AUTH_KEY) ?? localStorage.getItem(LEGACY_AUTH)
-    if (!raw) return { accessToken: null, username: null, displayName: null, scopes: [] }
-    return JSON.parse(raw) as AuthState
+    const raw = localStorage.getItem(AUTH_KEY)
+    if (raw) return JSON.parse(raw) as AuthState
+    // Pre-v2 storage was a flat, Twitch-only ProviderAuthState with no provider wrapper.
+    const legacyRaw =
+      localStorage.getItem(LEGACY_AUTH_V1) ?? localStorage.getItem(LEGACY_AUTH_STREAM_WATCHER)
+    if (legacyRaw) return { twitch: JSON.parse(legacyRaw) as ProviderAuthState }
+    return { twitch: DEFAULT_PROVIDER_AUTH }
   } catch {
-    return { accessToken: null, username: null, displayName: null, scopes: [] }
+    return { twitch: DEFAULT_PROVIDER_AUTH }
   }
 }
 
@@ -80,7 +94,8 @@ export function saveAuth(auth: AuthState) {
 
 export function clearAuth() {
   localStorage.removeItem(AUTH_KEY)
-  localStorage.removeItem(LEGACY_AUTH)
+  localStorage.removeItem(LEGACY_AUTH_V1)
+  localStorage.removeItem(LEGACY_AUTH_STREAM_WATCHER)
 }
 
 export function createDefaultLayout(streams: StreamItem[]): GridLayout {

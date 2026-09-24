@@ -40,11 +40,15 @@ export type ChatFloatPosition = {
   height: number
 }
 
-export type AuthState = {
+export type ProviderAuthState = {
   accessToken: string | null
   username: string | null
   displayName: string | null
   scopes: string[]
+}
+
+export type AuthState = {
+  twitch: ProviderAuthState
 }
 
 export type LayoutTemplate = {

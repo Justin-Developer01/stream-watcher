@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { PlatformId } from '../../types'
+import type { PlatformId, ProviderAuthState } from '../../types'
 
 export type StreamPlayerProps = {
   channel: string
@@ -15,4 +15,13 @@ export type StreamPlatform = {
   id: PlatformId
   label: string
   Player: StreamPlayerComponent
+}
+
+export interface PlatformAuth {
+  auth: ProviderAuthState
+  busy: boolean
+  error: string | null
+  login: () => Promise<void>
+  logout: () => Promise<void>
+  isLoggedIn: boolean
 }
