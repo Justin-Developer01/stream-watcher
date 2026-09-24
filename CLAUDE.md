@@ -4,6 +4,16 @@ Windows Electron desk for watching several Twitch streams at once. The product n
 
 This repository has no `AGENTS.md`. This file is the instruction set for Claude Code and any other Claude session.
 
+## Design constraints
+
+Lindsey confirmed these. They must stay explicit:
+
+- Soft cyan `#7ec8d8`.
+- Transparent mark ~28–32px with glow (no dusk plate).
+- Frosted chip hover, not opaque hover plates.
+- Light menus use theme surfaces (cream/visible).
+- Landing stays Coming soon until a public Setup URL exists.
+
 ## Source of truth
 
 - UI truth is draft PR [#2](https://github.com/Justin-Developer01/vesper-desk/pull/2) on branch `cursor/vesper-desk-ui-rebuild` (electron-vite + Radix).
@@ -39,9 +49,9 @@ npm run dist         # unsigned Windows Setup + Portable; do not run for a docs-
 Keep the quiet frosted desk.
 
 - Chrome is a ~42px bar (`--chrome`), `backdrop-filter: blur(16px)`, surface mixed with transparency. It can sit on Top, Left, Right, or Bottom.
-- Default accent is soft cyan `#7ec8d8` (`DEFAULT_SETTINGS.accent` in `src/types.ts`). Active and selected controls use a light cyan mix plus an accent edge (`color-mix` into `--btn-bg`, inset ring or border). Menu highlight is the same light mix.
-- Toolbar and chip hover is a light border and a slight background lift on the frost. Do not add heavy opaque hover plates.
-- The Vesper mark in the chrome (`ChromeBar`, class `chrome-mark`) is a transparent `currentColor` glyph, about 28–32px (30px today), with a soft cyan glow. No filled plate behind it, and no amber or dusk plate.
+- Accent is soft cyan `#7ec8d8` (`DEFAULT_SETTINGS.accent` in `src/types.ts`). Active and selected controls use that cyan as a light mix plus an accent edge (`color-mix` into `--btn-bg`, inset ring or border). Menu highlight uses the same light mix.
+- Frosted chip hover, not opaque hover plates. Hover is a light border and a slight background lift on the frost.
+- The Vesper mark in the chrome (`ChromeBar`, class `chrome-mark`) is a transparent mark ~28–32px with glow (no dusk plate). It is a `currentColor` glyph (30px today) and a soft cyan `#7ec8d8` glow. No filled plate, amber plate, or dusk plate behind it.
 - Wordmark text is `ui.appName` (`Vesper Desk`).
 
 Radix menus, tooltips, dialogs, and the emote popover portal to `document.body`, outside `.desk`. Spread `usePortalThemeProps()` onto that portaled content (`src/components/ui/portalTheme.tsx`) and mark interactive portaled nodes `data-hit`. Tooltips use `outwardSide()` so they open away from the chrome edge.
@@ -105,7 +115,7 @@ Themes are Dark, Dim, and Light (`data-theme` on `.desk`). Light uses cream surf
 - Selected controls stay readable: dark text, cyan border `#7ec8d8`, fill `#e7f6f8`.
 - Primary buttons use cyan fill with dark text. Disabled buttons stay bordered and readable (muted text, cream fill). Danger and Close hover use `#b42318` on a cream button, not a black fill.
 
-Every control, menu row, tooltip, switch, tab, and input must stay visible in Light. Portaled Radix nodes do not inherit `.desk` tokens — they need `data-theme` plus the light overrides in `src/index.css`. A previous bug painted Light buttons black; do not regress that. When `theme === 'light'`, `themeVars()` also rewrites leftover dark hex values for surface, text, and page background.
+Every control, menu row, tooltip, switch, tab, and input must stay visible in Light. Light menus use theme surfaces (cream/visible): cream fill, dark text, and the light border above. That includes portaled Radix menus, tooltips, dialogs, and the emote popover. Those nodes do not inherit `.desk` tokens — spread `usePortalThemeProps()` and keep the `[data-theme='light']` overrides in `src/index.css`. A previous bug painted Light buttons black; do not regress that. When `theme === 'light'`, `themeVars()` also rewrites leftover dark hex values for surface, text, and page background.
 
 ## Feature inventory
 
@@ -145,10 +155,10 @@ A docs-only change does not need a version bump, tag, or new EXE. The repo may b
 - Before deleting a control, check the feature inventory and `uiLabels.ts`.
 - After chrome, theme, layout, or hit-testing edits, smoke these: Light and Dark, See through (bar stays on top and clickable; empty stage passes clicks; tiles still work), Focus (no tile drag), chat drawer versus pop-out, Ghost overlay and Pin toolbar.
 - `npm run typecheck` after TypeScript edits.
-- Do not undraft or merge pull requests, publish the GitHub repo, or wire the landing-site download unless Justin explicitly asks.
+- Do not undraft or merge pull requests, or publish the GitHub repo, unless Justin explicitly asks. Landing stays Coming soon until a public Setup URL exists.
 
 ## Out of scope unless asked
 
-- Landing-site download wiring (`vesper-desk-web` / www.vesperdesk.app).
+- Landing site (`vesper-desk-web` / www.vesperdesk.app). Landing stays Coming soon until a public Setup URL exists. Do not wire a download, replace Coming soon, or point the site at a private or 404 asset before that URL is public.
 - Making this GitHub repo public.
 - Merging or undrafting PR #2 or any other draft.
