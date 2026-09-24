@@ -547,7 +547,8 @@ button:disabled { cursor: not-allowed; }
 .stream-grid { height: 100%; }
 .focus-stage { flex: 1; display: grid; grid-template-columns: minmax(0, 72%) minmax(0, 28%); gap: 8px; padding: 8px; }
 .focus-strip { display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: auto; }
-.focus-strip__item { padding: 0; border: 0; background: none; height: 28%; min-height: 120px; }
+.focus-strip__item { padding: 0; border: 0; background: none; height: 28%; min-height: 120px; cursor: pointer; }
+.focus-strip__item:hover .stream-tile { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
 .focus-hero, .focus-strip__item, .stream-grid__item { min-width: 0; min-height: 0; overflow: hidden; }
 
 .stream-tile {

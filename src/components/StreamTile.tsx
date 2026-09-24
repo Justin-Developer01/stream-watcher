@@ -42,7 +42,7 @@ export function StreamTile({
           {stream.channel}
         </button>
         {low && <span className="perf-chip">{ui.low}</span>}
-        <div className="stream-tile__actions">
+        <div className="stream-tile__actions" onClick={(event) => event.stopPropagation()}>
           <Tip label={isSaved ? ui.saved : 'Star save'}>
             <button type="button" className={`icon-btn${isSaved ? ' is-on' : ''}`} onClick={onToggleSave}>
               <Star size={13} fill={isSaved ? 'currentColor' : 'none'} />

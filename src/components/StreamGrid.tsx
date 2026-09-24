@@ -94,11 +94,12 @@ export function StreamGrid({
     )
   }
 
-  const tile = (stream: StreamItem) => (
+  // Strip tiles promote on click, so their players must not swallow the click (pre.17 promoteOnClick).
+  const tile = (stream: StreamItem, promoteOnClick = false) => (
     <StreamTile
       stream={stream}
       focused={focusedId === stream.id}
-      interactive={!isDragging}
+      interactive={!isDragging && !promoteOnClick}
       isSaved={savedChannels.includes(stream.channel)}
       mode={mode}
       onFocus={() => onFocus(stream.id)}
@@ -122,14 +123,22 @@ export function StreamGrid({
             {ui.switchFocus}
           </button>
           {strip.map((stream) => (
-            <button
+            <div
               key={stream.id}
-              type="button"
               className="focus-strip__item"
+              role="button"
+              tabIndex={0}
               onClick={() => onFocus(stream.id)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onFocus(stream.id)
+                }
+              }}
             >
-              {tile(stream)}
-            </button>
+              {tile(stream, true)}
+            </div>
           ))}
         </aside>
       </div>
@@ -158,7 +167,7 @@ function MeasuredGrid({
   onLayoutChange: (layout: Layout[]) => void
   onDragState: (active: boolean) => void
   streams: StreamItem[]
-  tile: (stream: StreamItem) => ReactNode
+  tile: (stream: StreamItem, promoteOnClick?: boolean) => ReactNode
 }) {
   const [ref, size] = useElementSize<HTMLDivElement>()
   const layoutRef = useRef(layout)
