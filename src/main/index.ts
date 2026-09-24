@@ -206,6 +206,27 @@ function openTwitchLogin() {
   })
 }
 
+/** Load twitch.tv once in the shared session so player embeds pick up the new login cookies. */
+function warmTwitchCookies() {
+  return new Promise<void>((resolve) => {
+    const warm = new BrowserWindow({
+      show: false,
+      webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
+    })
+    let finished = false
+    const done = () => {
+      if (finished) return
+      finished = true
+      if (!warm.isDestroyed()) warm.destroy()
+      resolve()
+    }
+    setTimeout(done, 5000)
+    warm.webContents.once('did-finish-load', done)
+    warm.webContents.once('did-fail-load', done)
+    void warm.loadURL('https://www.twitch.tv/')
+  })
+}
+
 async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: string[]) {
   const params = new URLSearchParams({
     client_id: clientId,
@@ -231,11 +252,20 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
       if (settled) return
       settled = true
       if (!authWin.isDestroyed()) authWin.close()
-      resolve(result)
+      if (!result) {
+        resolve(null)
+        return
+      }
+      void warmTwitchCookies().finally(() => {
+        mainWindow?.webContents.send('twitch-session-updated')
+        resolve(result)
+      })
     }
     authWin.on('closed', () => finish(null))
+    // The redirect URI is never served: the token is read from the redirect URL itself, so the
+    // packaged build needs no dev server on localhost:5173.
     const tryParseHash = (url: string) => {
-      if (!url.includes('access_token=')) return
+      if (!url.startsWith(redirectUri) && !url.includes('access_token=')) return
       const hash = url.includes('#') ? url.slice(url.indexOf('#') + 1) : ''
       const data = new URLSearchParams(hash)
       const accessToken = data.get('access_token')

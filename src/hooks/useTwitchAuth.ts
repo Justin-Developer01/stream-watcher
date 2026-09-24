@@ -16,7 +16,7 @@ export function useTwitchAuth(clientId: string) {
 
   const loginForChat = useCallback(async () => {
     if (!clientId.trim()) {
-      setError('Add your Twitch Client ID in Settings first')
+      setError('Add a Twitch Client ID in Settings → Advanced')
       return
     }
     if (!window.vesper) {
@@ -60,10 +60,9 @@ export function useTwitchAuth(clientId: string) {
     await window.vesper.openTwitchLogin()
   }, [])
 
-  const loginToTwitch = useCallback(async () => {
-    await loginForPrime()
-    await loginForChat()
-  }, [loginForPrime, loginForChat])
+  // One OAuth window. Main warms twitch.tv cookies after it, so the Prime session rides along
+  // (pre.17). Opening the twitch.tv login window here too stacked two windows at once.
+  const loginToTwitch = loginForChat
 
   const logout = useCallback(async () => {
     clearAuth()
