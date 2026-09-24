@@ -77,8 +77,9 @@ button svg {
 button:disabled {
   opacity: 1;
   color: var(--muted);
-  background: color-mix(in srgb, var(--muted) 12%, var(--btn-bg));
-  border-color: color-mix(in srgb, var(--muted) 45%, var(--btn-border));
+  /* Quieter than an enabled chip on the dark frost; it used to read as lifted/active. */
+  background: var(--btn-bg);
+  border-color: color-mix(in srgb, var(--btn-border) 55%, transparent);
 }
 
 .icon-btn, .text-btn, .mode-btn, .win-btn, .ghost-btn, .primary-btn, .hotkey-btn {
