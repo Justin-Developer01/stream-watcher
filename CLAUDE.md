@@ -51,7 +51,7 @@ Keep the quiet frosted desk.
 - Chrome is a ~42px bar (`--chrome`), `backdrop-filter: blur(16px)`, surface mixed with transparency. It can sit on Top, Left, Right, or Bottom.
 - Accent is soft cyan `#7ec8d8` (`DEFAULT_SETTINGS.accent` in `src/types.ts`). Active and selected controls use that cyan as a light mix plus an accent edge (`color-mix` into `--btn-bg`, inset ring or border). Menu highlight uses the same light mix.
 - Frosted chip hover, not opaque hover plates. Hover is a light border and a slight background lift on the frost.
-- The Vesper mark in the chrome (`ChromeBar`, class `chrome-mark`) is a transparent mark ~28–32px with glow (no dusk plate). It is a `currentColor` glyph (30px today) and a soft cyan `#7ec8d8` glow. No filled plate, amber plate, or dusk plate behind it.
+- The Vesper mark in the chrome (`ChromeBar`, class `chrome-mark`) is a transparent mark ~28–32px with glow (no dusk plate). It is a `currentColor` glyph (30px today): the V/A monogram under a crescent and star, drawn as strokes in `src/assets/vesper-mark.svg`, with a soft cyan `#7ec8d8` glow. No filled plate, amber plate, or dusk plate behind it.
 - Wordmark text is `ui.appName` (`Vesper Desk`).
 
 Radix menus, tooltips, dialogs, and the emote popover portal to `document.body`, outside `.desk`. Spread `usePortalThemeProps()` onto that portaled content (`src/components/ui/portalTheme.tsx`) and mark interactive portaled nodes `data-hit`. Tooltips use `outwardSide()` so they open away from the chrome edge.

@@ -105,17 +105,25 @@ export function ChromeBar({
     <header className="chrome-bar" data-hit>
       <div className="chrome-bar__drag">
         <span className="chrome-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
+          <svg
+            viewBox="0 0 64 64"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {/* V/A monogram under a crescent and star (src/assets/vesper-mark.svg). */}
+            <path d="M12 16 25.5 32M10 32h44M22 32 11.5 58M24.5 32 32 58 51.5 16M44.1 32 52.5 58" />
             <path
-              d="M3 16c3.2-.8 5.5-3.6 9-3.6S17.8 15.2 21 16"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <path d="M4 19h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            <path
-              d="M12 4.2l.72 2.2h2.32l-1.88 1.36.72 2.2L12 8.6l-1.88 1.36.72-2.2-1.88-1.36h2.32L12 4.2z"
+              d="M31.20 12.91A6.6 6.6 0 1 0 37.81 21.44A5.4 5.4 0 0 1 31.20 12.91Z"
               fill="currentColor"
+              stroke="none"
+            />
+            <path
+              d="M42.50 3.90 L43.35 7.65 L47.10 8.50 L43.35 9.35 L42.50 13.10 L41.65 9.35 L37.90 8.50 L41.65 7.65Z"
+              fill="currentColor"
+              stroke="none"
             />
           </svg>
         </span>
