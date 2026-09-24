@@ -1162,3 +1162,10 @@ button:disabled { cursor: not-allowed; }
   background: transparent;
   border-color: transparent;
 }
+.help-logo {
+  display: block;
+  width: min(320px, 100%);
+  height: auto;
+  margin: 0 auto 0.25rem;
+  border-radius: 10px;
+}

@@ -6,6 +6,7 @@ import { defaultHotkeys, formatHotkeyEvent, hotkeyActions, hotkeyLabels, hotkeys
 import { chatFontFamily } from '../lib/storage'
 import { builtInTwitchClientId } from '../lib/twitchClientId'
 import { ui } from '../lib/uiLabels'
+import vesperLogo from '../assets/vesper-desk-logo.png'
 import { themeVars, usePortalThemeProps } from './ui/portalTheme'
 import { DEFAULT_SETTINGS, type AppSettings, type ChatFont, type ChromeEdge, type ThemeName } from '../types'
 
@@ -332,6 +333,7 @@ export function SettingsModal({
             </Tabs.Content>
 
             <Tabs.Content value="help" className="settings-pane">
+              <img className="help-logo" src={vesperLogo} alt={ui.appName} draggable={false} />
               <p>
                 Vesper Desk is a thin multi-stream desk. Use {ui.standard}, {ui.focus}, and {ui.performance} from the
                 chrome. {ui.openChat} is a drawer. {ui.popOutChat} is a separate window.
