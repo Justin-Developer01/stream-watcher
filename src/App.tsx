@@ -1,11 +1,8 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChatDrawer } from './components/ChatDrawer'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PortalThemeProvider, themeVars } from './components/ui/portalTheme'
 import { ChromeBar } from './components/ChromeBar'
 import { FirstRunTips } from './components/FirstRunTips'
-import { PopoutApp } from './components/PopoutApp'
-import { SettingsModal } from './components/SettingsModal'
 import { StreamGrid } from './components/StreamGrid'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useDesk } from './hooks/useDesk'
@@ -16,6 +13,12 @@ import { chatFontFamily } from './lib/storage'
 import type { AppSettings, PopoutInfo } from './types'
 
 const CHROME_IDLE_MS = 2400
+
+// Loaded on first use: chat (tmi.js, Helix, emote picker), Settings, and the pop-out window UI are
+// not needed to show the desk, so they stay out of the startup bundle.
+const ChatDrawer = lazy(() => import('./components/ChatDrawer').then((m) => ({ default: m.ChatDrawer })))
+const SettingsModal = lazy(() => import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal })))
+const PopoutApp = lazy(() => import('./components/PopoutApp').then((m) => ({ default: m.PopoutApp })))
 
 function nearChromeEdge(edge: AppSettings['chromeEdge'], x: number, y: number) {
   if (edge === 'bottom') return y >= window.innerHeight - 52
@@ -139,6 +142,16 @@ function DeskApp() {
     desk.popStream(channel)
     await window.vesper?.openPopout('stream', channel)
   }
+
+  // Stable tile callbacks, so chrome, menu, and chat state changes do not re-render StreamGrid
+  // (and every player tile) — it is memoized on its props.
+  const tileActions = useRef({ openChat, popoutChat, popoutStream })
+  tileActions.current = { openChat, popoutChat, popoutStream }
+  const onTileOpenChat = useCallback((channel: string) => tileActions.current.openChat(channel), [])
+  const onTilePopoutChat = useCallback((channel: string) => void tileActions.current.popoutChat(channel), [])
+  const onTilePopoutStream = useCallback((channel: string) => void tileActions.current.popoutStream(channel), [])
+  const savedChannels = useMemo(() => desk.savedStreams.map((s) => s.channel), [desk.savedStreams])
+  const poppedStreamCount = popped.filter((p) => p.kind === 'stream').length
 
   const dockPop = async (channel: string, kind: 'stream' | 'chat') => {
     await window.vesper?.dockPopout(kind, channel)
@@ -268,6 +281,7 @@ function DeskApp() {
   }, [desk.settings.theme, style])
 
   const chatEl = desk.chatOpen ? (
+    <Suspense fallback={<aside className={`chat-drawer chat-drawer--${desk.chatDock}`} data-hit />}>
     <ChatDrawer
       dock={desk.chatDock}
       channels={drawerChannels}
@@ -286,6 +300,7 @@ function DeskApp() {
         if (drawerActive) void popoutChat(drawerActive)
       }}
     />
+    </Suspense>
   ) : null
 
   return (
@@ -350,17 +365,17 @@ function DeskApp() {
           layout={desk.layout}
           focusedId={desk.focusedId}
           isDragging={desk.isDragging}
-          savedChannels={desk.savedStreams.map((s) => s.channel)}
+          savedChannels={savedChannels}
           mode={desk.mode}
-          poppedCount={popped.filter((p) => p.kind === 'stream').length}
+          poppedCount={poppedStreamCount}
           onLayoutChange={desk.setLayout}
           onDragState={desk.setIsDragging}
           onFocus={desk.focusStream}
           onToggleMute={desk.toggleMute}
           onRemove={desk.removeStream}
-          onOpenChat={(channel) => openChat(channel)}
-          onPopoutChat={(channel) => void popoutChat(channel)}
-          onPopoutStream={(channel) => void popoutStream(channel)}
+          onOpenChat={onTileOpenChat}
+          onPopoutChat={onTilePopoutChat}
+          onPopoutStream={onTilePopoutStream}
           onToggleSave={desk.toggleSaveStream}
           onSwitchFocus={desk.switchFocus}
         />
@@ -386,6 +401,8 @@ function DeskApp() {
       </main>
 
 
+      {settingsOpen && (
+      <Suspense fallback={null}>
       <SettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
@@ -396,6 +413,8 @@ function DeskApp() {
         onRefreshPrime={() => void loginForPrime()}
         onShowTips={() => desk.applySettings({ ...desk.settings, dismissedTips: [] })}
       />
+      </Suspense>
+      )}
     </div>
     </PortalThemeProvider>
   )
@@ -409,7 +428,9 @@ export default function App() {
   return (
     <Tooltip.Provider delayDuration={250} skipDelayDuration={80}>
       {mode === 'chat' || mode === 'stream' ? (
-        <PopoutApp mode={mode} channel={channel} />
+        <Suspense fallback={null}>
+          <PopoutApp mode={mode} channel={channel} />
+        </Suspense>
       ) : (
         <DeskApp />
       )}

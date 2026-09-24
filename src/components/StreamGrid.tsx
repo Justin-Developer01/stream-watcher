@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import GridLayout from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
@@ -63,7 +63,7 @@ type Props = {
   onSwitchFocus: () => void
 }
 
-export function StreamGrid({
+export const StreamGrid = memo(function StreamGrid({
   streams,
   layout,
   focusedId,
@@ -82,6 +82,11 @@ export function StreamGrid({
   onToggleSave,
   onSwitchFocus,
 }: Props) {
+  // Tiles are memoized and keep the closures from their last render; route them through a ref so
+  // they always call the grid's current handlers (focusStream depends on the stream list).
+  const handlers = useRef({ onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave })
+  handlers.current = { onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave }
+
   if (!streams.length) {
     return (
       <div className="empty-grid">
@@ -102,13 +107,13 @@ export function StreamGrid({
       interactive={!isDragging && !promoteOnClick}
       isSaved={savedChannels.includes(stream.channel)}
       mode={mode}
-      onFocus={() => onFocus(stream.id)}
-      onToggleMute={() => onToggleMute(stream.id)}
-      onRemove={() => onRemove(stream.id)}
-      onOpenChat={() => onOpenChat(stream.channel)}
-      onPopoutChat={() => onPopoutChat(stream.channel)}
-      onPopoutStream={() => onPopoutStream(stream.channel)}
-      onToggleSave={() => onToggleSave(stream.channel)}
+      onFocus={() => handlers.current.onFocus(stream.id)}
+      onToggleMute={() => handlers.current.onToggleMute(stream.id)}
+      onRemove={() => handlers.current.onRemove(stream.id)}
+      onOpenChat={() => handlers.current.onOpenChat(stream.channel)}
+      onPopoutChat={() => handlers.current.onPopoutChat(stream.channel)}
+      onPopoutStream={() => handlers.current.onPopoutStream(stream.channel)}
+      onToggleSave={() => handlers.current.onToggleSave(stream.channel)}
     />
   )
 
@@ -154,7 +159,7 @@ export function StreamGrid({
       tile={tile}
     />
   )
-}
+})
 
 function MeasuredGrid({
   layout,

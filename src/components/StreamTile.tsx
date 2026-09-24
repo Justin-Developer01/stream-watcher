@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { MessageSquare, PictureInPicture2, Star, Volume2, VolumeX, X } from 'lucide-react'
 import { Tip } from './ui/Tip'
 import { TwitchPlayer } from './TwitchPlayer'
@@ -19,7 +20,7 @@ type Props = {
   onToggleSave: () => void
 }
 
-export function StreamTile({
+function StreamTileImpl({
   stream,
   focused,
   interactive,
@@ -87,3 +88,17 @@ export function StreamTile({
     </article>
   )
 }
+
+/**
+ * Tiles hold live players, so skip re-rendering unless what they show changed. The handlers are
+ * per-tile closures over the same stream id, so comparing them would only defeat the memo.
+ */
+export const StreamTile = memo(
+  StreamTileImpl,
+  (a, b) =>
+    a.stream === b.stream &&
+    a.focused === b.focused &&
+    a.interactive === b.interactive &&
+    a.isSaved === b.isSaved &&
+    a.mode === b.mode,
+)

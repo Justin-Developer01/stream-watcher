@@ -1,6 +1,8 @@
 import * as Popover from '@radix-ui/react-popover'
 import { PictureInPicture2, Send, Smile, X } from 'lucide-react'
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -17,9 +19,10 @@ import type { Emote } from '../lib/chat/types'
 import { ui } from '../lib/uiLabels'
 import type { ChatDock } from '../types'
 import { ChatRow, type LineContext } from './chat/ChatLine'
-import { EmotePicker } from './chat/EmotePicker'
 import { usePortalThemeProps } from './ui/portalTheme'
 import { Tip } from './ui/Tip'
+
+const EmotePicker = lazy(() => import('./chat/EmotePicker').then((m) => ({ default: m.EmotePicker })))
 
 const EMOJI_FONTS = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"'
 const MAX_CHARS = 500
@@ -310,12 +313,14 @@ export function ChatDrawer({
                 collisionPadding={12}
                 avoidCollisions
               >
-                <EmotePicker
-                  user={emotes.user}
-                  channel={emotes.channel}
-                  global={emotes.global}
-                  onPick={(name) => insert(name)}
-                />
+                <Suspense fallback={<p className="muted">…</p>}>
+                  <EmotePicker
+                    user={emotes.user}
+                    channel={emotes.channel}
+                    global={emotes.global}
+                    onPick={(name) => insert(name)}
+                  />
+                </Suspense>
               </Popover.Content>
             </Popover.Portal>
           </Popover.Root>
