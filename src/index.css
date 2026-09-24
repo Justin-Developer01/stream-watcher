@@ -637,7 +637,8 @@ button:disabled { cursor: not-allowed; }
   gap: 0.3rem;
   flex-wrap: wrap;
 }
-.chat-drawer__tools { margin-left: auto; }
+.chat-drawer__tools { margin-left: auto; flex-wrap: nowrap; }
+.chat-drawer__tools .chrome-select { width: auto; }
 .chat-lines { flex: 1; min-height: 0; overflow: auto; }
 .chat-line {
   display: grid;
