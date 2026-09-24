@@ -78,6 +78,23 @@ export const ui = {
   slideRight: 'Slide R',
   dockBottom: 'Dock bottom',
   float: 'Float',
+  sendMessage: 'Send a message',
+  chatPaused: 'Chat paused due to scroll',
+  moreMessages: 'More messages below',
+  messageDeleted: '<message deleted>',
+  firstTimeChat: 'First-time chat',
+  replyingTo: (name: string) => `Replying to @${name}:`,
+  searchEmotes: 'Search emotes',
+  yourEmotes: 'Your emotes',
+  channelEmotes: 'Channel emotes',
+  globalEmotes: 'Global emotes',
+  noEmotes: 'No emotes found',
+  emoteLocked: 'Subscribe or follow to use',
+  slowMode: (seconds: number) => `Slow mode (${seconds}s)`,
+  subsOnly: 'Subscriber-only',
+  emoteOnly: 'Emote-only',
+  followersOnly: 'Followers-only',
+  uniqueChat: 'Unique chat',
 } as const
 
 export const firstRunTips = [

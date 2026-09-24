@@ -1,6 +1,7 @@
 const HELIX = 'https://api.twitch.tv/helix'
 
-export const CHAT_SCOPES = ['chat:read', 'chat:edit']
+// user:read:emotes lists the viewer's sub/follower emotes for the picker, as twitch.tv does.
+export const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:read:emotes']
 
 export async function fetchTwitchUser(clientId: string, accessToken: string) {
   const res = await fetch(`${HELIX}/users`, {
@@ -27,12 +28,4 @@ export function getEmbedParent(): string {
   if (typeof window === 'undefined') return 'localhost'
   const host = window.location.hostname
   return host || 'localhost'
-}
-
-export function badgeUrl(set: string, version: string) {
-  return `https://static-cdn.jtvnw.net/badges/v1/${set}/${version}/1`
-}
-
-export function emoteUrl(id: string) {
-  return `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/1.0`
 }

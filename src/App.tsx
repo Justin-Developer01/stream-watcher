@@ -7,7 +7,6 @@ import { FirstRunTips } from './components/FirstRunTips'
 import { PopoutApp } from './components/PopoutApp'
 import { SettingsModal } from './components/SettingsModal'
 import { StreamGrid } from './components/StreamGrid'
-import { useChat } from './hooks/useChat'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
@@ -27,9 +26,8 @@ function nearChromeEdge(edge: AppSettings['chromeEdge'], x: number, y: number) {
 
 function DeskApp() {
   const desk = useDesk()
-  const { auth, busy, error, loginToTwitch, loginForPrime, isLoggedIn } = useTwitchAuth(
-    resolveTwitchClientId(desk.clientId),
-  )
+  const twitchClientId = resolveTwitchClientId(desk.clientId)
+  const { auth, busy, error, loginToTwitch, loginForPrime, isLoggedIn } = useTwitchAuth(twitchClientId)
   const searchRef = useRef<HTMLInputElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -47,12 +45,7 @@ function DeskApp() {
     desk.chatChannel && !poppedChat.has(desk.chatChannel.toLowerCase())
       ? desk.chatChannel
       : (drawerChannels[0] ?? null)
-  const chat = useChat({
-    channels: drawerChannels,
-    activeChannel: drawerActive,
-    username: auth.username,
-    accessToken: auth.accessToken,
-  })
+  const [chatNonce, setChatNonce] = useState(0)
 
   const autoHideChrome =
     (fullscreen || desk.settings.ghostOverlay) &&
@@ -277,14 +270,13 @@ function DeskApp() {
       channels={drawerChannels}
       activeChannel={drawerActive}
       onChannelChange={desk.setChatChannel}
-      messages={chat.messages}
-      status={chat.status}
-      error={chat.error}
-      canSend={isLoggedIn}
       username={auth.username}
+      accessToken={auth.accessToken}
+      clientId={twitchClientId}
+      theme={desk.settings.theme === 'light' ? 'light' : 'dark'}
       fontFamily={chatFontFamily(desk.settings)}
       fontSize={desk.settings.chat.fontSize}
-      onSend={chat.sendMessage}
+      reconnectNonce={chatNonce}
       onDockChange={desk.setChatDock}
       onHide={() => desk.setChatOpen(false)}
       onPopout={() => {
@@ -343,10 +335,10 @@ function DeskApp() {
         onSearchBlur={() => desk.setToolbarForced(false)}
       />
 
-      {desk.chatOpen && desk.chatDock === 'left' && chatEl}
+      {/* One mount for every dock: grid areas place it, so moving chat keeps its connection and history. */}
+      {chatEl}
 
       <main className="desk-stage">
-        {desk.chatOpen && desk.chatDock === 'float' && chatEl}
         <StreamGrid
           streams={desk.visibleStreams}
           layout={desk.layout}
@@ -387,8 +379,6 @@ function DeskApp() {
         )}
       </main>
 
-      {desk.chatOpen && desk.chatDock === 'right' && chatEl}
-      {desk.chatOpen && desk.chatDock === 'bottom' && chatEl}
 
       <SettingsModal
         open={settingsOpen}
@@ -396,7 +386,7 @@ function DeskApp() {
         settings={desk.settings}
         clientId={desk.clientId}
         onSave={saveSettings}
-        onReconnectChat={chat.reconnect}
+        onReconnectChat={() => setChatNonce((n) => n + 1)}
         onRefreshPrime={() => void loginForPrime()}
         onShowTips={() => desk.applySettings({ ...desk.settings, dismissedTips: [] })}
       />

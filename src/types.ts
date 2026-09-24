@@ -35,22 +35,6 @@ export type ChatFloatPosition = {
   height: number
 }
 
-export type ChatBadge = {
-  set: string
-  version: string
-}
-
-export type ChatMessage = {
-  id: string
-  channel: string
-  user: string
-  color?: string
-  text: string
-  timestamp: number
-  badges: ChatBadge[]
-  emotes: Array<{ id: string; start: number; end: number }>
-}
-
 export type AuthState = {
   accessToken: string | null
   username: string | null

@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChatDrawer } from './ChatDrawer'
 import { PortalThemeProvider, themeVars } from './ui/portalTheme'
 import { TwitchPlayer } from './TwitchPlayer'
-import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { chatFontFamily, loadState } from '../lib/storage'
 import { resolveTwitchClientId } from '../lib/twitchClientId'
@@ -14,18 +13,13 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
   const saved = useMemo(() => loadState(), [])
   const settings = saved?.settings ?? DEFAULT_SETTINGS
   const clientId = resolveTwitchClientId(saved?.clientId)
-  const { auth, isLoggedIn } = useTwitchAuth(clientId)
+  const { auth } = useTwitchAuth(clientId)
+  const channels = useMemo(() => [channel], [channel])
   const [alwaysOnTop, setAlwaysOnTop] = useState(false)
 
   useEffect(() => {
     void window.vesper?.getThisPopoutAlwaysOnTop().then((value) => setAlwaysOnTop(Boolean(value)))
   }, [])
-  const chat = useChat({
-    channels: [channel],
-    activeChannel: channel,
-    username: auth.username,
-    accessToken: auth.accessToken,
-  })
 
   const dock = async () => {
     await window.vesper?.dockPopout(mode, channel)
@@ -71,17 +65,15 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
       ) : (
         <ChatDrawer
           dock="right"
-          channels={[channel]}
+          channels={channels}
           activeChannel={channel}
           onChannelChange={() => undefined}
-          messages={chat.messages}
-          status={chat.status}
-          error={chat.error}
-          canSend={isLoggedIn}
           username={auth.username}
+          accessToken={auth.accessToken}
+          clientId={clientId}
+          theme={settings.theme === 'light' ? 'light' : 'dark'}
           fontFamily={chatFontFamily(settings)}
           fontSize={settings.chat.fontSize}
-          onSend={chat.sendMessage}
           onHide={() => void dock()}
         />
       )}
