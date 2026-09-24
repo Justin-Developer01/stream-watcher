@@ -69,6 +69,13 @@
 }
 .kick-player.is-blocked { pointer-events: none; }
 
+.youtube-player, .youtube-player > div, .youtube-player iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}
+.youtube-player.is-blocked { pointer-events: none; }
+
 .empty-grid {
   height: 100%;
   display: grid;
