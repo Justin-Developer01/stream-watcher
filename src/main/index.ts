@@ -112,6 +112,8 @@ function createMainWindow() {
     mainWindow?.show()
   })
 
+  mainWindow.on('minimize', () => mainWindow?.webContents.send('window:minimized-changed', true))
+  mainWindow.on('restore', () => mainWindow?.webContents.send('window:minimized-changed', false))
   mainWindow.on('enter-full-screen', () => {
     mainWindow?.webContents.send('window:fullscreen-changed', true)
   })

@@ -42,29 +42,37 @@ type VesperApi = {
     callback: (payload: { channel: string; kind: 'stream' | 'chat' }) => void,
   ) => () => void
   onFullscreenChange: (callback: (value: boolean) => void) => () => void
+  onMinimizedChange?: (callback: (value: boolean) => void) => () => void
 }
 
 declare global {
   interface Window {
     vesper?: VesperApi
     Twitch?: {
-      Player: new (
-        element: HTMLElement | string,
-        options: {
-          channel: string
-          width: string | number
-          height: string | number
-          parent: string[]
-          muted?: boolean
-          autoplay?: boolean
-        },
-      ) => {
-        setChannel: (channel: string) => void
-        setMuted: (muted: boolean) => void
-        play: () => void
-        pause: () => void
-        setQuality?: (quality: string) => void
-        destroy?: () => void
+      Player: {
+        new (
+          element: HTMLElement | string,
+          options: {
+            channel: string
+            width: string | number
+            height: string | number
+            parent: string[]
+            muted?: boolean
+            autoplay?: boolean
+          },
+        ): {
+          setChannel: (channel: string) => void
+          setMuted: (muted: boolean) => void
+          play: () => void
+          pause: () => void
+          setQuality?: (quality: string) => void
+          getQuality?: () => string
+          getQualities?: () => Array<{ group: string; name?: string }>
+          addEventListener?: (event: string, callback: () => void) => void
+          destroy?: () => void
+        }
+        READY?: string
+        PLAYING?: string
       }
     }
   }

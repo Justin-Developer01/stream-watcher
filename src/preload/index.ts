@@ -58,6 +58,11 @@ const api = {
     ipcRenderer.on('popouts:dock-request', handler)
     return () => ipcRenderer.removeListener('popouts:dock-request', handler)
   },
+  onMinimizedChange: (callback: (value: boolean) => void) => {
+    const handler = (_e: unknown, value: boolean) => callback(Boolean(value))
+    ipcRenderer.on('window:minimized-changed', handler)
+    return () => ipcRenderer.removeListener('window:minimized-changed', handler)
+  },
   onFullscreenChange: (callback: (value: boolean) => void) => {
     const handler = (_e: unknown, value: boolean) => callback(Boolean(value))
     ipcRenderer.on('window:fullscreen-changed', handler)
