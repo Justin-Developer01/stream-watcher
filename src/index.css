@@ -1070,6 +1070,21 @@ button:disabled { cursor: not-allowed; }
   color: #2a2118;
 }
 
+/* Native dropdowns: Chromium draws the open list from the select's background, and --btn-bg is
+   translucent, so on Windows the Dark/Dim list came out white with light text. Give selects and
+   their options an opaque theme surface. Light keeps its cream rules above (higher specificity). */
+select { color-scheme: dark; }
+[data-theme='light'] select { color-scheme: light; }
+select.chrome-select,
+.settings-pane select {
+  background: linear-gradient(var(--btn-bg), var(--btn-bg)), var(--surface);
+}
+option,
+optgroup {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
 @media (max-width: 1100px) {
   .chrome-wordmark { display: none; }
   .chrome-bar { gap: 6px; }
