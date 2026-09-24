@@ -25,7 +25,7 @@ import {
 import { memo, useEffect, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
 import { ui } from '../lib/uiLabels'
 import { usePortalThemeProps } from './ui/portalTheme'
-import type { ChromeEdge, LayoutTemplate, PopoutInfo, WatchMode } from '../types'
+import type { ChromeEdge, LayoutTemplate, PlatformId, PopoutInfo, WatchMode } from '../types'
 import { outwardSide, skipFocusReturnAfterPointer, Tip } from './ui/Tip'
 
 type Props = {
@@ -38,7 +38,7 @@ type Props = {
   onPreset: (preset: '1x1' | '1x2' | '2x2' | '1+3') => void
   popped: PopoutInfo[]
   onDockAll: () => void
-  onDock: (channel: string, kind: 'stream' | 'chat') => void
+  onDock: (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => void
   seeThrough: boolean
   onSeeThrough: (value: boolean) => void
   windowLocked: boolean
@@ -320,9 +320,9 @@ export const ChromeBar = memo(function ChromeBar({
                 <DropdownMenu.Separator className="menu__sep" />
                 {popped.map((item) => (
                   <DropdownMenu.Item
-                    key={`${item.kind}-${item.channel}`}
+                    key={`${item.kind}-${item.platform}-${item.channel}`}
                     className="menu__item"
-                    onSelect={() => onDock(item.channel, item.kind)}
+                    onSelect={() => onDock(item.channel, item.kind, item.platform)}
                   >
                     {ui.dockBack} #{item.channel}
                     {item.kind === 'chat' && <span className="muted"> · {ui.chat}</span>}

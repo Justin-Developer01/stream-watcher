@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { PlatformId } from '../lib/platformId'
 
 export type TwitchOAuthResult = {
   accessToken: string
@@ -8,6 +9,7 @@ export type TwitchOAuthResult = {
 export type PopoutInfo = {
   channel: string
   kind: 'stream' | 'chat'
+  platform: PlatformId
   alwaysOnTop: boolean
 }
 
@@ -36,10 +38,10 @@ const api = {
     ipcRenderer.invoke('twitch:oauth', payload) as Promise<TwitchOAuthResult | null>,
   openLogFolder: () => ipcRenderer.invoke('log:open-folder') as Promise<string>,
   clearTwitchSession: () => ipcRenderer.invoke('twitch:clear-session') as Promise<void>,
-  openPopout: (kind: 'stream' | 'chat', channel: string) =>
-    ipcRenderer.invoke('popout:open', { kind, channel }) as Promise<void>,
-  dockPopout: (kind: 'stream' | 'chat', channel: string) =>
-    ipcRenderer.invoke('popout:dock', { kind, channel }) as Promise<void>,
+  openPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) =>
+    ipcRenderer.invoke('popout:open', { kind, channel, platform }) as Promise<void>,
+  dockPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) =>
+    ipcRenderer.invoke('popout:dock', { kind, channel, platform }) as Promise<void>,
   dockAllPopouts: () => ipcRenderer.invoke('popout:dock-all') as Promise<void>,
   listPopouts: () => ipcRenderer.invoke('popout:list') as Promise<PopoutInfo[]>,
   onTwitchSessionUpdated: (callback: () => void) => {
@@ -52,9 +54,13 @@ const api = {
     ipcRenderer.on('popouts:changed', handler)
     return () => ipcRenderer.removeListener('popouts:changed', handler)
   },
-  onDockRequest: (callback: (payload: { channel: string; kind: 'stream' | 'chat' }) => void) => {
-    const handler = (_e: unknown, payload: { channel: string; kind: 'stream' | 'chat' }) =>
-      callback(payload)
+  onDockRequest: (
+    callback: (payload: { channel: string; kind: 'stream' | 'chat'; platform: PlatformId }) => void,
+  ) => {
+    const handler = (
+      _e: unknown,
+      payload: { channel: string; kind: 'stream' | 'chat'; platform: PlatformId },
+    ) => callback(payload)
     ipcRenderer.on('popouts:dock-request', handler)
     return () => ipcRenderer.removeListener('popouts:dock-request', handler)
   },

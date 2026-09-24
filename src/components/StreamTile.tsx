@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { MessageSquare, PictureInPicture2, Star, Volume2, VolumeX, X } from 'lucide-react'
 import { Tip } from './ui/Tip'
-import { TwitchPlayer } from './TwitchPlayer'
+import { StreamPlayer } from './StreamPlayer'
 import { ui } from '../lib/uiLabels'
 import type { StreamItem, WatchMode } from '../types'
 
@@ -77,7 +77,8 @@ function StreamTileImpl({
         </div>
       </header>
       <div className="stream-tile__player" onDoubleClick={onFocus}>
-        <TwitchPlayer
+        <StreamPlayer
+          platform={stream.platform}
           channel={stream.channel}
           muted={stream.muted || low}
           interactive={interactive}

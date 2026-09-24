@@ -10,7 +10,7 @@ import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { resolveTwitchClientId } from './lib/twitchClientId'
 import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
 import { chatFontFamily, streamKey } from './lib/storage'
-import type { AppSettings, PopoutInfo } from './types'
+import type { AppSettings, PlatformId, PopoutInfo } from './types'
 
 const CHROME_IDLE_MS = 2400
 
@@ -104,6 +104,8 @@ function DeskApp() {
 
   useEffect(() => {
     return window.vesper?.onDockRequest(({ channel, kind }) => {
+      // platform isn't needed here yet: desk.dockStream/setChatChannel are
+      // Twitch-only internally until later phases thread it through too.
       if (kind === 'stream') {
         desk.dockStream(channel)
         return
@@ -120,16 +122,19 @@ function DeskApp() {
     void window.vesper?.setClickThroughLocked(desk.windowLocked)
   }, [desk.settings.seeThrough, desk.windowLocked])
 
+  // Chat pop-outs are Twitch-only until Phase 3 (chat abstraction) — no
+  // platform other than Twitch has a chat toggle in the UI yet, so hardcoding
+  // here matches current reality rather than guessing ahead of that phase.
   const popoutChat = async (channel: string) => {
     desk.setChatChannel(channel)
-    await window.vesper?.openPopout('chat', channel)
+    await window.vesper?.openPopout('chat', channel, 'twitch')
     desk.setChatOpen(false)
   }
 
   const openChat = (channel?: string) => {
     if (channel && poppedChat.has(channel.toLowerCase())) {
       // Already popped out: bring that window forward instead of an empty drawer.
-      void window.vesper?.openPopout('chat', channel)
+      void window.vesper?.openPopout('chat', channel, 'twitch')
       return
     }
     if (channel) desk.setChatChannel(channel)
@@ -138,9 +143,9 @@ function DeskApp() {
     if (channel && desk.chatDock === 'float') desk.setChatDock('right')
   }
 
-  const popoutStream = async (channel: string) => {
+  const popoutStream = async (channel: string, platform: PlatformId) => {
     desk.popStream(channel)
-    await window.vesper?.openPopout('stream', channel)
+    await window.vesper?.openPopout('stream', channel, platform)
   }
 
   // Stable tile callbacks, so chrome, menu, and chat state changes do not re-render StreamGrid
@@ -149,15 +154,18 @@ function DeskApp() {
   tileActions.current = { openChat, popoutChat, popoutStream }
   const onTileOpenChat = useCallback((channel: string) => tileActions.current.openChat(channel), [])
   const onTilePopoutChat = useCallback((channel: string) => void tileActions.current.popoutChat(channel), [])
-  const onTilePopoutStream = useCallback((channel: string) => void tileActions.current.popoutStream(channel), [])
+  const onTilePopoutStream = useCallback(
+    (channel: string, platform: PlatformId) => void tileActions.current.popoutStream(channel, platform),
+    [],
+  )
   const savedKeys = useMemo(
     () => new Set(desk.savedStreams.map((s) => streamKey(s.platform, s.channel))),
     [desk.savedStreams],
   )
   const poppedStreamCount = popped.filter((p) => p.kind === 'stream').length
 
-  const dockPop = async (channel: string, kind: 'stream' | 'chat') => {
-    await window.vesper?.dockPopout(kind, channel)
+  const dockPop = async (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => {
+    await window.vesper?.dockPopout(kind, channel, platform)
     if (kind === 'stream') desk.dockStream(channel)
   }
 
@@ -334,7 +342,7 @@ function DeskApp() {
         onPreset={desk.applyPreset}
         popped={popped}
         onDockAll={() => void dockAll()}
-        onDock={(channel, kind) => void dockPop(channel, kind)}
+        onDock={(channel, kind, platform) => void dockPop(channel, kind, platform)}
         seeThrough={desk.settings.seeThrough}
         onSeeThrough={(value) => desk.applySettings({ ...desk.settings, seeThrough: value })}
         windowLocked={desk.windowLocked}
@@ -427,12 +435,13 @@ export default function App() {
   const params = new URLSearchParams(window.location.search)
   const mode = params.get('mode')
   const channel = params.get('channel') ?? ''
+  const platform: PlatformId = params.get('platform') === 'kick' ? 'kick' : 'twitch'
 
   return (
     <Tooltip.Provider delayDuration={250} skipDelayDuration={80}>
       {mode === 'chat' || mode === 'stream' ? (
         <Suspense fallback={null}>
-          <PopoutApp mode={mode} channel={channel} />
+          <PopoutApp mode={mode} channel={channel} platform={platform} />
         </Suspense>
       ) : (
         <DeskApp />
