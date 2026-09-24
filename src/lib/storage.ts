@@ -1,6 +1,14 @@
 import type { Layout } from 'react-grid-layout'
 import { defaultHotkeys } from './hotkeys'
-import { DEFAULT_SETTINGS, type AppSettings, type AuthState, type PersistedState, type StreamItem } from '../types'
+import {
+  DEFAULT_SETTINGS,
+  type AppSettings,
+  type AuthState,
+  type PersistedState,
+  type PlatformId,
+  type SavedStream,
+  type StreamItem,
+} from '../types'
 
 const STATE_KEY = 'vesper-desk:v1'
 const LEGACY_KEY = 'stream-watcher:v1'
@@ -18,21 +26,27 @@ function mergeSettings(raw: Partial<AppSettings> | undefined): AppSettings {
   }
 }
 
+type LegacyStreamItem = Omit<StreamItem, 'platform'> & { platform?: PlatformId }
+type LegacySavedStream = Omit<SavedStream, 'platform'> & { platform?: PlatformId }
+
 export function loadState(): PersistedState | null {
   try {
     const raw = localStorage.getItem(STATE_KEY) ?? localStorage.getItem(LEGACY_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<PersistedState> & {
+    const parsed = JSON.parse(raw) as Partial<Omit<PersistedState, 'streams' | 'savedStreams'>> & {
+      streams?: LegacyStreamItem[]
+      savedStreams?: LegacySavedStream[]
       chatSidebarOpen?: boolean
       leftSidebarOpen?: boolean
     }
     return {
-      streams: parsed.streams ?? [],
+      // Streams saved before the platform field existed are all Twitch.
+      streams: (parsed.streams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch' })),
       layout: parsed.layout ?? [],
       focusedId: parsed.focusedId ?? null,
       chatChannel: parsed.chatChannel ?? null,
       clientId: parsed.clientId ?? '',
-      savedStreams: parsed.savedStreams ?? [],
+      savedStreams: (parsed.savedStreams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch' })),
       chatOpen: parsed.chatOpen ?? parsed.chatSidebarOpen ?? false,
       chatDock: parsed.chatDock ?? 'right',
       chatFloat: parsed.chatFloat ?? { x: 72, y: 56, width: 320, height: 440 },
@@ -88,6 +102,14 @@ export function createDefaultLayout(streams: StreamItem[]): GridLayout {
       minH: 4,
     }
   })
+}
+
+/**
+ * Identifies a stream/pop-out by platform + channel so two platforms with
+ * the same channel name (e.g. a Kick and a Twitch "xqc") never collide.
+ */
+export function streamKey(platform: PlatformId, channel: string): string {
+  return `${platform}:${channel}`
 }
 
 export function normalizeChannel(input: string): string | null {

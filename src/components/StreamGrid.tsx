@@ -3,6 +3,7 @@ import GridLayout from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
 import { ui } from '../lib/uiLabels'
+import { streamKey } from '../lib/storage'
 import type { StreamItem, WatchMode } from '../types'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -48,7 +49,7 @@ type Props = {
   layout: Layout[]
   focusedId: string | null
   isDragging: boolean
-  savedChannels: string[]
+  savedKeys: Set<string>
   mode: WatchMode
   poppedCount: number
   onLayoutChange: (layout: Layout[]) => void
@@ -68,7 +69,7 @@ export const StreamGrid = memo(function StreamGrid({
   layout,
   focusedId,
   isDragging,
-  savedChannels,
+  savedKeys,
   mode,
   poppedCount,
   onLayoutChange,
@@ -105,7 +106,7 @@ export const StreamGrid = memo(function StreamGrid({
       stream={stream}
       focused={focusedId === stream.id}
       interactive={!isDragging && !promoteOnClick}
-      isSaved={savedChannels.includes(stream.channel)}
+      isSaved={savedKeys.has(streamKey(stream.platform, stream.channel))}
       mode={mode}
       onFocus={() => handlers.current.onFocus(stream.id)}
       onToggleMute={() => handlers.current.onToggleMute(stream.id)}

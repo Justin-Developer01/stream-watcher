@@ -2,14 +2,18 @@ import type { Layout } from 'react-grid-layout'
 import type { HotkeyAction } from './lib/hotkeys'
 import { defaultHotkeys } from './lib/hotkeys'
 
+export type PlatformId = 'twitch' | 'kick'
+
 export type StreamItem = {
   id: string
+  platform: PlatformId
   channel: string
   muted: boolean
   popped?: boolean
 }
 
 export type SavedStream = {
+  platform: PlatformId
   channel: string
   savedAt: number
 }
@@ -122,6 +126,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 export type PopoutKind = 'stream' | 'chat'
 
+// platform threading for pop-outs happens in Phase 1, alongside the IPC
+// plumbing (preload's PopoutInfo, vite-env.d.ts's VesperPopout, main's
+// popoutKey/PopoutRecord) it depends on.
 export type PopoutInfo = {
   channel: string
   kind: PopoutKind

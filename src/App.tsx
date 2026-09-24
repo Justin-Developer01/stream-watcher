@@ -9,7 +9,7 @@ import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { resolveTwitchClientId } from './lib/twitchClientId'
 import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
-import { chatFontFamily } from './lib/storage'
+import { chatFontFamily, streamKey } from './lib/storage'
 import type { AppSettings, PopoutInfo } from './types'
 
 const CHROME_IDLE_MS = 2400
@@ -150,7 +150,10 @@ function DeskApp() {
   const onTileOpenChat = useCallback((channel: string) => tileActions.current.openChat(channel), [])
   const onTilePopoutChat = useCallback((channel: string) => void tileActions.current.popoutChat(channel), [])
   const onTilePopoutStream = useCallback((channel: string) => void tileActions.current.popoutStream(channel), [])
-  const savedChannels = useMemo(() => desk.savedStreams.map((s) => s.channel), [desk.savedStreams])
+  const savedKeys = useMemo(
+    () => new Set(desk.savedStreams.map((s) => streamKey(s.platform, s.channel))),
+    [desk.savedStreams],
+  )
   const poppedStreamCount = popped.filter((p) => p.kind === 'stream').length
 
   const dockPop = async (channel: string, kind: 'stream' | 'chat') => {
@@ -365,7 +368,7 @@ function DeskApp() {
           layout={desk.layout}
           focusedId={desk.focusedId}
           isDragging={desk.isDragging}
-          savedChannels={savedChannels}
+          savedKeys={savedKeys}
           mode={desk.mode}
           poppedCount={poppedStreamCount}
           onLayoutChange={desk.setLayout}
