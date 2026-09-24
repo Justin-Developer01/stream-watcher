@@ -104,9 +104,18 @@ function DeskApp() {
     return window.vesper?.onPopoutsChanged(setPopped)
   }, [])
 
+  const suppressChatReopenRef = useRef(false)
+
   useEffect(() => {
     return window.vesper?.onDockRequest(({ channel, kind }) => {
-      if (kind === 'stream') desk.dockStream(channel)
+      if (kind === 'stream') {
+        desk.dockStream(channel)
+        return
+      }
+      // Dock back on a chat pop-out returns it to the drawer (pre.17). Dock all stays quiet.
+      if (suppressChatReopenRef.current) return
+      desk.setChatChannel(channel)
+      desk.setChatOpen(true)
     })
   }, [desk])
 
@@ -115,15 +124,22 @@ function DeskApp() {
     void window.vesper?.setClickThroughLocked(desk.windowLocked)
   }, [desk.settings.seeThrough, desk.windowLocked])
 
-  const openChat = (channel?: string) => {
-    if (channel) desk.setChatChannel(channel)
-    desk.setChatOpen(true)
-    if (desk.chatDock === 'float') desk.setChatDock('right')
-  }
-
   const popoutChat = async (channel: string) => {
     desk.setChatChannel(channel)
     await window.vesper?.openPopout('chat', channel)
+    desk.setChatOpen(false)
+  }
+
+  const openChat = (channel?: string) => {
+    if (channel && poppedChat.has(channel.toLowerCase())) {
+      // Already popped out: bring that window forward instead of an empty drawer.
+      void window.vesper?.openPopout('chat', channel)
+      return
+    }
+    if (channel) desk.setChatChannel(channel)
+    desk.setChatOpen(true)
+    // Only a tile's Open chat slides a floating drawer back in; the menu keeps Float.
+    if (channel && desk.chatDock === 'float') desk.setChatDock('right')
   }
 
   const popoutStream = async (channel: string) => {
@@ -137,7 +153,12 @@ function DeskApp() {
   }
 
   const dockAll = async () => {
-    await window.vesper?.dockAllPopouts()
+    suppressChatReopenRef.current = true
+    try {
+      await window.vesper?.dockAllPopouts()
+    } finally {
+      suppressChatReopenRef.current = false
+    }
     popped.filter((p) => p.kind === 'stream').forEach((p) => desk.dockStream(p.channel))
   }
 
@@ -267,7 +288,7 @@ function DeskApp() {
       onDockChange={desk.setChatDock}
       onHide={() => desk.setChatOpen(false)}
       onPopout={() => {
-        if (desk.chatChannel) void popoutChat(desk.chatChannel)
+        if (drawerActive) void popoutChat(drawerActive)
       }}
     />
   ) : null

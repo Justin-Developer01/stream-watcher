@@ -22,9 +22,10 @@ type Props = {
   fontFamily: string
   fontSize: number
   onSend: (text: string) => Promise<{ ok: boolean; error?: string }>
-  onDockChange: (dock: ChatDock) => void
+  /** Omitted in the chat pop-out window, which has no drawer to move or pop out. */
+  onDockChange?: (dock: ChatDock) => void
   onHide: () => void
-  onPopout: () => void
+  onPopout?: () => void
 }
 
 function renderText(message: ChatMessage) {
@@ -92,22 +93,26 @@ export function ChatDrawer({
         <span className={`dot dot--${status}`} />
         {username && <span className="muted tiny">{username}</span>}
         <div className="chat-drawer__tools">
-          <select
-            className="chrome-select"
-            value={dock}
-            onChange={(e) => onDockChange(e.target.value as ChatDock)}
-            aria-label="Move chat"
-          >
-            <option value="left">{ui.slideLeft}</option>
-            <option value="right">{ui.slideRight}</option>
-            <option value="bottom">{ui.dockBottom}</option>
-            <option value="float">{ui.float}</option>
-          </select>
-          <Tip label={ui.popOutChat}>
-            <button type="button" className="icon-btn" onClick={onPopout}>
-              <PictureInPicture2 size={13} />
-            </button>
-          </Tip>
+          {onDockChange && (
+            <select
+              className="chrome-select"
+              value={dock}
+              onChange={(e) => onDockChange(e.target.value as ChatDock)}
+              aria-label="Move chat"
+            >
+              <option value="left">{ui.slideLeft}</option>
+              <option value="right">{ui.slideRight}</option>
+              <option value="bottom">{ui.dockBottom}</option>
+              <option value="float">{ui.float}</option>
+            </select>
+          )}
+          {onPopout && (
+            <Tip label={ui.popOutChat}>
+              <button type="button" className="icon-btn" onClick={onPopout}>
+                <PictureInPicture2 size={13} />
+              </button>
+            </Tip>
+          )}
           <Tip label={ui.hideChat}>
             <button type="button" className="icon-btn" onClick={onHide}>
               <X size={13} />

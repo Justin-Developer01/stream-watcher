@@ -82,9 +82,7 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
           fontFamily={chatFontFamily(settings)}
           fontSize={settings.chat.fontSize}
           onSend={chat.sendMessage}
-          onDockChange={() => undefined}
           onHide={() => void dock()}
-          onPopout={() => undefined}
         />
       )}
     </div>
