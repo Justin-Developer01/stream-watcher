@@ -109,6 +109,9 @@ function createMainWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    // Closing the desk quits. Pop-outs veto their own close (it docks them), so without this an
+    // OS close (Alt+F4, taskbar) left them running with no desk to dock into.
+    app.quit()
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
