@@ -1032,3 +1032,28 @@ button:disabled { cursor: not-allowed; }
 .react-grid-item > .react-resizable-handle::after {
   border-color: var(--accent) !important;
 }
+
+/* The global appearance: none reset erased radio dots and the range track, so Settings never
+   showed which Theme or Chrome edge is picked. Keep native controls, tinted with the accent. */
+:is(.settings-pane, [data-theme='light'] .settings-pane) input:is([type='radio'], [type='checkbox']) {
+  appearance: auto;
+  -webkit-appearance: auto;
+  width: auto;
+  min-height: 0;
+  margin: 0 0.1rem 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--accent);
+}
+:is(.settings-pane, [data-theme='light'] .settings-pane) input[type='range'] {
+  appearance: auto;
+  -webkit-appearance: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--accent);
+}
+.choice { align-items: center; }
+/* Radix Switch is a <button>: drop the button padding/min-height so off and on read differently. */
+.switch { padding: 0; min-height: 0; display: inline-flex; align-items: center; flex: 0 0 auto; }
