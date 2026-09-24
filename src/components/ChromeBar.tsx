@@ -9,7 +9,6 @@ import {
   Gauge,
   PanelsTopLeft,
   LayoutGrid,
-  LogIn,
   Menu,
   MessageSquare,
   Minus,
@@ -54,10 +53,7 @@ type Props = {
   onToggleChat: () => void
   onFullscreen: () => void
   onAddStream: (value: string) => { ok: boolean; error?: string }
-  onLogin: () => void
   onSettings: () => void
-  isLoggedIn: boolean
-  displayName: string | null
   searchRef: RefObject<HTMLInputElement | null>
   chromeEdge: ChromeEdge
   onMenuOpen: (open: boolean) => void
@@ -106,10 +102,7 @@ export const ChromeBar = memo(function ChromeBar({
   onToggleChat,
   onFullscreen,
   onAddStream,
-  onLogin,
   onSettings,
-  isLoggedIn,
-  displayName,
   searchRef,
   chromeEdge,
   onMenuOpen,
@@ -357,9 +350,6 @@ export const ChromeBar = memo(function ChromeBar({
           </Tip>
           <DropdownMenu.Portal>
             <DropdownMenu.Content {...menuProps}>
-              <DropdownMenu.Item className="menu__item" onSelect={onLogin}>
-                <LogIn size={13} /> {isLoggedIn ? displayName : ui.loginToTwitch}
-              </DropdownMenu.Item>
               <DropdownMenu.Item className="menu__item" onSelect={onSettings}>
                 <Settings size={13} /> {ui.settings}
               </DropdownMenu.Item>

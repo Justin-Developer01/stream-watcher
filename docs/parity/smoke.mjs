@@ -458,8 +458,9 @@ await step('ghost: bar hides after idle, hidden bar is no-drag, edge reveals; Pi
 // ---------- Twitch login window ----------
 await step('twitch: Login to Twitch opens ONE window with a built-in client_id', async () => {
   const before = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)
-  await page.click('.chrome-bar button[aria-label="Menu"]')
-  await page.locator('.menu .menu__item', { hasText: 'Login to Twitch' }).click()
+  await openSettings(page)
+  await page.getByRole('tab', { name: 'Accounts' }).click()
+  await page.locator('.modal-card button', { hasText: 'Login to Twitch' }).click()
   await sleep(1500)
   const info = await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows().map((w) => ({ title: w.getTitle(), url: w.webContents.getURL() || w.webContents.getLastWebContents?.()?.getURL?.() })),
@@ -473,6 +474,8 @@ await step('twitch: Login to Twitch opens ONE window with a built-in client_id',
   await sleep(800)
   const alive = !page.isClosed()
   const clientOk = info.some((w) => /client_id=dqxba57by77shem4jb9nzz39rtah2x/.test(w.url || ''))
+  await page.locator('.modal-footer button', { hasText: 'Cancel' }).click()
+  await page.waitForSelector('.modal-card', { state: 'detached', timeout: 3000 })
   return { ok: opened === 1 && alive && clientOk, detail: `mainAliveAfterClosingAuth=${alive} newWindows=${opened} clientIdInUrl=${clientOk} toast=${toast} windows=${JSON.stringify(info.map((i) => i.title))}` }
 })
 

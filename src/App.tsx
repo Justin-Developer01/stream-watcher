@@ -31,7 +31,7 @@ function nearChromeEdge(edge: AppSettings['chromeEdge'], x: number, y: number) {
 function DeskApp() {
   const desk = useDesk()
   const twitchClientId = resolveTwitchClientId(desk.clientId)
-  const { auth, busy, error, loginToTwitch, loginForPrime, isLoggedIn } = useTwitchAuth(twitchClientId)
+  const { auth, busy, error, loginToTwitch, loginForPrime, logout, isLoggedIn } = useTwitchAuth(twitchClientId)
   const searchRef = useRef<HTMLInputElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -362,10 +362,7 @@ function DeskApp() {
         onToggleChat={() => (desk.chatOpen ? desk.setChatOpen(false) : openChat())}
         onFullscreen={() => runHotkey('fullscreen')}
         onAddStream={desk.addStream}
-        onLogin={() => void loginToTwitch()}
         onSettings={() => setSettingsOpen(true)}
-        isLoggedIn={isLoggedIn}
-        displayName={auth.displayName}
         searchRef={searchRef}
         chromeEdge={desk.settings.chromeEdge}
         onMenuOpen={setMenuOpen}
@@ -428,6 +425,10 @@ function DeskApp() {
         onReconnectChat={() => setChatNonce((n) => n + 1)}
         onRefreshPrime={() => void loginForPrime()}
         onShowTips={() => desk.applySettings({ ...desk.settings, dismissedTips: [] })}
+        isLoggedIn={isLoggedIn}
+        displayName={auth.displayName}
+        onLogin={() => void loginToTwitch()}
+        onLogout={() => void logout()}
       />
       </Suspense>
       )}
