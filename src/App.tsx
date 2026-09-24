@@ -214,6 +214,9 @@ function DeskApp() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        // Escape belongs to an open menu, popover, or tooltip first (Radix closes it), and to
+        // whatever is being typed; it must not also close fullscreen or the chat drawer.
+        if (event.defaultPrevented || document.querySelector('[data-radix-popper-content-wrapper]')) return
         if (settingsOpen) {
           setSettingsOpen(false)
           return
@@ -224,7 +227,7 @@ function DeskApp() {
           setFullscreen(false)
           return
         }
-        if (desk.chatOpen) desk.setChatOpen(false)
+        if (desk.chatOpen && !isEditableTarget(event.target)) desk.setChatOpen(false)
         return
       }
       if (isEditableTarget(event.target) && event.key !== 'F11') return
