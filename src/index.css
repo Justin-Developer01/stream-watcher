@@ -967,6 +967,10 @@ button:disabled { cursor: not-allowed; }
   background-color: #f6efe6;
   border-color: #c9b8a4;
 }
+[data-theme='light'] .stream-tile__channel {
+  background-color: transparent;
+  border-color: transparent;
+}
 [data-theme='light'] option {
   background-color: #fffdf9;
   color: #2a2118;
