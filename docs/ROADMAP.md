@@ -48,6 +48,7 @@ About 70% of the renderer can be shared. What's desktop-only: click-through and 
   - OAuth: Authorization Code + PKCE, redirecting to `https://vesperdesk.app/oauth/callback`. Register that URL in the Twitch console.
   - A PWA manifest.
   - Responsive layout for smaller screens.
+- **Styling** (M): the CSS stays hand-written for now (Justin's call). It's split into `src/styles/*` with the theme tokens in `tokens.css`. When `apps/web` starts, adopt Tailwind v4 mapped onto those same CSS variables, for new screens only; migrate existing screens when they're redesigned. This needs the "no Tailwind" rule in CLAUDE.md lifted at that point.
 - **State libraries** (optional, M):
   - `zustand` for desk state shared across windows and tabs
   - `@tanstack/react-query` for Helix caching, replacing the hand cache in `lib/chat/assets.ts`

@@ -32,7 +32,7 @@ Electron + React 19 + Vite, bundled with **electron-vite** (`electron.vite.confi
 | Preload | `src/preload/index.ts` | `contextBridge` → `window.vesper`. ESM preload (`index.mjs`) requires `sandbox: false` |
 | Renderer | `src/App.tsx`, `src/renderer.tsx`, `index.html` | Desk UI. Dev server is `http://localhost:5173` (`strictPort`) |
 
-UI primitives are **Radix only** (dialog, dropdown menu, popover, select, slider, switch, tabs, toggle group, tooltip) plus Lucide icons. Hand-written CSS lives in `src/index.css`. Do not install shadcn, Tailwind, or a component kit, and do not restyle the desk into a dense app shell.
+UI primitives are **Radix only** (dialog, dropdown menu, popover, select, slider, switch, tabs, toggle group, tooltip) plus Lucide icons. Hand-written CSS lives in `src/styles/` (`tokens`, `base`, `desk`, `chrome`, `tiles`, `chat`, `overlays`, `light`, `responsive`), imported in that order by `src/index.css`. Order matters: `light.css` wins ties over the component files, and `responsive.css` comes last. Do not install shadcn, Tailwind, or a component kit, and do not restyle the desk into a dense app shell.
 
 Other libraries already in use: `react-grid-layout` (stream grid), `tmi.js` (chat). The player is the Twitch embed script, not a custom player.
 
@@ -126,7 +126,7 @@ Themes are Dark, Dim, and Light (`data-theme` on `.desk`). Light uses cream surf
 - Selected controls stay readable: dark text, cyan border `#7ec8d8`, fill `#e7f6f8`.
 - Primary buttons use cyan fill with dark text. Disabled buttons stay bordered and readable (muted text, cream fill). Danger and Close hover use `#b42318` on a cream button, not a black fill.
 
-Every control, menu row, tooltip, switch, tab, and input must stay visible in Light. Light menus use theme surfaces (cream/visible): cream fill, dark text, and the light border above. That includes portaled Radix menus, tooltips, dialogs, and the emote popover. Those nodes do not inherit `.desk` tokens — spread `usePortalThemeProps()` and keep the `[data-theme='light']` overrides in `src/index.css`. A previous bug painted Light buttons black; do not regress that. When `theme === 'light'`, `themeVars()` also rewrites leftover dark hex values for surface, text, and page background.
+Every control, menu row, tooltip, switch, tab, and input must stay visible in Light. Light menus use theme surfaces (cream/visible): cream fill, dark text, and the light border above. That includes portaled Radix menus, tooltips, dialogs, and the emote popover. Those nodes do not inherit `.desk` tokens — spread `usePortalThemeProps()` and keep the `[data-theme='light']` overrides in `src/styles/light.css`. A previous bug painted Light buttons black; do not regress that. When `theme === 'light'`, `themeVars()` also rewrites leftover dark hex values for surface, text, and page background.
 
 ## Feature inventory
 
@@ -153,7 +153,7 @@ Do not revert visible branding to Stream Watcher. That includes the window title
 
 ## Releases
 
-Windows artifacts are unsigned (`forceCodeSigning: false`, `signAndEditExecutable: false`, `CSC_IDENTITY_AUTO_DISCOVERY=false`):
+Windows artifacts are unsigned (`forceCodeSigning: false`, `signExecutable: false`, `CSC_IDENTITY_AUTO_DISCOVERY=false`). Do not use `signAndEditExecutable: false`: it also skips writing the icon into `Vesper Desk.exe`, so the EXE and shortcuts fall back to the Electron icon. `signExecutable: false` still writes the icon and version info, just without signing:
 
 - `Vesper-Desk-Setup-<version>.exe` (one-click NSIS)
 - `Vesper-Desk-Portable-<version>.exe`
