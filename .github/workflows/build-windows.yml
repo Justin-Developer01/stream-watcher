@@ -27,7 +27,8 @@ jobs:
       - run: npm ci
       - run: npm run dist
         env:
-          # Optional. The rebuild reads the Twitch Client ID from Settings, not from this env.
+          # Optional. Baked in as the default Client ID; empty falls back to the public one.
+          # A Developer Client ID saved in Settings → Advanced overrides it.
           VITE_TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
       - uses: actions/upload-artifact@v4
         with:
@@ -52,7 +53,7 @@ jobs:
             Unsigned Windows build of Vesper Desk for testing. Do not expect a signed SmartScreen reputation yet.
 
             **Install:** `Vesper-Desk-Setup-*.exe` (one-click NSIS) or run `Vesper-Desk-Portable-*.exe`.
-            Open the app — no setup wizard. Use **Login to Twitch** from the ☰ menu. Put a Twitch Client ID in Settings → Advanced, then **Save**. OAuth redirect: `http://localhost:5173/oauth/callback`.
+            Open the app — no setup wizard. Use **Login to Twitch** from the ☰ menu. The Twitch Client ID is built in; to use your own, put it in Settings → Advanced, then **Save**. OAuth redirect: `http://localhost:5173/oauth/callback`.
 
             Settings persist only after **Save**. Quit with **Ctrl+Q** or the window Close control.
 

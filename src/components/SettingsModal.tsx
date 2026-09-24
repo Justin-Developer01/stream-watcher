@@ -4,6 +4,7 @@ import * as Switch from '@radix-ui/react-switch'
 import { useEffect, useMemo, useState } from 'react'
 import { defaultHotkeys, formatHotkeyEvent, hotkeyActions, hotkeyLabels, hotkeysConflict, type HotkeyAction } from '../lib/hotkeys'
 import { chatFontFamily } from '../lib/storage'
+import { builtInTwitchClientId } from '../lib/twitchClientId'
 import { ui } from '../lib/uiLabels'
 import { themeVars, usePortalThemeProps } from './ui/portalTheme'
 import { DEFAULT_SETTINGS, type AppSettings, type ChatFont, type ChromeEdge, type ThemeName } from '../types'
@@ -322,7 +323,11 @@ export function SettingsModal({
               </button>
               <label>
                 {ui.developerClientId}
-                <input value={draftClientId} onChange={(e) => setDraftClientId(e.target.value.trim())} />
+                <input
+                  value={draftClientId}
+                  onChange={(e) => setDraftClientId(e.target.value.trim())}
+                  placeholder={builtInTwitchClientId()}
+                />
               </label>
             </Tabs.Content>
 

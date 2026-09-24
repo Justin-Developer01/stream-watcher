@@ -1,5 +1,9 @@
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  readonly VITE_TWITCH_CLIENT_ID?: string
+}
+
 type VesperPopout = {
   channel: string
   kind: 'stream' | 'chat'

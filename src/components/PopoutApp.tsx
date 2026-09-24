@@ -6,13 +6,14 @@ import { TwitchPlayer } from './TwitchPlayer'
 import { useChat } from '../hooks/useChat'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { chatFontFamily, loadState } from '../lib/storage'
+import { resolveTwitchClientId } from '../lib/twitchClientId'
 import { ui } from '../lib/uiLabels'
 import { DEFAULT_SETTINGS } from '../types'
 
 export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel: string }) {
   const saved = useMemo(() => loadState(), [])
   const settings = saved?.settings ?? DEFAULT_SETTINGS
-  const clientId = saved?.clientId ?? ''
+  const clientId = resolveTwitchClientId(saved?.clientId)
   const { auth, isLoggedIn } = useTwitchAuth(clientId)
   const [alwaysOnTop, setAlwaysOnTop] = useState(false)
 

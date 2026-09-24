@@ -11,6 +11,7 @@ import { useChat } from './hooks/useChat'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
+import { resolveTwitchClientId } from './lib/twitchClientId'
 import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
 import { chatFontFamily } from './lib/storage'
 import type { AppSettings, PopoutInfo } from './types'
@@ -26,7 +27,9 @@ function nearChromeEdge(edge: AppSettings['chromeEdge'], x: number, y: number) {
 
 function DeskApp() {
   const desk = useDesk()
-  const { auth, busy, error, loginToTwitch, loginForPrime, isLoggedIn } = useTwitchAuth(desk.clientId)
+  const { auth, busy, error, loginToTwitch, loginForPrime, isLoggedIn } = useTwitchAuth(
+    resolveTwitchClientId(desk.clientId),
+  )
   const searchRef = useRef<HTMLInputElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
