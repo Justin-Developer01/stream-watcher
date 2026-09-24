@@ -50,12 +50,13 @@ The two trees share no files after the electron-vite/Radix rebuild (`6b3bc29`): 
 5. **Settings.** OK on both trees: only Save writes storage, and Reset and Cancel change only the draft (measured through `localStorage`). The controls were unreadable (row 13), which is fixed.
 6. **Chat.** The drawer pushes the grid for Slide L, Slide R, and Dock bottom, and Float overlays it (measured stage width 1440 → 1120). The Pop out, Dock back, and Float behavior was broken (rows 6–9) and is fixed.
 
+## Chat rebuilt to work like Twitch (follow-up)
+
+The chat items that were open here (Helix emotes and badges, reconnecting on every channel change, emote ranges vs emoji) are fixed by the chat rebuild: `2e48ba0`, `980b325`, `dd8ddab`. A mock Twitch (IRC WebSocket plus Helix) drives the built app in [`docs/parity/chat-e2e.mjs`](docs/parity/chat-e2e.mjs): 22/22 checks pass on both the built app and the packaged (asar) build, and the 15 parser unit tests pass under `npm test`. It is still untested against the real twitch.tv, which is blocked from this container.
+
 ## Still open (not fixed here)
 
 - **Left/Right chrome clips text chips.** "Standard", "Performance", and "Change layout" are cut off inside the 42px side bar ([`after-edge-left.png`](docs/parity/after-edge-left.png)). Fixing it needs icon forms of those chips, which is new UI, so it needs a design decision.
-- **Chat emotes and badges.** pre.17 had a Helix emote picker (global plus channel emotes, with search) and Helix badges. PR #2 has 7 hard-coded emote names, and the badges 404 (row 18). Restoring them means porting `useTwitchChatAssets` and `EmotePicker`, and neither can be tested from this container.
-- **Chat reconnects on every channel change.** pre.17 joined and parted incrementally (`f378678`). PR #2 rebuilds the tmi client whenever the channel list changes.
-- **Emote ranges versus emoji.** Twitch emote ranges count code points, but `renderText` slices by UTF-16 units, so a message with emoji before an emote renders it misaligned.
 - **Login error toast has no dismiss.** "Login was cancelled" stays until the next attempt.
 - **Pop-outs load the theme once** and don't follow a theme saved in the main window until they reopen.
 

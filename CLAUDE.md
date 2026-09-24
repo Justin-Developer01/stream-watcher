@@ -40,6 +40,7 @@ Other libraries already in use: `react-grid-layout` (stream grid), `tmi.js` (cha
 npm install
 npm run dev          # electron-vite
 npm run typecheck
+npm test             # vitest: chat parser
 npm run build
 npm run dist         # unsigned Windows Setup + Portable; do not run for a docs-only change
 ```
@@ -86,6 +87,15 @@ The `BrowserWindow` is always frameless (`frame: false`, transparent, maximized 
 
 **Pop out chat** (`popOutChat`) opens a separate window (`openPopout('chat', channel)`). **Pop out stream** does the same for video. Popped streams leave the grid. **Dock back**, the redock menu, **Dock all pop-outs**, or the pop-out window Close returns them. Pop-out bounds and always-on-top are stored on disk.
 
+### Chat behaves like twitch.tv chat
+
+Justin asked for chat to work like Twitch's, emotes and Bits included. Keep it that way:
+
+- `ChatDrawer` owns the chat (`useChat` + `useChatAssets`), not `App`, so messages never re-render the desk or the players. It is mounted once and placed by grid area, so moving the drawer keeps the connection and history.
+- One tmi.js connection per login; channel changes join/part on it. Lines are parsed from `raw_message` by `src/lib/chat/parse.ts` (unit-tested, `npm test`). Emote ranges are code-point indices.
+- Helix (`src/lib/chat/assets.ts`) supplies badges, global/channel/user emotes, and cheermotes. Login scopes are `chat:read chat:edit user:read:emotes`.
+- Shown like Twitch: badges, readable name colors, emotes, animated cheermotes with tier colors, mentions, links, replies, first-time chat, `/me`, sub/raid/announcement notices, deleted messages and timeouts, room modes, and "Chat paused due to scroll". The composer has the emote picker, Tab completion, history, `/me`, and slow mode.
+
 ### See through windows
 
 **See through windows** clears the desk background and turns on click-through for empty stage space.
@@ -105,7 +115,7 @@ The grid is 12 columns, `compactType="vertical"`, resizable, and its row height 
 
 ### Out of product unless asked
 
-Do not add a Bits iframe, cheer panel, channel-points store, or other Twitch Pro surfaces.
+Bits **in chat** are in product: cheermotes render in messages, and typing `Cheer100` sends it like any message. Do not add a Bits purchase flow, a Bits iframe or cheer panel, a channel-points store, or other Twitch Pro surfaces.
 
 ## Light mode
 
@@ -154,7 +164,7 @@ A docs-only change does not need a version bump, tag, or new EXE. The repo may b
 - Prefer small diffs. Match the surrounding code. Do not drive-by rename or redesign.
 - Before deleting a control, check the feature inventory and `uiLabels.ts`.
 - After chrome, theme, layout, or hit-testing edits, smoke these: Light and Dark, See through (bar stays on top and clickable; empty stage passes clicks; tiles still work), Focus (no tile drag), chat drawer versus pop-out, Ghost overlay and Pin toolbar.
-- `npm run typecheck` after TypeScript edits.
+- `npm run typecheck` after TypeScript edits, and `npm test` after chat parser edits.
 - Do not undraft or merge pull requests, or publish the GitHub repo, unless Justin explicitly asks. Landing stays Coming soon until a public Setup URL exists.
 
 ## Out of scope unless asked
