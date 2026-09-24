@@ -1021,3 +1021,14 @@ button:disabled { cursor: not-allowed; }
   .focus-strip { flex-direction: row; min-height: 0; }
   .focus-strip__item { height: 112px; min-height: 0; flex: 1 1 0; }
 }
+
+/* Grid drag/resize feedback in the accent (pre.17), not react-grid-layout's default red plate. */
+.react-grid-item.react-grid-placeholder {
+  background: color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  border-radius: 10px;
+  opacity: 0.4;
+}
+.react-grid-item > .react-resizable-handle { z-index: 3; }
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--accent) !important;
+}
