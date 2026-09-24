@@ -35,6 +35,14 @@ function preloadPath() {
   return join(moduleDir, '../preload/index.mjs')
 }
 
+/** The logo for the taskbar, Alt-Tab, and window icons (the EXE icon comes from electron-builder). */
+function appIconPath() {
+  const packaged = join(process.resourcesPath, 'icon.png')
+  if (app.isPackaged && existsSync(packaged)) return packaged
+  const dev = join(app.getAppPath(), 'build/icon.png')
+  return existsSync(dev) ? dev : undefined
+}
+
 function loadRenderer(win: BrowserWindow, search = '') {
   const q = search.startsWith('?') || search === '' ? search : `?${search}`
   if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
@@ -87,6 +95,7 @@ function createMainWindow() {
     show: false,
     autoHideMenuBar: true,
     thickFrame: true,
+    icon: appIconPath(),
     webPreferences: {
       preload: preloadPath(),
       contextIsolation: true,
@@ -153,6 +162,7 @@ function openPopout(kind: PopoutKind, channel: string) {
     backgroundColor: '#0c0a10',
     autoHideMenuBar: true,
     thickFrame: true,
+    icon: appIconPath(),
     webPreferences: {
       preload: preloadPath(),
       contextIsolation: true,

@@ -37,7 +37,6 @@
       "output": "release"
     },
     "win": {
-      "signAndEditExecutable": false,
       "target": [
         {
           "target": "nsis",
@@ -51,7 +50,9 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "signExecutable": false,
+      "icon": "build/icon.png"
     },
     "nsis": {
       "oneClick": true,
@@ -66,7 +67,13 @@
     },
     "portable": {
       "artifactName": "Vesper-Desk-Portable-${version}.${ext}"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ]
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
