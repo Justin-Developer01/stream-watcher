@@ -5,4 +5,5 @@ export const twitchPlatform: StreamPlatform = {
   id: 'twitch',
   label: 'Twitch',
   Player: TwitchPlayer,
+  hasChat: true,
 }

@@ -17,7 +17,7 @@ import { useChatAssets } from '../hooks/useChatAssets'
 import { emoteUrl } from '../lib/chat/parse'
 import type { Emote } from '../lib/chat/types'
 import { ui } from '../lib/uiLabels'
-import type { ChatDock } from '../types'
+import type { ChatDock, PlatformId } from '../types'
 import { ChatRow, type LineContext } from './chat/ChatLine'
 import { usePortalThemeProps } from './ui/portalTheme'
 import { Tip } from './ui/Tip'
@@ -48,6 +48,7 @@ const FALLBACK_GLOBAL: Array<[string, string]> = [
 
 type Props = {
   dock: ChatDock
+  platform: PlatformId
   channels: string[]
   activeChannel: string | null
   onChannelChange: (channel: string) => void
@@ -66,6 +67,7 @@ type Props = {
 
 export function ChatDrawer({
   dock,
+  platform,
   channels,
   activeChannel,
   onChannelChange,
@@ -93,7 +95,7 @@ export function ChatDrawer({
     }),
     [theme],
   )
-  const chat = useChat({ channels, username, accessToken, reconnectNonce, parseOptions })
+  const chat = useChat({ platform, channels, username, accessToken, reconnectNonce, parseOptions })
   const events = chat.eventsFor(activeChannel)
   const room = chat.roomStateFor(activeChannel)
 

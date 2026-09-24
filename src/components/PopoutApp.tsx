@@ -73,6 +73,7 @@ export function PopoutApp({
       ) : (
         <ChatDrawer
           dock="right"
+          platform={platform}
           channels={channels}
           activeChannel={channel}
           onChannelChange={() => undefined}

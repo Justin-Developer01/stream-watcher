@@ -9,6 +9,7 @@ import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { resolveTwitchClientId } from './lib/twitchClientId'
 import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
+import { getPlatform } from './lib/platforms/registry'
 import { chatFontFamily, streamKey } from './lib/storage'
 import type { AppSettings, PlatformId, PopoutInfo } from './types'
 
@@ -38,7 +39,9 @@ function DeskApp() {
   const [popped, setPopped] = useState<PopoutInfo[]>([])
   const [fullscreen, setFullscreen] = useState(false)
 
-  const channels = desk.visibleStreams.map((s) => s.channel)
+  // Chat is Twitch-only for now (Kick's chat transport is deferred) — streams on a
+  // platform without chat never reach the drawer or its tmi.js connection.
+  const channels = desk.visibleStreams.filter((s) => getPlatform(s.platform).hasChat).map((s) => s.channel)
   const poppedChat = useMemo(
     () => new Set(popped.filter((item) => item.kind === 'chat').map((item) => item.channel.toLowerCase())),
     [popped],
@@ -122,9 +125,8 @@ function DeskApp() {
     void window.vesper?.setClickThroughLocked(desk.windowLocked)
   }, [desk.settings.seeThrough, desk.windowLocked])
 
-  // Chat pop-outs are Twitch-only until Phase 3 (chat abstraction) — no
-  // platform other than Twitch has a chat toggle in the UI yet, so hardcoding
-  // here matches current reality rather than guessing ahead of that phase.
+  // Chat pop-outs are Twitch-only — Kick's chat transport is deferred (see the
+  // StreamPlatform plan), so no other platform's tiles ever offer a chat toggle.
   const popoutChat = async (channel: string) => {
     desk.setChatChannel(channel)
     await window.vesper?.openPopout('chat', channel, 'twitch')
@@ -295,6 +297,9 @@ function DeskApp() {
     <Suspense fallback={<aside className={`chat-drawer chat-drawer--${desk.chatDock}`} data-hit />}>
     <ChatDrawer
       dock={desk.chatDock}
+      // Chat is Twitch-only until Kick's chat transport is built — see the
+      // StreamPlatform plan's Phase 3 scope note.
+      platform="twitch"
       channels={drawerChannels}
       activeChannel={drawerActive}
       onChannelChange={desk.setChatChannel}
