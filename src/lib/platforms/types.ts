@@ -18,6 +18,8 @@ export type StreamPlatform = {
   Player: StreamPlayerComponent
   /** False hides chat toggles for this platform's tiles (e.g. Kick, until its chat transport is built). */
   hasChat: boolean
+  /** Parses a URL or bare channel name typed into "Add channel"; null if this platform doesn't recognize it. */
+  matchChannelInput: (input: string) => string | null
 }
 
 export interface PlatformAuth {

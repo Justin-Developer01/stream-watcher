@@ -60,7 +60,7 @@ type Props = {
   onOpenChat: (channel: string) => void
   onPopoutChat: (channel: string, platform: PlatformId) => void
   onPopoutStream: (channel: string, platform: PlatformId) => void
-  onToggleSave: (channel: string) => void
+  onToggleSave: (platform: PlatformId, channel: string) => void
   onSwitchFocus: () => void
 }
 
@@ -114,7 +114,7 @@ export const StreamGrid = memo(function StreamGrid({
       onOpenChat={() => handlers.current.onOpenChat(stream.channel)}
       onPopoutChat={() => handlers.current.onPopoutChat(stream.channel, stream.platform)}
       onPopoutStream={() => handlers.current.onPopoutStream(stream.channel, stream.platform)}
-      onToggleSave={() => handlers.current.onToggleSave(stream.channel)}
+      onToggleSave={() => handlers.current.onToggleSave(stream.platform, stream.channel)}
     />
   )
 

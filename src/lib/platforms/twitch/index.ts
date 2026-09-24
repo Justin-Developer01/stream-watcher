@@ -1,4 +1,5 @@
 import { TwitchPlayer } from '../../../components/TwitchPlayer'
+import { normalizeChannel } from '../../storage'
 import type { StreamPlatform } from '../types'
 
 export const twitchPlatform: StreamPlatform = {
@@ -6,4 +7,5 @@ export const twitchPlatform: StreamPlatform = {
   label: 'Twitch',
   Player: TwitchPlayer,
   hasChat: true,
+  matchChannelInput: normalizeChannel,
 }

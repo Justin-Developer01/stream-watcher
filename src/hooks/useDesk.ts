@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
+import { matchChannelInput } from '../lib/platforms/registry'
 import {
   createDefaultLayout,
   loadState,
   newStreamId,
-  normalizeChannel,
   saveState,
   streamKey,
 } from '../lib/storage'
-import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type PersistedState, type SavedStream, type StreamItem, type WatchMode } from '../types'
+import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type PersistedState, type PlatformId, type SavedStream, type StreamItem, type WatchMode } from '../types'
 
 const DEFAULT_STREAMS: StreamItem[] = [
   { id: newStreamId(), platform: 'twitch', channel: 'xqc', muted: false },
@@ -111,11 +111,9 @@ export function useDesk() {
   const visibleStreams = useMemo(() => streams.filter((s) => !s.popped), [streams])
 
   const addStream = useCallback((raw: string) => {
-    // Only Twitch is matched here today; Phase 5 adds platform-aware
-    // channel input (kick.com URLs etc.) alongside this.
-    const platform = 'twitch' as const
-    const channel = normalizeChannel(raw)
-    if (!channel) return { ok: false as const, error: 'Enter a valid Twitch channel or URL' }
+    const match = matchChannelInput(raw)
+    if (!match) return { ok: false as const, error: 'Enter a valid Twitch or Kick channel or URL' }
+    const { platform, channel } = match
     const key = streamKey(platform, channel)
     const existing = streams.find((s) => streamKey(s.platform, s.channel) === key)
     if (existing && !existing.popped) {
@@ -145,11 +143,7 @@ export function useDesk() {
     })
   }, [])
 
-  const toggleSaveStream = useCallback((raw: string) => {
-    // Twitch-only until Phase 5; see addStream.
-    const platform = 'twitch' as const
-    const channel = normalizeChannel(raw)
-    if (!channel) return
+  const toggleSaveStream = useCallback((platform: PlatformId, channel: string) => {
     const key = streamKey(platform, channel)
     setSavedStreams((prev) =>
       prev.some((s) => streamKey(s.platform, s.channel) === key)
@@ -158,8 +152,8 @@ export function useDesk() {
     )
   }, [])
 
-  const unsaveStream = useCallback((channel: string) => {
-    const key = streamKey('twitch', channel)
+  const unsaveStream = useCallback((platform: PlatformId, channel: string) => {
+    const key = streamKey(platform, channel)
     setSavedStreams((prev) => prev.filter((s) => streamKey(s.platform, s.channel) !== key))
   }, [])
 
