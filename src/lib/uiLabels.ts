@@ -76,6 +76,8 @@ export const ui = {
   unmute: 'Unmute',
   saved: 'Saved',
   removeSaved: 'Remove from Saved',
+  playerStopped: 'This player stopped.',
+  reloadPlayer: 'Reload player',
   low: 'Low',
   emotes: 'Emotes',
   send: 'Send',
