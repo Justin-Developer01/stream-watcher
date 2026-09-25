@@ -348,6 +348,9 @@ function DeskApp() {
         popped={popped}
         onDockAll={() => void dockAll()}
         onDock={(channel, kind, platform) => void dockPop(channel, kind, platform)}
+        savedStreams={desk.savedStreams}
+        onOpenSaved={desk.openSaved}
+        onUnsaveStream={desk.unsaveStream}
         seeThrough={desk.settings.seeThrough}
         onSeeThrough={(value) => desk.applySettings({ ...desk.settings, seeThrough: value })}
         windowLocked={desk.windowLocked}
