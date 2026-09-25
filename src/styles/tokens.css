@@ -1,0 +1,39 @@
+/* Theme tokens: Dark (default), Dim, and Light. Components read these variables; portaled
+   Radix content gets them via usePortalThemeProps(). */
+
+:root {
+  --chrome: 42px;
+  --drawer: 320px;
+  --accent: #7ec8d8;
+  --surface: #141018;
+  --text: #f4ece2;
+  --muted: #b5a89a;
+  --page-bg: #0c0a10;
+  --line: rgba(244, 236, 226, 0.14);
+  --btn-bg: rgba(255, 247, 236, 0.08);
+  --btn-fg: #f4ece2;
+  --btn-border: rgba(244, 236, 226, 0.22);
+  --danger: #e26d6d;
+  --radius: 8px;
+  --font: 'IBM Plex Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+[data-theme='dim'] {
+  --surface: #1a1620;
+  --page-bg: #121018;
+  --text: #efe6db;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --surface: #fff7ec;
+  --text: #2a2118;
+  --muted: #6d5f50;
+  --page-bg: #f3ebe1;
+  --line: rgba(42, 33, 24, 0.16);
+  --btn-bg: #fffdf9;
+  --btn-fg: #2a2118;
+  --btn-border: #c9b8a4;
+  --danger: #b42318;
+}

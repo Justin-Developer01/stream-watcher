@@ -1,0 +1,128 @@
+/* Light theme overrides (cream surfaces, dark text) and native dropdown colors. Keep after the
+   component files: several rules win on source order. */
+
+[data-theme='light'] button,
+[data-theme='light'] input,
+[data-theme='light'] select,
+[data-theme='light'] textarea,
+[data-theme='light'] .icon-btn,
+[data-theme='light'] .text-btn,
+[data-theme='light'] .mode-btn,
+[data-theme='light'] .win-btn,
+[data-theme='light'] .ghost-btn,
+[data-theme='light'] .hotkey-btn,
+[data-theme='light'] .chip,
+[data-theme='light'] .settings-tabs__list button,
+[data-theme='light'] .chrome-search input,
+[data-theme='light'] .chrome-select,
+[data-theme='light'] .settings-pane input,
+[data-theme='light'] .settings-pane select,
+[data-theme='light'] .menu-inline input,
+[data-theme='light'] .chat-composer input {
+  background-color: #fffdf9;
+  color: #2a2118;
+  border-color: #c9b8a4;
+}
+[data-theme='light'] .icon-btn.is-on,
+[data-theme='light'] .text-btn.is-on,
+[data-theme='light'] .mode-btn.is-on,
+[data-theme='light'] .mode-btn[data-state='on'],
+[data-theme='light'] .chip.is-on,
+[data-theme='light'] .settings-tabs__list button[data-state='active'] {
+  color: #2a2118;
+  border-color: #7ec8d8;
+  background-color: #e7f6f8;
+}
+[data-theme='light'] .primary-btn {
+  background-color: #7ec8d8;
+  color: #2a2118;
+  border-color: #5eafc2;
+}
+[data-theme='light'] .menu,
+[data-theme='light'].menu,
+[data-theme='light'] .modal-card,
+[data-theme='light'].modal-card,
+[data-theme='light'] .vd-tooltip,
+[data-theme='light'].vd-tooltip,
+[data-theme='light'] .emote-pop,
+[data-theme='light'].emote-pop,
+[data-theme='light'] .tip-card,
+[data-theme='light'] .toast,
+[data-theme='light'] .lock-chip {
+  --surface: #fff7ec;
+  --text: #2a2118;
+  --muted: #6d5f50;
+  --btn-bg: #fffdf9;
+  --btn-fg: #2a2118;
+  --btn-border: #c9b8a4;
+  --line: rgba(42, 33, 24, 0.16);
+  --danger: #b42318;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--text);
+  border-color: var(--btn-border);
+}
+[data-theme='light'] .modal-overlay,
+[data-theme='light'].modal-overlay {
+  background: rgba(42, 33, 24, 0.28);
+}
+[data-theme='light'] .vd-tooltip__arrow { fill: #fff7ec; }
+[data-theme='light'] .menu__item,
+[data-theme='light'] .menu__label,
+[data-theme='light'] .menu__item svg {
+  color: #2a2118;
+  background-color: transparent;
+}
+[data-theme='light'] .menu__item:hover,
+[data-theme='light'] .menu__item[data-highlighted] {
+  background: color-mix(in srgb, var(--accent) 28%, var(--surface));
+  color: var(--text);
+}
+[data-theme='light'] .switch {
+  background-color: #fffdf9;
+  border-color: #c9b8a4;
+}
+[data-theme='light'] .switch[data-state='checked'] {
+  background-color: #7ec8d8;
+}
+[data-theme='light'] .switch__thumb {
+  background-color: #2a2118;
+}
+[data-theme='light'] .perf-chip,
+[data-theme='light'] .badge {
+  color: #2a2118;
+  background-color: #e7f6f8;
+  border-color: #7ec8d8;
+}
+[data-theme='light'] .win-btn--close:hover,
+[data-theme='light'] .danger {
+  color: #b42318;
+  background-color: #fffdf9;
+}
+[data-theme='light'] button:disabled {
+  color: #6d5f50;
+  background-color: #f6efe6;
+  border-color: #c9b8a4;
+}
+[data-theme='light'] .stream-tile__channel {
+  background-color: transparent;
+  border-color: transparent;
+}
+[data-theme='light'] option {
+  background-color: #fffdf9;
+  color: #2a2118;
+}
+
+/* Native dropdowns: Chromium draws the open list from the select's background, and --btn-bg is
+   translucent, so on Windows the Dark/Dim list came out white with light text. Give selects and
+   their options an opaque theme surface. Light keeps its cream rules above (higher specificity). */
+select { color-scheme: dark; }
+[data-theme='light'] select { color-scheme: light; }
+select.chrome-select,
+.settings-pane select {
+  background: linear-gradient(var(--btn-bg), var(--btn-bg)), var(--surface);
+}
+option,
+optgroup {
+  background-color: var(--surface);
+  color: var(--text);
+}

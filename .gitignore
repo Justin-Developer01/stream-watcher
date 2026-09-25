@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-electron
+out
+release
+.DS_Store
+*.local
+.env
+.env.local
+*.log
+.vscode/*
+!.vscode/extensions.json
+
+# TypeScript / Vite caches — do not commit
+*.tsbuildinfo
+.vite
+.cache

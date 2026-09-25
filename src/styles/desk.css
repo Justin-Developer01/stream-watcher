@@ -1,0 +1,216 @@
+/* The desk grid: chrome, stage, and chat drawer areas for every chrome edge and dock, plus the
+   Ghost overlay and fullscreen variants. */
+
+.desk {
+  --chrome-size: var(--chrome);
+  height: 100%;
+  width: 100%;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  color: var(--text);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--chrome-size) minmax(0, 1fr);
+  grid-template-areas:
+    "chrome"
+    "stage";
+}
+
+.desk::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(12, 10, 16, calc(1 - var(--bg-opacity, 1))), rgba(12, 10, 16, calc(1 - var(--bg-opacity, 1)))),
+    var(--bg-image) center/cover no-repeat,
+    var(--page-bg);
+}
+
+.desk--see-through::before { background: transparent; }
+
+.desk > * { position: relative; z-index: 1; min-width: 0; min-height: 0; }
+.chrome-bar { grid-area: chrome; }
+.desk-stage { grid-area: stage; }
+.desk > .chat-drawer { grid-area: drawer; }
+
+.desk--chrome-bottom {
+  grid-template-rows: minmax(0, 1fr) var(--chrome-size);
+  grid-template-areas:
+    "stage"
+    "chrome";
+}
+.desk--chrome-left {
+  grid-template-columns: var(--chrome-size) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "chrome stage";
+}
+.desk--chrome-right {
+  grid-template-columns: minmax(0, 1fr) var(--chrome-size);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "stage chrome";
+}
+
+.desk--chrome-top.desk--chat-right {
+  grid-template-columns: minmax(0, 1fr) var(--drawer);
+  grid-template-rows: var(--chrome-size) minmax(0, 1fr);
+  grid-template-areas:
+    "chrome chrome"
+    "stage drawer";
+}
+.desk--chrome-top.desk--chat-left {
+  grid-template-columns: var(--drawer) minmax(0, 1fr);
+  grid-template-rows: var(--chrome-size) minmax(0, 1fr);
+  grid-template-areas:
+    "chrome chrome"
+    "drawer stage";
+}
+.desk--chrome-top.desk--chat-bottom {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--chrome-size) minmax(0, 1fr) minmax(160px, 28%);
+  grid-template-areas:
+    "chrome"
+    "stage"
+    "drawer";
+}
+.desk--chrome-bottom.desk--chat-right {
+  grid-template-columns: minmax(0, 1fr) var(--drawer);
+  grid-template-rows: minmax(0, 1fr) var(--chrome-size);
+  grid-template-areas:
+    "stage drawer"
+    "chrome chrome";
+}
+.desk--chrome-bottom.desk--chat-left {
+  grid-template-columns: var(--drawer) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) var(--chrome-size);
+  grid-template-areas:
+    "drawer stage"
+    "chrome chrome";
+}
+.desk--chrome-bottom.desk--chat-bottom {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(160px, 28%) var(--chrome-size);
+  grid-template-areas:
+    "stage"
+    "drawer"
+    "chrome";
+}
+.desk--chrome-left.desk--chat-right {
+  grid-template-columns: var(--chrome-size) minmax(0, 1fr) var(--drawer);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "chrome stage drawer";
+}
+.desk--chrome-left.desk--chat-left {
+  grid-template-columns: var(--chrome-size) var(--drawer) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "chrome drawer stage";
+}
+.desk--chrome-left.desk--chat-bottom {
+  grid-template-columns: var(--chrome-size) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(160px, 28%);
+  grid-template-areas:
+    "chrome stage"
+    "chrome drawer";
+}
+.desk--chrome-right.desk--chat-right {
+  grid-template-columns: minmax(0, 1fr) var(--drawer) var(--chrome-size);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "stage drawer chrome";
+}
+.desk--chrome-right.desk--chat-left {
+  grid-template-columns: var(--drawer) minmax(0, 1fr) var(--chrome-size);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "drawer stage chrome";
+}
+.desk--chrome-right.desk--chat-bottom {
+  grid-template-columns: minmax(0, 1fr) var(--chrome-size);
+  grid-template-rows: minmax(0, 1fr) minmax(160px, 28%);
+  grid-template-areas:
+    "stage chrome"
+    "drawer chrome";
+}
+
+.desk--ghost { --chrome-size: 0px; }
+.desk--ghost .chrome-bar {
+  position: absolute;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+}
+/* A hidden bar must not keep an invisible OS drag strip over the stage. */
+.desk--ghost .chrome-bar,
+.desk--ghost .chrome-bar * {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.desk--ghost.desk--chrome-top .chrome-bar,
+.desk--ghost.desk--chrome-bottom .chrome-bar {
+  left: 0;
+  right: 0;
+  height: var(--chrome);
+  width: auto;
+}
+.desk--ghost.desk--chrome-top .chrome-bar { top: 0; }
+.desk--ghost.desk--chrome-bottom .chrome-bar { bottom: 0; }
+.desk--ghost.desk--chrome-left .chrome-bar,
+.desk--ghost.desk--chrome-right .chrome-bar {
+  top: 0;
+  bottom: 0;
+  width: var(--chrome);
+  height: auto;
+}
+.desk--ghost.desk--chrome-left .chrome-bar { left: 0; }
+.desk--ghost.desk--chrome-right .chrome-bar { right: 0; }
+.chrome-hotzone {
+  position: absolute;
+  z-index: 7;
+}
+.desk--chrome-top .chrome-hotzone { top: 0; left: 0; right: 0; height: 10px; }
+.desk--chrome-bottom .chrome-hotzone { bottom: 0; left: 0; right: 0; height: 10px; }
+.desk--chrome-left .chrome-hotzone { top: 0; bottom: 0; left: 0; width: 10px; }
+.desk--chrome-right .chrome-hotzone { top: 0; bottom: 0; right: 0; width: 10px; }
+
+.desk--fullscreen .chrome-bar {
+  position: absolute;
+  z-index: 5;
+}
+.desk--fullscreen.desk--chrome-top .chrome-bar,
+.desk--fullscreen.desk--chrome-bottom .chrome-bar {
+  left: 0;
+  right: 0;
+  height: var(--chrome);
+  width: auto;
+}
+.desk--fullscreen.desk--chrome-top .chrome-bar { top: 0; }
+.desk--fullscreen.desk--chrome-bottom .chrome-bar { bottom: 0; }
+.desk--fullscreen.desk--chrome-left .chrome-bar,
+.desk--fullscreen.desk--chrome-right .chrome-bar {
+  top: 0;
+  bottom: 0;
+  width: var(--chrome);
+  height: auto;
+}
+.desk--fullscreen.desk--chrome-left .chrome-bar { left: 0; }
+.desk--fullscreen.desk--chrome-right .chrome-bar { right: 0; }
+.menu__item.is-on { box-shadow: inset 3px 0 0 var(--accent); }
+.desk--fullscreen {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "stage";
+}
+.desk--fullscreen.desk--chat-right {
+  grid-template-columns: minmax(0, 1fr) var(--drawer);
+  grid-template-areas: "stage drawer";
+}
+.desk--fullscreen.desk--chat-left {
+  grid-template-columns: var(--drawer) minmax(0, 1fr);
+  grid-template-areas: "drawer stage";
+}
+.desk--fullscreen.desk--chat-bottom {
+  grid-template-rows: minmax(0, 1fr) minmax(160px, 28%);
+  grid-template-areas:
+    "stage"
+    "drawer";
+}
