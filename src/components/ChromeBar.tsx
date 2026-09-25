@@ -76,10 +76,6 @@ const PRESETS: Array<['1x1' | '1x2' | '2x2' | '1+3', string]> = [
   ['1+3', '1+3'],
 ]
 
-// A pointer click on a Saved row waits this long before opening, so a second click can rename
-// it instead. Keyboard Enter/Space opens immediately.
-const SAVED_DOUBLE_CLICK_MS = 300
-
 const savedKey = (item: SavedStream) => `${item.platform}:${item.channel}`
 const savedDefaultLabel = (item: SavedStream) => `${getPlatform(item.platform).label} · ${item.channel}`
 
@@ -138,8 +134,6 @@ export const ChromeBar = memo(function ChromeBar({
   // (after Esc, ×, or a save) can never commit a stale draft a second time.
   const renamingRef = useRef(renaming)
   renamingRef.current = renaming
-  const savedOpenTimer = useRef(0)
-  const savedClickCount = useRef(0)
   const vertical = chromeEdge === 'left' || chromeEdge === 'right'
   const flyoutSide = outwardSide(chromeEdge)
   const portal = usePortalThemeProps()
@@ -154,7 +148,6 @@ export const ChromeBar = memo(function ChromeBar({
   }
 
   const startRename = (item: SavedStream) => {
-    window.clearTimeout(savedOpenTimer.current)
     setRenaming({ key: savedKey(item), draft: item.name ?? '' })
   }
 
@@ -169,15 +162,10 @@ export const ChromeBar = memo(function ChromeBar({
 
   const setSavedOpen = (open: boolean) => {
     // Closing (click away, trigger, or opening a stream) keeps whatever was typed, like a blur.
-    if (!open) {
-      endRename(true)
-      window.clearTimeout(savedOpenTimer.current)
-    }
+    if (!open) endRename(true)
     setSavedMenuOpen(open)
     onMenuOpen(open)
   }
-
-  useEffect(() => () => window.clearTimeout(savedOpenTimer.current), [])
 
   useEffect(() => {
     // Keep the Maximize/Restore icon honest after OS snaps and double-clicks on the bar.
@@ -457,27 +445,7 @@ export const ChromeBar = memo(function ChromeBar({
                           startRename(item)
                         }
                       }}
-                      onClick={(e) => {
-                        savedClickCount.current = e.detail
-                      }}
-                      onSelect={(event) => {
-                        // detail 0 = keyboard Enter/Space: open now. A mouse click waits briefly so a
-                        // second click (detail 2) renames the row instead of opening the stream.
-                        if (savedClickCount.current === 0) {
-                          onOpenSaved(item.platform, item.channel)
-                          return
-                        }
-                        event.preventDefault()
-                        window.clearTimeout(savedOpenTimer.current)
-                        if (savedClickCount.current >= 2) {
-                          startRename(item)
-                          return
-                        }
-                        savedOpenTimer.current = window.setTimeout(() => {
-                          onOpenSaved(item.platform, item.channel)
-                          setSavedOpen(false)
-                        }, SAVED_DOUBLE_CLICK_MS)
-                      }}
+                      onSelect={() => onOpenSaved(item.platform, item.channel)}
                     >
                       <span className="menu__saved-name">{item.name ?? fallback}</span>
                       <span className="menu__saved-actions">
