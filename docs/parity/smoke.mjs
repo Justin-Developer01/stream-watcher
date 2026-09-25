@@ -291,6 +291,30 @@ await step('focus: no drag handle; strip click promotes; strip action click does
     detail: `handles=${handles} nestedButtons=${nested} hero ${heroBefore} → (action) ${heroAfterAction} → (click) ${heroAfterClick}`,
   }
 })
+await step('focus: promoting a strip tile moves players without reloading them (Twitch)', async () => {
+  await page.locator('.mode-btn', { hasText: 'Focus' }).click()
+  // The embed script adds its iframe asynchronously after the Focus mount.
+  await page.waitForFunction(() => document.querySelectorAll('.focus-stage iframe').length >= 2, null, { timeout: 8000 })
+  const tagged = await page.evaluate(() =>
+    [...document.querySelectorAll('.focus-stage iframe')].map((f, i) => (f.dataset.smokeKeep = String(i))).length,
+  )
+  const heroBefore = await page.locator('.focus-hero .stream-tile__channel').textContent()
+  await page.locator('.focus-strip__item').first().dispatchEvent('click')
+  await sleep(600)
+  const heroMid = await page.locator('.focus-hero .stream-tile__channel').textContent()
+  await page.locator('.focus-strip__item').first().dispatchEvent('click')
+  await sleep(600)
+  const heroAfter = await page.locator('.focus-hero .stream-tile__channel').textContent()
+  const r = await page.evaluate(() => {
+    const frames = [...document.querySelectorAll('.focus-stage iframe')]
+    return { total: frames.length, kept: frames.filter((f) => f.dataset.smokeKeep).length }
+  })
+  await page.locator('.mode-btn', { hasText: 'Standard' }).click()
+  return {
+    ok: tagged >= 2 && heroMid !== heroBefore && r.kept === tagged && r.total === tagged,
+    detail: `2 promotes (hero ${heroBefore} → ${heroMid} → ${heroAfter}), iframes before=${tagged} after=${r.total} same-element=${r.kept}`,
+  }
+})
 
 // ---------- Chat drawer ----------
 const stageWidth = () => page.locator('.desk-stage').evaluate((e) => e.getBoundingClientRect().width)

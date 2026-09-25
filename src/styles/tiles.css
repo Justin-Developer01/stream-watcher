@@ -11,9 +11,22 @@
 .stream-grid-measure { flex: 1 1 auto; min-width: 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; }
 .stream-grid, .focus-stage { min-height: 0; width: 100%; }
 .stream-grid { height: 100%; }
-.focus-stage { flex: 1; display: grid; grid-template-columns: minmax(0, 72%) minmax(0, 28%); gap: 8px; padding: 8px; }
-.focus-strip { display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: auto; }
-.focus-strip__item { padding: 0; border: 0; background: none; height: 28%; min-height: 120px; cursor: pointer; }
+/* Focus: the hero, Switch Focus, and strip tiles are all direct children of .focus-stage and are
+   placed by grid slot (StreamGrid sets --focus-rows, --focus-span, --focus-slot), so a promote only
+   moves a tile's slot and never re-parents its player. Hero: column 1 across every row. Strip:
+   column 2, Switch Focus on top, then one minmax(0, 28%) row per tile, shrinking to fit like the
+   old flex strip did; the trailing 1fr row takes any leftover height so the hero stays full height. */
+.focus-stage {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 72%) minmax(0, 28%);
+  grid-template-rows: var(--focus-rows, auto 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+.focus-switch { grid-column: 2; grid-row: 1; }
+.focus-hero { grid-column: 1; grid-row: 1 / -1; }
+.focus-strip__item { grid-column: 2; grid-row: var(--focus-slot); padding: 0; border: 0; background: none; cursor: pointer; }
 .focus-strip__item:hover .stream-tile { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
 .focus-hero, .focus-strip__item, .stream-grid__item { min-width: 0; min-height: 0; overflow: hidden; }
 

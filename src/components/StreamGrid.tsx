@@ -1,4 +1,4 @@
-import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import GridLayout from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
@@ -121,17 +121,31 @@ export const StreamGrid = memo(function StreamGrid({
   if (mode === 'focus') {
     const hero = streams.find((s) => s.id === focusedId) ?? streams[0]
     const strip = streams.filter((s) => s.id !== hero.id)
+    // Every tile stays a keyed child of .focus-stage, in desk order; promoting only changes its class
+    // and grid slot. Split across a hero box and a strip box, a promote moved both streams to a new
+    // parent, which React can only do by remounting them, and a re-attached iframe always reloads.
+    const stageStyle = {
+      '--focus-span': streams.length,
+      '--focus-rows': strip.length ? `auto repeat(${strip.length}, minmax(0, 28%)) 1fr` : 'auto 1fr',
+    } as CSSProperties
     return (
-      <div className="focus-stage">
-        <div className="focus-hero">{tile(hero)}</div>
-        <aside className="focus-strip">
-          <button type="button" className="text-btn" data-hit onClick={onSwitchFocus}>
-            {ui.switchFocus}
-          </button>
-          {strip.map((stream) => (
+      <div className="focus-stage" style={stageStyle}>
+        <button type="button" className="text-btn focus-switch" data-hit onClick={onSwitchFocus}>
+          {ui.switchFocus}
+        </button>
+        {streams.map((stream) => {
+          if (stream.id === hero.id) {
+            return (
+              <div key={stream.id} className="focus-hero">
+                {tile(stream)}
+              </div>
+            )
+          }
+          return (
             <div
               key={stream.id}
               className="focus-strip__item"
+              style={{ '--focus-slot': strip.indexOf(stream) + 2 } as CSSProperties}
               role="button"
               tabIndex={0}
               onClick={() => onFocus(stream.id)}
@@ -145,8 +159,8 @@ export const StreamGrid = memo(function StreamGrid({
             >
               {tile(stream, true)}
             </div>
-          ))}
-        </aside>
+          )
+        })}
       </div>
     )
   }

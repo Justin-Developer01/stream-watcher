@@ -46,7 +46,13 @@
       "stage"
       "drawer";
   }
-  .focus-stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .focus-strip { flex-direction: row; min-height: 0; }
-  .focus-strip__item { height: 112px; min-height: 0; flex: 1 1 0; }
+  /* Hero on top across every column; Switch Focus, then one equal column per strip tile below. */
+  .focus-stage {
+    grid-template-columns: auto;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 112px;
+  }
+  .focus-switch { grid-column: 1; grid-row: 2; }
+  .focus-hero { grid-column: 1 / span var(--focus-span, 1); grid-row: 1; }
+  .focus-strip__item { grid-column: var(--focus-slot); grid-row: 2; }
 }
