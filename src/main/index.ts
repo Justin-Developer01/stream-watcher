@@ -90,6 +90,23 @@ function applyClickThrough() {
   mainWindow.setIgnoreMouseEvents(false)
 }
 
+export function hardenWindow(win: BrowserWindow) {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) {
+      void shell.openExternal(url)
+    }
+    return { action: 'deny' }
+  })
+
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url === win.webContents.getURL()) return
+    event.preventDefault()
+    if (/^https?:\/\//i.test(url)) {
+      void shell.openExternal(url)
+    }
+  })
+}
+
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -133,10 +150,7 @@ function createMainWindow() {
     app.quit()
   })
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url)
-    return { action: 'deny' }
-  })
+  hardenWindow(mainWindow)
 
   loadRenderer(mainWindow)
 }
@@ -194,6 +208,8 @@ function openPopout(kind: PopoutKind, platform: PlatformId, channel: string) {
     event.preventDefault()
     dockPopout(kind, platform, channel)
   })
+
+  hardenWindow(win)
 
   loadRenderer(win, `mode=${kind}&channel=${encodeURIComponent(channel)}&platform=${platform}`)
   broadcastPopouts()
@@ -311,13 +327,39 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
   })
 }
 
+const CSP_STRIP_URL_PATTERNS = [
+  '*://player.twitch.tv/*',
+  '*://embed.twitch.tv/*',
+]
+
+const CSP_STRIP_HOSTS = new Set(['player.twitch.tv', 'embed.twitch.tv'])
+
+function shouldStripCsp(urlStr: string): boolean {
+  try {
+    const { hostname } = new URL(urlStr)
+    return CSP_STRIP_HOSTS.has(hostname)
+  } catch {
+    return false
+  }
+}
+
 app.whenReady().then(() => {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const headers = { ...details.responseHeaders }
-    delete headers['Content-Security-Policy']
-    delete headers['content-security-policy']
-    callback({ responseHeaders: headers })
-  })
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls: CSP_STRIP_URL_PATTERNS },
+    (details, callback) => {
+      if (!shouldStripCsp(details.url)) {
+        callback({ responseHeaders: details.responseHeaders })
+        return
+      }
+      const headers = { ...details.responseHeaders }
+      for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === 'content-security-policy') {
+          delete headers[key]
+        }
+      }
+      callback({ responseHeaders: headers })
+    },
+  )
 
   ipcMain.handle('window:minimize', (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize()

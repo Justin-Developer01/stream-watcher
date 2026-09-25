@@ -12,13 +12,34 @@ const [repo, shots, label = 'run'] = process.argv.slice(2)
 mkdirSync(shots, { recursive: true })
 const cfgHome = mkdtempSync(join(tmpdir(), 'vd-cfg-'))
 const results = []
+const cspViolations = []
+
 const record = (name, ok, detail = '') => {
   results.push({ name, ok, detail })
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`)
 }
+
+const hookWindowCsp = (w) => {
+  w.on('console', (msg) => {
+    if (msg.text().startsWith('CSP_VIOLATION:')) {
+      try {
+        cspViolations.push(JSON.parse(msg.text().slice(14)))
+      } catch {
+        cspViolations.push({ raw: msg.text() })
+      }
+    }
+  })
+}
+
 const step = async (name, fn) => {
+  const violationsBefore = cspViolations.length
   try {
     const r = await fn()
+    if (cspViolations.length > violationsBefore) {
+      const newV = cspViolations.slice(violationsBefore)
+      record(name, false, `securitypolicyviolation: ${JSON.stringify(newV)}`)
+      return
+    }
     if (r === false) record(name, false)
     else if (typeof r === 'string') record(name, true, r)
     else if (r && typeof r === 'object') record(name, r.ok, r.detail)
@@ -36,7 +57,19 @@ async function launch() {
     env: { ...process.env, XDG_CONFIG_HOME: cfgHome, ELECTRON_RENDERER_URL: '' },
     cwd: repo,
   })
+  await app.context().addInitScript(() => {
+    window.addEventListener('securitypolicyviolation', (e) => {
+      const detail = {
+        blockedURI: e.blockedURI,
+        violatedDirective: e.violatedDirective,
+        effectiveDirective: e.effectiveDirective,
+      }
+      console.error('CSP_VIOLATION:' + JSON.stringify(detail))
+    })
+  })
+  app.on('window', hookWindowCsp)
   const page = await app.firstWindow()
+  hookWindowCsp(page)
   await page.waitForSelector('.desk', { timeout: 20000 })
   await sleep(600)
   return { app, page }
@@ -378,7 +411,11 @@ await step('resize: 1000x700 window keeps tiles/chrome/drawer from overlapping',
     return { barStage: ov(bar, st), stageDrawer: ov(st, dr), barDrawer: ov(bar, dr), sw: document.documentElement.scrollWidth, w: innerWidth }
   })
   await page.keyboard.press('Control+Shift+C')
-  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].maximize())
+  await app.evaluate(({ BrowserWindow }) => {
+    const w = BrowserWindow.getAllWindows()[0]
+    w.maximize()
+    w.setSize(1440, 900)
+  })
   await sleep(500)
   return { ok: !r.barStage && !r.stageDrawer && !r.barDrawer && r.sw <= r.w, detail: JSON.stringify(r) }
 })
@@ -388,7 +425,10 @@ await app.evaluate(({ BrowserWindow }) => {
   const w = BrowserWindow.getAllWindows()[0]
   const orig = w.setIgnoreMouseEvents.bind(w)
   globalThis.__ignore = []
-  w.setIgnoreMouseEvents = (v, o) => { globalThis.__ignore.push(v); return orig(v, o) }
+  w.setIgnoreMouseEvents = (v, o) => {
+    globalThis.__ignore.push(v)
+    if (process.platform !== 'linux') orig(v, o)
+  }
 })
 const lastIgnore = () => app.evaluate(() => globalThis.__ignore.at(-1))
 await step('see-through: bar on top; empty stage ignores mouse; bar + tiles stay interactive', async () => {
@@ -399,18 +439,18 @@ await step('see-through: bar on top; empty stage ignores mouse; bar + tiles stay
   // find an empty stage point
   const empty = await page.evaluate(() => {
     const st = document.querySelector('.desk-stage').getBoundingClientRect()
-    for (let y = st.bottom - 5; y > st.top; y -= 20)
+    for (let y = Math.min(st.bottom - 5, window.innerHeight - 55); y > st.top; y -= 20)
       for (let x = st.left + 5; x < st.right; x += 20) {
         const el = document.elementFromPoint(x, y)
         if (el && !el.closest('[data-hit]')) return [x, y]
       }
     return null
   })
-  const tile = await page.locator('.stream-tile__player').first().boundingBox()
+  const tile = await page.locator('.stream-tile__bar').first().boundingBox()
   const barBtn = await page.locator('.chrome-bar .text-btn').first().boundingBox()
   const out = {}
   if (empty) { await page.mouse.move(empty[0], empty[1]); await sleep(150); out.emptyStage = await lastIgnore() }
-  await page.mouse.move(tile.x + 30, tile.y + 30); await sleep(150); out.tile = await lastIgnore()
+  await page.mouse.move(tile.x + 30, tile.y + 15); await sleep(150); out.tile = await lastIgnore()
   await page.mouse.move(barBtn.x + 5, barBtn.y + 5); await sleep(150); out.chromeButton = await lastIgnore()
   await shot(page, 'see-through')
   return { ok: onTop && cls.includes('desk--see-through') && out.emptyStage === true && out.tile === false && out.chromeButton === false, detail: `alwaysOnTop=${onTop} ignoreMouse=${JSON.stringify(out)} emptyPoint=${JSON.stringify(empty)}` }
@@ -501,6 +541,24 @@ await step('kick: mute remounts the iframe with a flipped muted param; star save
     detail: `muted ${mutedBefore}→${mutedAfter} starOn=${starOn} saved=${JSON.stringify(saved)}`,
   }
 })
+await step('kick: pop out stream opens a separate window and dock back restores it', async () => {
+  const tile = page.locator('.stream-grid__item', { hasText: 'adinross' })
+  const winP = app.waitForEvent('window', { timeout: 5000 })
+  await tile.locator('.stream-tile__actions .icon-btn').nth(2).click()
+  const pop = await winP
+  await pop.waitForSelector('.popout-root', { timeout: 10000 })
+  const hasKickPlayer = (await pop.locator('.kick-player iframe').count()) === 1
+  const src = await pop.locator('.kick-player iframe').getAttribute('src')
+  await pop.screenshot({ path: join(shots, `${label}-kick-popout.png`) })
+  await pop.locator('.popout-bar .text-btn', { hasText: 'Dock back' }).click()
+  await sleep(600)
+  const windows = app.windows().filter((w) => !w.isClosed()).length
+  const tileRestored = (await page.locator('.stream-grid__item', { hasText: 'adinross' }).count()) === 1
+  return {
+    ok: hasKickPlayer && /^https:\/\/player\.kick\.com\/adinross\?/.test(src || '') && windows === 1 && tileRestored,
+    detail: `kickPlayer=${hasKickPlayer} src=${src} windowsAfterDock=${windows} tileOnDesk=${tileRestored}`,
+  }
+})
 await step('kick: remove drops the tile', async () => {
   const before = await page.locator('.stream-grid__item').count()
   await page.locator('.stream-grid__item', { hasText: 'adinross' }).locator('.stream-tile__actions .icon-btn.danger').click()
@@ -543,6 +601,23 @@ await step('youtube: mute toggles without error and the tile stays mounted', asy
   await sleep(300)
   const stillThere = (await tile.locator('.youtube-player').count()) === 1
   return { ok: stillThere, detail: `container still mounted after mute click: ${stillThere}` }
+})
+await step('youtube: pop out stream opens a separate window and dock back restores it', async () => {
+  const tile = page.locator('.stream-grid__item', { hasText: 'dQw4w9WgXcQ' })
+  const winP = app.waitForEvent('window', { timeout: 5000 })
+  await tile.locator('.stream-tile__actions .icon-btn').nth(2).click()
+  const pop = await winP
+  await pop.waitForSelector('.popout-root', { timeout: 10000 })
+  const hasYTContainer = (await pop.locator('.youtube-player').count()) === 1
+  await pop.screenshot({ path: join(shots, `${label}-youtube-popout.png`) })
+  await pop.locator('.popout-bar .text-btn', { hasText: 'Dock back' }).click()
+  await sleep(600)
+  const windows = app.windows().filter((w) => !w.isClosed()).length
+  const tileRestored = (await page.locator('.stream-grid__item', { hasText: 'dQw4w9WgXcQ' }).count()) === 1
+  return {
+    ok: hasYTContainer && windows === 1 && tileRestored,
+    detail: `youtubeContainer=${hasYTContainer} windowsAfterDock=${windows} tileOnDesk=${tileRestored}`,
+  }
 })
 await step('youtube: remove drops the tile', async () => {
   const before = await page.locator('.stream-grid__item').count()
@@ -658,11 +733,54 @@ await step('log: main.log records startup, windows, and warnings with tokens red
   }
 })
 
+// ---------- Security hardening: hardenWindow & setWindowOpenHandler ----------
+await step('security: setWindowOpenHandler and will-navigate guard against non-http and external navigation', async () => {
+  await app.evaluate(({ shell }) => {
+    globalThis.__openedUrls = []
+    shell.openExternal = async (url) => {
+      globalThis.__openedUrls.push(url)
+    }
+  })
+
+  // setWindowOpenHandler: http allowed, non-http denied
+  await page.evaluate(() => window.open('https://example.com/allowed-open'))
+  await page.evaluate(() => window.open('file:///etc/passwd'))
+  await sleep(200)
+
+  // will-navigate: http allowed & prevented, non-http denied & prevented, same-url allowed
+  const navResult = await app.evaluate(({ BrowserWindow }) => {
+    const main = BrowserWindow.getAllWindows()[0]
+    let pHttp = false, pFile = false, pSame = false
+    main.webContents.emit('will-navigate', { preventDefault: () => { pHttp = true } }, 'https://example.com/allowed-nav')
+    main.webContents.emit('will-navigate', { preventDefault: () => { pFile = true } }, 'file:///etc/hosts')
+    main.webContents.emit('will-navigate', { preventDefault: () => { pSame = true } }, main.webContents.getURL())
+    return { pHttp, pFile, pSame }
+  })
+
+  const opened = await app.evaluate(() => globalThis.__openedUrls)
+  const ok = navResult.pHttp &&
+    navResult.pFile &&
+    !navResult.pSame &&
+    opened.includes('https://example.com/allowed-open') &&
+    opened.includes('https://example.com/allowed-nav') &&
+    !opened.some((u) => u.startsWith('file:'))
+
+  return { ok, detail: `nav=${JSON.stringify(navResult)} opened=${JSON.stringify(opened)}` }
+})
+
+// ---------- CSP: zero securitypolicyviolation events ----------
+await step('csp: zero securitypolicyviolation events fired across any window', async () => {
+  return {
+    ok: cspViolations.length === 0,
+    detail: cspViolations.length ? JSON.stringify(cspViolations) : '0 violations',
+  }
+})
+
 // ---------- Quit with pop-outs open ----------
 await step('quit: Ctrl+Q exits even with a stream pop-out open', async () => {
   await page.keyboard.press('Escape')
   const winP = app.waitForEvent('window', { timeout: 5000 })
-  await page.locator('.stream-grid__item').first().locator('.stream-tile__actions .icon-btn').nth(4).click()
+  await page.locator('.stream-grid__item').first().locator('.stream-tile__actions button:has(svg.lucide-picture-in-picture-2)').click()
   const pop = await winP
   await pop.waitForSelector('.popout-root', { timeout: 10000 })
   await pop.screenshot({ path: join(shots, `${label}-stream-popout.png`) })

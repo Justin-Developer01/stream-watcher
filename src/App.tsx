@@ -444,7 +444,8 @@ export default function App() {
   const params = new URLSearchParams(window.location.search)
   const mode = params.get('mode')
   const channel = params.get('channel') ?? ''
-  const platform: PlatformId = params.get('platform') === 'kick' ? 'kick' : 'twitch'
+  const rawPlatform = params.get('platform')
+  const platform: PlatformId = rawPlatform === 'kick' || rawPlatform === 'youtube' ? rawPlatform : 'twitch'
 
   return (
     <Tooltip.Provider delayDuration={250} skipDelayDuration={80}>
