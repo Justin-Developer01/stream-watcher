@@ -1,4 +1,4 @@
-import { memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import GridLayout from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
@@ -178,12 +178,21 @@ function MeasuredGrid({
   const [ref, size] = useElementSize<HTMLDivElement>()
   const layoutRef = useRef(layout)
   layoutRef.current = layout
-  const rows = rowSpan(layout)
+  // A popped-out stream has no rendered tile, so react-grid-layout must never see its layout
+  // entry: handed a layout item with no matching child, it "corrects" that item down to 1x1 on
+  // the next layout event, corrupting the size it should be restored to on dock-back.
+  const visibleIds = useMemo(() => new Set(streams.map((s) => s.id)), [streams])
+  const visibleLayout = useMemo(() => layout.filter((l) => visibleIds.has(l.i)), [layout, visibleIds])
+  const rows = rowSpan(visibleLayout)
   const vertical = GRID_PADDING[1] * 2 + GRID_MARGIN[1] * Math.max(rows - 1, 0)
   const rowHeight = size.height > vertical ? (size.height - vertical) / rows : 40
   const emitLayout = useCallback((next: Layout[]) => {
-    if (layoutsEqual(layoutRef.current, next)) return
-    onLayoutChange(next)
+    // next only covers currently-visible items; merge into the full layout so a popped
+    // stream's own remembered position is untouched rather than dropped or corrupted.
+    const merged = layoutRef.current.map((l) => next.find((n) => n.i === l.i) ?? l)
+    for (const n of next) if (!merged.some((m) => m.i === n.i)) merged.push(n)
+    if (layoutsEqual(layoutRef.current, merged)) return
+    onLayoutChange(merged)
   }, [onLayoutChange])
 
   return (
@@ -192,7 +201,7 @@ function MeasuredGrid({
         <GridLayout
           className="stream-grid"
           width={size.width}
-          layout={layout}
+          layout={visibleLayout}
           cols={12}
           rowHeight={rowHeight}
           margin={GRID_MARGIN}

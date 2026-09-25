@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { log } from '../lib/log'
 import type { PlatformAuth } from '../lib/platforms/types'
 import { clearAuth, loadAuth, saveAuth } from '../lib/storage'
@@ -21,10 +21,6 @@ export function useTwitchAuth(clientId: string): PlatformAuth & {
   const [auth, setAuth] = useState<ProviderAuthState>(() => loadAuth().twitch)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    return window.vesper?.onTwitchSessionUpdated(() => undefined)
-  }, [])
 
   const loginForChat = useCallback(async () => {
     if (!clientId.trim()) {
