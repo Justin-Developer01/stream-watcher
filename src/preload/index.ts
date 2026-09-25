@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { AuthState } from '../lib/authState'
+import type { ProviderAuthState, PublicAuthState } from '../lib/authState'
 import type { PlatformId } from '../lib/platformId'
+
+export type ChatCredentials = { username: string; accessToken: string }
 
 export type TwitchOAuthResult = {
   accessToken: string
@@ -38,9 +40,19 @@ const api = {
   startTwitchOAuth: (payload: { clientId: string; redirectUri: string; scopes: string[] }) =>
     ipcRenderer.invoke('twitch:oauth', payload) as Promise<TwitchOAuthResult | null>,
   openLogFolder: () => ipcRenderer.invoke('log:open-folder') as Promise<string>,
-  clearTwitchSession: () => ipcRenderer.invoke('twitch:clear-session') as Promise<void>,
-  loadTwitchAuth: () => ipcRenderer.invoke('auth:load-twitch') as Promise<AuthState | null>,
-  saveTwitchAuth: (auth: AuthState) => ipcRenderer.invoke('auth:save-twitch', auth) as Promise<void>,
+  getAuthSession: () => ipcRenderer.invoke('auth:get-session') as Promise<PublicAuthState>,
+  getChatCredentials: () =>
+    ipcRenderer.invoke('auth:get-chat-credentials') as Promise<ChatCredentials | null>,
+  migrateLegacyAuth: (legacy: ProviderAuthState) =>
+    ipcRenderer.invoke('auth:migrate-legacy', legacy) as Promise<void>,
+  loginTwitchSession: (session: ProviderAuthState) =>
+    ipcRenderer.invoke('auth:login', session) as Promise<void>,
+  logoutTwitch: (clientId: string) => ipcRenderer.invoke('auth:logout', clientId) as Promise<void>,
+  onAuthChanged: (callback: (session: PublicAuthState) => void) => {
+    const handler = (_e: unknown, session: PublicAuthState) => callback(session)
+    ipcRenderer.on('auth:changed', handler)
+    return () => ipcRenderer.removeListener('auth:changed', handler)
+  },
   openPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) =>
     ipcRenderer.invoke('popout:open', { kind, channel, platform }) as Promise<void>,
   dockPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) =>

@@ -94,21 +94,12 @@ export function clearAuth() {
   localStorage.removeItem(LEGACY_AUTH_STREAM_WATCHER)
 }
 
-/**
- * Twitch auth now lives in main-process safeStorage (see src/main/index.ts's
- * auth:load-twitch/auth:save-twitch), not localStorage — a stolen renderer
- * localStorage dump (e.g. via a bug in an embedded player) can no longer
- * carry a live Twitch token. useTwitchAuth() migrates the old `loadAuth()`
- * localStorage entry into this store once, then calls clearAuth() to drop it.
- */
-export async function loadSecureAuth(): Promise<AuthState | null> {
-  if (!window.vesper) return null
-  return window.vesper.loadTwitchAuth()
-}
-
-export async function saveSecureAuth(auth: AuthState): Promise<void> {
-  await window.vesper?.saveTwitchAuth(auth)
-}
+// Twitch auth now lives entirely in the main process (src/main/index.ts owns
+// twitch-auth.bin, migration, validation, and every write — see the comment on
+// `currentAuth` there). loadAuth()/clearAuth() above are only used once, by the
+// desk's useTwitchAuth() on first launch, to hand main any pre-existing
+// vesper-desk:auth:v1/v2 localStorage entry and then drop it — the renderer
+// never reads or writes the live session itself anymore.
 
 export function createDefaultLayout(streams: StreamItem[]): GridLayout {
   const visible = streams.filter((s) => !s.popped)

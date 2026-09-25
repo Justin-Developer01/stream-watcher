@@ -4,6 +4,7 @@ import { PortalThemeProvider, themeVars } from './components/ui/portalTheme'
 import { ChromeBar } from './components/ChromeBar'
 import { FirstRunTips } from './components/FirstRunTips'
 import { StreamGrid } from './components/StreamGrid'
+import { useChatCredentials } from './hooks/useChatCredentials'
 import { useClickThrough } from './hooks/useClickThrough'
 import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
@@ -32,6 +33,11 @@ function DeskApp() {
   const desk = useDesk()
   const twitchClientId = resolveTwitchClientId(desk.clientId)
   const { auth, busy, error, loginToTwitch, loginForPrime, logout, isLoggedIn } = useTwitchAuth(twitchClientId)
+  // The desk always hosts ChatDrawer (mounted once, just repositioned — see
+  // CLAUDE.md), so it always needs chat credentials ready for when it opens.
+  // auth.accessToken is always null now (see useTwitchAuth) — the raw token
+  // only ever reaches this window through useChatCredentials.
+  const chatCredentials = useChatCredentials(true)
   const searchRef = useRef<HTMLInputElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -299,8 +305,8 @@ function DeskApp() {
       channels={drawerChannels}
       activeChannel={drawerActive}
       onChannelChange={desk.setChatChannel}
-      username={auth.username}
-      accessToken={auth.accessToken}
+      username={chatCredentials?.username ?? null}
+      accessToken={chatCredentials?.accessToken ?? null}
       clientId={twitchClientId}
       theme={desk.settings.theme === 'light' ? 'light' : 'dark'}
       fontFamily={chatFontFamily(desk.settings)}

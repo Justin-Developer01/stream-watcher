@@ -4,7 +4,7 @@ import { ChatDrawer } from './ChatDrawer'
 import { PortalThemeProvider, themeVars } from './ui/portalTheme'
 import { PlayerErrorBoundary } from './PlayerErrorBoundary'
 import { StreamPlayer } from './StreamPlayer'
-import { useTwitchAuth } from '../hooks/useTwitchAuth'
+import { useChatCredentials } from '../hooks/useChatCredentials'
 import { chatFontFamily, loadState } from '../lib/storage'
 import { resolveTwitchClientId } from '../lib/twitchClientId'
 import { ui } from '../lib/uiLabels'
@@ -22,7 +22,10 @@ export function PopoutApp({
   const saved = useMemo(() => loadState(), [])
   const settings = saved?.settings ?? DEFAULT_SETTINGS
   const clientId = resolveTwitchClientId(saved?.clientId)
-  const { auth } = useTwitchAuth(clientId)
+  // Only a chat pop-out asks for the raw token at all (main refuses a video
+  // pop-out's request — see auth:get-chat-credentials) — this pop-out never
+  // runs a login/logout/validate cycle of its own either way.
+  const chatCredentials = useChatCredentials(mode === 'chat')
   const channels = useMemo(() => [channel], [channel])
   const [alwaysOnTop, setAlwaysOnTop] = useState(false)
 
@@ -80,8 +83,8 @@ export function PopoutApp({
           channels={channels}
           activeChannel={channel}
           onChannelChange={() => undefined}
-          username={auth.username}
-          accessToken={auth.accessToken}
+          username={chatCredentials?.username ?? null}
+          accessToken={chatCredentials?.accessToken ?? null}
           clientId={clientId}
           theme={settings.theme === 'light' ? 'light' : 'dark'}
           fontFamily={chatFontFamily(settings)}

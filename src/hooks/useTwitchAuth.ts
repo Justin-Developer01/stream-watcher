@@ -1,50 +1,66 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { log } from '../lib/log'
 import type { PlatformAuth } from '../lib/platforms/types'
-import { clearAuth, loadAuth, loadSecureAuth, saveSecureAuth } from '../lib/storage'
-import { CHAT_SCOPES, fetchTwitchUser, revokeTwitchToken, validateTwitchToken } from '../lib/twitch'
-import type { ProviderAuthState } from '../types'
+import { clearAuth, loadAuth } from '../lib/storage'
+import { CHAT_SCOPES, fetchTwitchUser } from '../lib/twitch'
+import type { ProviderAuthState, PublicAuthState } from '../types'
 
 const DEFAULT_REDIRECT = 'http://localhost:5173/oauth/callback'
-const EMPTY_AUTH: ProviderAuthState = {
-  accessToken: null,
+const EMPTY_SESSION: PublicAuthState = {
+  isLoggedIn: false,
   username: null,
   displayName: null,
   scopes: [],
 }
-const VALIDATE_INTERVAL_MS = 60 * 60 * 1000
 
+function toProviderShape(session: PublicAuthState): ProviderAuthState {
+  // The desk never holds the raw token itself — see useChatCredentials for
+  // that. accessToken here is always null; it exists only so this return
+  // shape keeps satisfying PlatformAuth's existing `auth: ProviderAuthState`
+  // field without changing that shared interface for a Twitch-only concern.
+  return {
+    accessToken: null,
+    username: session.username,
+    displayName: session.displayName,
+    scopes: session.scopes,
+  }
+}
+
+/**
+ * Desk-only (App.tsx). Pop-outs never call this — they have no login UI and
+ * main rejects login/logout/save from anything but the desk window anyway
+ * (see isMainWindowSender in src/main/index.ts). Pop-outs that need chat
+ * credentials use useChatCredentials() instead, which never runs a validate/
+ * clear cycle of its own.
+ */
 export function useTwitchAuth(clientId: string): PlatformAuth & {
   loginForChat: () => Promise<void>
   loginForPrime: () => Promise<void>
   loginToTwitch: () => Promise<void>
 } {
-  const [auth, setAuth] = useState<ProviderAuthState>(EMPTY_AUTH)
+  const [session, setSession] = useState<PublicAuthState>(EMPTY_SESSION)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const clientIdRef = useRef(clientId)
-  clientIdRef.current = clientId
 
-  // Load from main-process safeStorage on launch; migrate a pre-existing
-  // localStorage auth entry into it once, then drop the localStorage copy.
+  // Seed from main's session, subscribe to changes (login/logout/expiry are all
+  // broadcast from there — this window never decides any of that itself), and
+  // hand off any pre-existing localStorage auth entry once, on first launch.
   useEffect(() => {
     let cancelled = false
-    void (async () => {
-      const stored = await loadSecureAuth()
-      if (cancelled) return
-      if (stored?.twitch.accessToken) {
-        setAuth(stored.twitch)
-        return
-      }
-      const legacy = loadAuth().twitch
-      if (legacy.accessToken) {
-        await saveSecureAuth({ twitch: legacy })
-        clearAuth()
-        if (!cancelled) setAuth(legacy)
-      }
-    })()
+    if (!window.vesper) return
+    void window.vesper.getAuthSession().then((s) => {
+      if (!cancelled) setSession(s)
+    })
+    const unsubscribe = window.vesper.onAuthChanged((s) => {
+      if (!cancelled) setSession(s)
+    })
+    const legacy = loadAuth().twitch
+    if (legacy.accessToken) {
+      void window.vesper.migrateLegacyAuth(legacy).then(() => clearAuth())
+    }
     return () => {
       cancelled = true
+      unsubscribe()
     }
   }, [])
 
@@ -77,8 +93,15 @@ export function useTwitchAuth(clientId: string): PlatformAuth & {
         displayName: user.display_name,
         scopes: result.scope.split(/[\s+]+/).filter(Boolean),
       }
-      await saveSecureAuth({ twitch: next })
-      setAuth(next)
+      await window.vesper.loginTwitchSession(next)
+      // onAuthChanged will also deliver this, but setting it directly here
+      // avoids a visible flash of "logged out" while that round-trip lands.
+      setSession({
+        isLoggedIn: true,
+        username: next.username,
+        displayName: next.displayName,
+        scopes: next.scopes,
+      })
     } catch (err) {
       log.error('twitch login failed:', err)
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -101,43 +124,15 @@ export function useTwitchAuth(clientId: string): PlatformAuth & {
   const loginToTwitch = loginForChat
 
   const logout = useCallback(async () => {
-    if (auth.accessToken && clientIdRef.current.trim()) {
-      await revokeTwitchToken(clientIdRef.current.trim(), auth.accessToken)
-    }
-    await saveSecureAuth({ twitch: EMPTY_AUTH })
-    clearAuth()
-    setAuth(EMPTY_AUTH)
-    await window.vesper?.clearTwitchSession()
-  }, [auth.accessToken])
-
-  // Validate on launch and hourly. An expired/revoked token (401) is cleared
-  // locally so the UI drops back to logged-out and prompts a fresh login —
-  // this never calls Twitch's revoke endpoint, since the token is already dead.
-  useEffect(() => {
-    const token = auth.accessToken
-    if (!token) return
-    let cancelled = false
-    const check = async () => {
-      const ok = await validateTwitchToken(token).catch(() => true)
-      if (cancelled || ok) return
-      log.warn('twitch token no longer valid; signing out')
-      await saveSecureAuth({ twitch: EMPTY_AUTH })
-      clearAuth()
-      if (!cancelled) {
-        setAuth(EMPTY_AUTH)
-        setError('Your Twitch session expired — log in again.')
-      }
-    }
-    void check()
-    const id = setInterval(check, VALIDATE_INTERVAL_MS)
-    return () => {
-      cancelled = true
-      clearInterval(id)
-    }
-  }, [auth.accessToken])
+    setSession(EMPTY_SESSION)
+    // Main does the (best-effort, timed-out) revoke, clears twitch-auth.bin, and
+    // clears cookies — always, even if revoke fails, so this can't hang or leave
+    // the app looking logged out while the file still holds a token.
+    await window.vesper?.logoutTwitch(clientId.trim())
+  }, [clientId])
 
   return {
-    auth,
+    auth: toProviderShape(session),
     busy,
     error,
     login: loginToTwitch,
@@ -145,6 +140,6 @@ export function useTwitchAuth(clientId: string): PlatformAuth & {
     loginForPrime,
     loginToTwitch,
     logout,
-    isLoggedIn: Boolean(auth.accessToken && auth.username),
+    isLoggedIn: session.isLoggedIn,
   }
 }
