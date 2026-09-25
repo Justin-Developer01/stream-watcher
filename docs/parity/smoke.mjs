@@ -509,6 +509,49 @@ await step('kick: remove drops the tile', async () => {
   return { ok: after === before - 1, detail: `tiles=${before}→${after}` }
 })
 
+// ---------- YouTube (third platform, VOD only) ----------
+// This sandbox's Electron build can't reach youtube.com (its Chromium network stack doesn't pick
+// up the sandbox's HTTPS_PROXY the way curl/Node do, confirmed by a throwaway repro — even with
+// --proxy-server passed explicitly, the IFrame API script never loads). That's an environment
+// limit, not a product bug: real users have no such proxy. So, like the Kick checks above (which
+// only assert on the iframe's src attribute, never that player.kick.com actually loaded), these
+// verify tile/DOM behavior that doesn't depend on youtube.com being reachable, and report whether
+// the iframe appeared as an informational detail rather than a pass/fail condition.
+await step('youtube: adding a youtube.com URL renders a tile with no chat toggle', async () => {
+  const before = await page.locator('.stream-grid__item').count()
+  await page.locator('.chrome-search input').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  await page.locator('.chrome-search input').press('Enter')
+  await sleep(500)
+  const tile = page.locator('.stream-grid__item', { hasText: 'dQw4w9WgXcQ' })
+  const channelText = await tile.locator('.stream-tile__channel').textContent()
+  const hasContainer = (await tile.locator('.youtube-player').count()) === 1
+  const actionCount = await tile.locator('.stream-tile__actions .icon-btn').count()
+  const chatButtons = await tile.locator('.stream-tile__actions .icon-btn', { hasText: '#' }).count()
+  const iframeAppeared = await tile.locator('.youtube-player iframe').first().waitFor({ timeout: 5000 }).then(() => true).catch(() => false)
+  return {
+    ok: (await page.locator('.stream-grid__item').count()) === before + 1 &&
+      channelText === 'dQw4w9WgXcQ' &&
+      hasContainer &&
+      actionCount === 4 &&
+      chatButtons === 0,
+    detail: `tiles=${before}→${before + 1} channel=${channelText} container=${hasContainer} actions=${actionCount} chatButtons=${chatButtons} iframeAppeared(informational, network-dependent)=${iframeAppeared}`,
+  }
+})
+await step('youtube: mute toggles without error and the tile stays mounted', async () => {
+  const tile = page.locator('.stream-grid__item', { hasText: 'dQw4w9WgXcQ' })
+  await tile.locator('.stream-tile__actions .icon-btn').nth(1).click()
+  await sleep(300)
+  const stillThere = (await tile.locator('.youtube-player').count()) === 1
+  return { ok: stillThere, detail: `container still mounted after mute click: ${stillThere}` }
+})
+await step('youtube: remove drops the tile', async () => {
+  const before = await page.locator('.stream-grid__item').count()
+  await page.locator('.stream-grid__item', { hasText: 'dQw4w9WgXcQ' }).locator('.stream-tile__actions .icon-btn.danger').click()
+  await sleep(300)
+  const after = await page.locator('.stream-grid__item').count()
+  return { ok: after === before - 1, detail: `tiles=${before}→${after}` }
+})
+
 // ---------- Twitch login window ----------
 await step('twitch: Login to Twitch opens ONE window with a built-in client_id', async () => {
   const before = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)

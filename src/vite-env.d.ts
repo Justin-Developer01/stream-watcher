@@ -51,6 +51,31 @@ type VesperApi = {
 declare global {
   interface Window {
     vesper?: VesperApi
+    onYouTubeIframeAPIReady?: () => void
+    YT?: {
+      Player: {
+        new (
+          element: HTMLElement | string,
+          options: {
+            videoId: string
+            width?: string | number
+            height?: string | number
+            playerVars?: Record<string, string | number>
+            events?: {
+              onReady?: () => void
+              onError?: (event: { data: number }) => void
+            }
+          },
+        ): {
+          mute: () => void
+          unMute: () => void
+          playVideo: () => void
+          pauseVideo: () => void
+          setPlaybackQuality?: (quality: string) => void
+          destroy?: () => void
+        }
+      }
+    }
     Twitch?: {
       Player: {
         new (
