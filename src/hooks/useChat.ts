@@ -9,6 +9,8 @@ import {
   type RoomState,
   type UserState,
 } from '../lib/chat/types'
+import { streamKey } from '../lib/storage'
+import type { PlatformId } from '../types'
 
 /** Twitch web keeps about this many lines per channel. */
 const MAX_LINES = 300
@@ -17,6 +19,7 @@ const FLUSH_MS = 80
 export type ChatStatus = 'idle' | 'connecting' | 'connected' | 'error'
 
 type Options = {
+  platform: PlatformId
   channels: string[]
   username: string | null
   accessToken: string | null
@@ -31,7 +34,7 @@ type Pending =
   | { type: 'clearchat'; channel: string; login: string | null; duration: number | null; timestamp: number }
   | { type: 'clearmsg'; channel: string; targetId: string }
 
-function applyPending(store: Map<string, ChatEvent[]>, batch: Pending[]) {
+function applyPending(store: Map<string, ChatEvent[]>, batch: Pending[], keyOf: (channel: string) => string) {
   const changed = new Map<string, ChatEvent[]>()
   const list = (channel: string) => {
     let next = changed.get(channel)
@@ -43,10 +46,10 @@ function applyPending(store: Map<string, ChatEvent[]>, batch: Pending[]) {
   }
   for (const item of batch) {
     if (item.type === 'event') {
-      list(item.event.channel).push(item.event)
+      list(keyOf(item.event.channel)).push(item.event)
       continue
     }
-    const lines = list(item.channel)
+    const lines = list(keyOf(item.channel))
     if (item.type === 'clearmsg') {
       const i = lines.findIndex((e) => e.id === item.targetId)
       if (i >= 0 && lines[i].kind === 'message') lines[i] = { ...(lines[i] as ChatLineEvent), deleted: true }
@@ -70,11 +73,13 @@ function applyPending(store: Map<string, ChatEvent[]>, batch: Pending[]) {
   return changed.size > 0
 }
 
-export function useChat({ channels, username, accessToken, reconnectNonce = 0, parseOptions }: Options) {
+export function useChat({ platform, channels, username, accessToken, reconnectNonce = 0, parseOptions }: Options) {
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
   const clientRef = useRef<tmi.Client | null>(null)
+  // Keyed by streamKey(platform, channel), not the bare channel tmi.js uses on the wire, so a
+  // future platform sharing a channel name with Twitch can never collide in these stores.
   const storeRef = useRef(new Map<string, ChatEvent[]>())
   const roomRef = useRef(new Map<string, RoomState>())
   const userStateRef = useRef(new Map<string, UserState>())
@@ -85,6 +90,10 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
   const syncRef = useRef<() => void>(() => undefined)
   const parseRef = useRef(parseOptions)
   parseRef.current = parseOptions
+
+  const keyOf = useCallback((channel: string) => streamKey(platform, channel.toLowerCase()), [platform])
+  const keyOfRef = useRef(keyOf)
+  keyOfRef.current = keyOf
 
   const wanted = [...new Set(channels.map((c) => c.toLowerCase()).filter(Boolean))].sort()
   const channelKey = wanted.join(',')
@@ -98,7 +107,7 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
       flushTimer.current = null
       const batch = pendingRef.current
       pendingRef.current = []
-      if (applyPending(storeRef.current, batch)) setVersion((v) => v + 1)
+      if (applyPending(storeRef.current, batch, keyOfRef.current)) setVersion((v) => v + 1)
     }, FLUSH_MS)
   }, [])
 
@@ -128,14 +137,17 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
       const action = ircToAction(message, parseRef.current(channel, false))
       if (!action) return
       switch (action.type) {
-        case 'roomstate':
-          roomRef.current.set(action.channel, { ...(roomRef.current.get(action.channel) ?? DEFAULT_ROOM_STATE), ...action.patch })
+        case 'roomstate': {
+          const key = keyOfRef.current(action.channel)
+          roomRef.current.set(key, { ...(roomRef.current.get(key) ?? DEFAULT_ROOM_STATE), ...action.patch })
           setVersion((v) => v + 1)
           return
+        }
         case 'userstate':
           if (action.channel) {
-            userStateRef.current.set(action.channel, {
-              ...(userStateRef.current.get(action.channel) ?? { displayName: null, color: null, badges: [], emoteSets: [], mod: false }),
+            const key = keyOfRef.current(action.channel)
+            userStateRef.current.set(key, {
+              ...(userStateRef.current.get(key) ?? { displayName: null, color: null, badges: [], emoteSets: [], mod: false }),
               ...action.state,
             } as UserState)
           } else {
@@ -196,15 +208,16 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
       const client = clientRef.current
       if (!client || client.readyState() !== 'OPEN') return { ok: false as const, error: 'Chat is not connected' }
       const key = channel.toLowerCase()
+      const mapKey = keyOfRef.current(channel)
       const isAction = /^\/me\s+/i.test(text)
       if (text.startsWith('/') && !isAction) {
         return { ok: false as const, error: 'Only /me works here. Use twitch.tv for other chat commands.' }
       }
-      const room = roomRef.current.get(key)
-      const me = userStateRef.current.get(key)
+      const room = roomRef.current.get(mapKey)
+      const me = userStateRef.current.get(mapKey)
       const privileged = me?.mod || me?.badges.some((b) => b.set === 'broadcaster')
       if (room?.slow && !privileged) {
-        const wait = Math.ceil(room.slow - (Date.now() - (lastSentRef.current.get(key) ?? 0)) / 1000)
+        const wait = Math.ceil(room.slow - (Date.now() - (lastSentRef.current.get(mapKey) ?? 0)) / 1000)
         if (wait > 0) return { ok: false as const, error: `Slow mode: wait ${wait}s` }
       }
       const body = isAction ? text.replace(/^\/me\s+/i, '') : text
@@ -215,7 +228,7 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
         log.warn(`chat send failed in #${key}:`, err)
         return { ok: false as const, error: typeof err === 'string' ? err : err instanceof Error ? err.message : 'Failed to send' }
       }
-      lastSentRef.current.set(key, Date.now())
+      lastSentRef.current.set(mapKey, Date.now())
       // Twitch does not echo our own PRIVMSG; show it from USERSTATE like twitch.tv does.
       const global = globalUserRef.current
       const opts = parseRef.current(key, true)
@@ -247,10 +260,13 @@ export function useChat({ channels, username, accessToken, reconnectNonce = 0, p
     [username, accessToken, queue],
   )
 
-  const eventsFor = useCallback((channel: string | null) => (channel ? (storeRef.current.get(channel.toLowerCase()) ?? []) : []), [])
+  const eventsFor = useCallback(
+    (channel: string | null) => (channel ? (storeRef.current.get(keyOf(channel)) ?? []) : []),
+    [keyOf],
+  )
   const roomStateFor = useCallback(
-    (channel: string | null) => (channel ? (roomRef.current.get(channel.toLowerCase()) ?? DEFAULT_ROOM_STATE) : DEFAULT_ROOM_STATE),
-    [],
+    (channel: string | null) => (channel ? (roomRef.current.get(keyOf(channel)) ?? DEFAULT_ROOM_STATE) : DEFAULT_ROOM_STATE),
+    [keyOf],
   )
   const recentChatters = useCallback((channel: string | null) => {
     const seen = new Map<string, string>()

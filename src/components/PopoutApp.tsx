@@ -2,14 +2,22 @@ import { Pin, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { ChatDrawer } from './ChatDrawer'
 import { PortalThemeProvider, themeVars } from './ui/portalTheme'
-import { TwitchPlayer } from './TwitchPlayer'
+import { StreamPlayer } from './StreamPlayer'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { chatFontFamily, loadState } from '../lib/storage'
 import { resolveTwitchClientId } from '../lib/twitchClientId'
 import { ui } from '../lib/uiLabels'
-import { DEFAULT_SETTINGS } from '../types'
+import { DEFAULT_SETTINGS, type PlatformId } from '../types'
 
-export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel: string }) {
+export function PopoutApp({
+  mode,
+  channel,
+  platform,
+}: {
+  mode: 'stream' | 'chat'
+  channel: string
+  platform: PlatformId
+}) {
   const saved = useMemo(() => loadState(), [])
   const settings = saved?.settings ?? DEFAULT_SETTINGS
   const clientId = resolveTwitchClientId(saved?.clientId)
@@ -22,7 +30,7 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
   }, [])
 
   const dock = async () => {
-    await window.vesper?.dockPopout(mode, channel)
+    await window.vesper?.dockPopout(mode, channel, platform)
   }
 
   const style = useMemo(() => themeVars(settings), [settings])
@@ -60,11 +68,12 @@ export function PopoutApp({ mode, channel }: { mode: 'stream' | 'chat'; channel:
       </header>
       {mode === 'stream' ? (
         <div className="popout-player" data-hit>
-          <TwitchPlayer channel={channel} muted={false} interactive />
+          <StreamPlayer platform={platform} channel={channel} muted={false} interactive />
         </div>
       ) : (
         <ChatDrawer
           dock="right"
+          platform={platform}
           channels={channels}
           activeChannel={channel}
           onChannelChange={() => undefined}

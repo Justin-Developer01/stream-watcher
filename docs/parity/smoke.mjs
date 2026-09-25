@@ -455,11 +455,66 @@ await step('ghost: bar hides after idle, hidden bar is no-drag, edge reveals; Pi
   return { ok: ghost && region === 'no-drag' && revealed && pinnedStays && pinBefore === 0 && pinWithGhost === 1, detail: `pinButton off=${pinBefore} ghost=${pinWithGhost} hidden=${ghost} hiddenBarRegion=${region} edgeReveals=${revealed} pinnedStaysVisible=${pinnedStays}` }
 })
 
+// ---------- Kick (second platform, player only) ----------
+await step('kick: adding a kick.com URL renders a Kick tile with no chat toggle', async () => {
+  // A 3rd tile lands bottom-right, under the first-run tips stack, so dismiss it first —
+  // same as a real user would; unrelated to this platform's own behavior.
+  while (await page.locator('.tips-stack .tip-card').count()) {
+    await page.locator('.tips-stack .tip-card button[aria-label="Dismiss"]').first().click()
+    await sleep(100)
+  }
+  const before = await page.locator('.stream-grid__item').count()
+  await page.locator('.chrome-search input').fill('https://kick.com/adinross')
+  await page.locator('.chrome-search input').press('Enter')
+  await sleep(500)
+  const tile = page.locator('.stream-grid__item', { hasText: 'adinross' })
+  const channelText = await tile.locator('.stream-tile__channel').textContent()
+  const hasKickPlayer = (await tile.locator('.kick-player').count()) === 1
+  const src = await tile.locator('.kick-player iframe').getAttribute('src')
+  const actionCount = await tile.locator('.stream-tile__actions .icon-btn').count()
+  const chatButtons = await tile.locator('.stream-tile__actions .icon-btn', { hasText: '#' }).count()
+  return {
+    ok: (await page.locator('.stream-grid__item').count()) === before + 1 &&
+      channelText === 'adinross' &&
+      hasKickPlayer &&
+      /^https:\/\/player\.kick\.com\/adinross\?/.test(src || '') &&
+      actionCount === 4 &&
+      chatButtons === 0,
+    detail: `tiles=${before}→${before + 1} channel=${channelText} kickPlayer=${hasKickPlayer} src=${src} actions=${actionCount} chatButtons=${chatButtons}`,
+  }
+})
+await step('kick: mute remounts the iframe with a flipped muted param; star saves under the kick platform', async () => {
+  const tile = page.locator('.stream-grid__item', { hasText: 'adinross' })
+  const srcBefore = await tile.locator('.kick-player iframe').getAttribute('src')
+  const mutedBefore = new URL(srcBefore).searchParams.get('muted')
+  await tile.locator('.stream-tile__actions .icon-btn').nth(1).click()
+  await sleep(300)
+  const srcAfter = await tile.locator('.kick-player iframe').getAttribute('src')
+  const mutedAfter = new URL(srcAfter).searchParams.get('muted')
+  await tile.locator('.stream-tile__actions .icon-btn').first().click()
+  await sleep(300)
+  const starOn = (await tile.locator('.stream-tile__actions .icon-btn').first().getAttribute('class') || '').includes('is-on')
+  const saved = (await state(page))?.savedStreams ?? []
+  const savedKick = saved.some((s) => s.platform === 'kick' && s.channel === 'adinross')
+  return {
+    ok: mutedBefore !== mutedAfter && starOn && savedKick && !saved.some((s) => s.platform === 'twitch' && s.channel === 'adinross'),
+    detail: `muted ${mutedBefore}→${mutedAfter} starOn=${starOn} saved=${JSON.stringify(saved)}`,
+  }
+})
+await step('kick: remove drops the tile', async () => {
+  const before = await page.locator('.stream-grid__item').count()
+  await page.locator('.stream-grid__item', { hasText: 'adinross' }).locator('.stream-tile__actions .icon-btn.danger').click()
+  await sleep(300)
+  const after = await page.locator('.stream-grid__item').count()
+  return { ok: after === before - 1, detail: `tiles=${before}→${after}` }
+})
+
 // ---------- Twitch login window ----------
 await step('twitch: Login to Twitch opens ONE window with a built-in client_id', async () => {
   const before = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)
-  await page.click('.chrome-bar button[aria-label="Menu"]')
-  await page.locator('.menu .menu__item', { hasText: 'Login to Twitch' }).click()
+  await openSettings(page)
+  await page.getByRole('tab', { name: 'Accounts' }).click()
+  await page.locator('.modal-card button', { hasText: 'Login to Twitch' }).click()
   await sleep(1500)
   const info = await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows().map((w) => ({ title: w.getTitle(), url: w.webContents.getURL() || w.webContents.getLastWebContents?.()?.getURL?.() })),
@@ -473,6 +528,8 @@ await step('twitch: Login to Twitch opens ONE window with a built-in client_id',
   await sleep(800)
   const alive = !page.isClosed()
   const clientOk = info.some((w) => /client_id=dqxba57by77shem4jb9nzz39rtah2x/.test(w.url || ''))
+  await page.locator('.modal-footer button', { hasText: 'Cancel' }).click()
+  await page.waitForSelector('.modal-card', { state: 'detached', timeout: 3000 })
   return { ok: opened === 1 && alive && clientOk, detail: `mainAliveAfterClosingAuth=${alive} newWindows=${opened} clientIdInUrl=${clientOk} toast=${toast} windows=${JSON.stringify(info.map((i) => i.title))}` }
 })
 

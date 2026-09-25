@@ -3,7 +3,8 @@ import GridLayout from 'react-grid-layout'
 import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
 import { ui } from '../lib/uiLabels'
-import type { StreamItem, WatchMode } from '../types'
+import { streamKey } from '../lib/storage'
+import type { PlatformId, StreamItem, WatchMode } from '../types'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
@@ -48,7 +49,7 @@ type Props = {
   layout: Layout[]
   focusedId: string | null
   isDragging: boolean
-  savedChannels: string[]
+  savedKeys: Set<string>
   mode: WatchMode
   poppedCount: number
   onLayoutChange: (layout: Layout[]) => void
@@ -57,9 +58,9 @@ type Props = {
   onToggleMute: (id: string) => void
   onRemove: (id: string) => void
   onOpenChat: (channel: string) => void
-  onPopoutChat: (channel: string) => void
-  onPopoutStream: (channel: string) => void
-  onToggleSave: (channel: string) => void
+  onPopoutChat: (channel: string, platform: PlatformId) => void
+  onPopoutStream: (channel: string, platform: PlatformId) => void
+  onToggleSave: (platform: PlatformId, channel: string) => void
   onSwitchFocus: () => void
 }
 
@@ -68,7 +69,7 @@ export const StreamGrid = memo(function StreamGrid({
   layout,
   focusedId,
   isDragging,
-  savedChannels,
+  savedKeys,
   mode,
   poppedCount,
   onLayoutChange,
@@ -105,15 +106,15 @@ export const StreamGrid = memo(function StreamGrid({
       stream={stream}
       focused={focusedId === stream.id}
       interactive={!isDragging && !promoteOnClick}
-      isSaved={savedChannels.includes(stream.channel)}
+      isSaved={savedKeys.has(streamKey(stream.platform, stream.channel))}
       mode={mode}
       onFocus={() => handlers.current.onFocus(stream.id)}
       onToggleMute={() => handlers.current.onToggleMute(stream.id)}
       onRemove={() => handlers.current.onRemove(stream.id)}
       onOpenChat={() => handlers.current.onOpenChat(stream.channel)}
-      onPopoutChat={() => handlers.current.onPopoutChat(stream.channel)}
-      onPopoutStream={() => handlers.current.onPopoutStream(stream.channel)}
-      onToggleSave={() => handlers.current.onToggleSave(stream.channel)}
+      onPopoutChat={() => handlers.current.onPopoutChat(stream.channel, stream.platform)}
+      onPopoutStream={() => handlers.current.onPopoutStream(stream.channel, stream.platform)}
+      onToggleSave={() => handlers.current.onToggleSave(stream.platform, stream.channel)}
     />
   )
 

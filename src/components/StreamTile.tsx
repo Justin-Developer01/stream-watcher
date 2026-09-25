@@ -1,7 +1,8 @@
 import { memo } from 'react'
 import { MessageSquare, PictureInPicture2, Star, Volume2, VolumeX, X } from 'lucide-react'
 import { Tip } from './ui/Tip'
-import { TwitchPlayer } from './TwitchPlayer'
+import { StreamPlayer } from './StreamPlayer'
+import { getPlatform } from '../lib/platforms/registry'
 import { ui } from '../lib/uiLabels'
 import type { StreamItem, WatchMode } from '../types'
 
@@ -35,6 +36,7 @@ function StreamTileImpl({
   onToggleSave,
 }: Props) {
   const low = mode === 'performance' && !focused
+  const hasChat = getPlatform(stream.platform).hasChat
 
   return (
     <article className={`stream-tile${focused ? ' is-focused' : ''}${low ? ' is-low' : ''}`} data-hit>
@@ -54,16 +56,20 @@ function StreamTileImpl({
               {stream.muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
             </button>
           </Tip>
-          <Tip label={ui.openChat}>
-            <button type="button" className="icon-btn" onClick={onOpenChat}>
-              <MessageSquare size={13} />
-            </button>
-          </Tip>
-          <Tip label={ui.popOutChat}>
-            <button type="button" className="icon-btn" onClick={onPopoutChat}>
-              <span className="tiny">#</span>
-            </button>
-          </Tip>
+          {hasChat && (
+            <Tip label={ui.openChat}>
+              <button type="button" className="icon-btn" onClick={onOpenChat}>
+                <MessageSquare size={13} />
+              </button>
+            </Tip>
+          )}
+          {hasChat && (
+            <Tip label={ui.popOutChat}>
+              <button type="button" className="icon-btn" onClick={onPopoutChat}>
+                <span className="tiny">#</span>
+              </button>
+            </Tip>
+          )}
           <Tip label={ui.popOutStream}>
             <button type="button" className="icon-btn" onClick={onPopoutStream}>
               <PictureInPicture2 size={13} />
@@ -77,7 +83,8 @@ function StreamTileImpl({
         </div>
       </header>
       <div className="stream-tile__player" onDoubleClick={onFocus}>
-        <TwitchPlayer
+        <StreamPlayer
+          platform={stream.platform}
           channel={stream.channel}
           muted={stream.muted || low}
           interactive={interactive}

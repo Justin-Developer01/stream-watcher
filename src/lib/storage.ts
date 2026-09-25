@@ -1,11 +1,29 @@
 import type { Layout } from 'react-grid-layout'
 import { defaultHotkeys } from './hotkeys'
-import { DEFAULT_SETTINGS, type AppSettings, type AuthState, type PersistedState, type StreamItem } from '../types'
+import {
+  DEFAULT_SETTINGS,
+  type AppSettings,
+  type AuthState,
+  type PersistedState,
+  type PlatformId,
+  type ProviderAuthState,
+  type SavedStream,
+  type StreamItem,
+} from '../types'
 
 const STATE_KEY = 'vesper-desk:v1'
 const LEGACY_KEY = 'stream-watcher:v1'
-const AUTH_KEY = 'vesper-desk:auth:v1'
-const LEGACY_AUTH = 'stream-watcher:auth:v1'
+const AUTH_KEY = 'vesper-desk:auth:v2'
+// v1 was a flat ProviderAuthState (Twitch-only, no provider wrapper).
+const LEGACY_AUTH_V1 = 'vesper-desk:auth:v1'
+const LEGACY_AUTH_STREAM_WATCHER = 'stream-watcher:auth:v1'
+
+const DEFAULT_PROVIDER_AUTH: ProviderAuthState = {
+  accessToken: null,
+  username: null,
+  displayName: null,
+  scopes: [],
+}
 
 export type GridLayout = Layout[]
 
@@ -18,21 +36,27 @@ function mergeSettings(raw: Partial<AppSettings> | undefined): AppSettings {
   }
 }
 
+type LegacyStreamItem = Omit<StreamItem, 'platform'> & { platform?: PlatformId }
+type LegacySavedStream = Omit<SavedStream, 'platform'> & { platform?: PlatformId }
+
 export function loadState(): PersistedState | null {
   try {
     const raw = localStorage.getItem(STATE_KEY) ?? localStorage.getItem(LEGACY_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<PersistedState> & {
+    const parsed = JSON.parse(raw) as Partial<Omit<PersistedState, 'streams' | 'savedStreams'>> & {
+      streams?: LegacyStreamItem[]
+      savedStreams?: LegacySavedStream[]
       chatSidebarOpen?: boolean
       leftSidebarOpen?: boolean
     }
     return {
-      streams: parsed.streams ?? [],
+      // Streams saved before the platform field existed are all Twitch.
+      streams: (parsed.streams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch' })),
       layout: parsed.layout ?? [],
       focusedId: parsed.focusedId ?? null,
       chatChannel: parsed.chatChannel ?? null,
       clientId: parsed.clientId ?? '',
-      savedStreams: parsed.savedStreams ?? [],
+      savedStreams: (parsed.savedStreams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch' })),
       chatOpen: parsed.chatOpen ?? parsed.chatSidebarOpen ?? false,
       chatDock: parsed.chatDock ?? 'right',
       chatFloat: parsed.chatFloat ?? { x: 72, y: 56, width: 320, height: 440 },
@@ -52,11 +76,15 @@ export function saveState(state: PersistedState) {
 
 export function loadAuth(): AuthState {
   try {
-    const raw = localStorage.getItem(AUTH_KEY) ?? localStorage.getItem(LEGACY_AUTH)
-    if (!raw) return { accessToken: null, username: null, displayName: null, scopes: [] }
-    return JSON.parse(raw) as AuthState
+    const raw = localStorage.getItem(AUTH_KEY)
+    if (raw) return JSON.parse(raw) as AuthState
+    // Pre-v2 storage was a flat, Twitch-only ProviderAuthState with no provider wrapper.
+    const legacyRaw =
+      localStorage.getItem(LEGACY_AUTH_V1) ?? localStorage.getItem(LEGACY_AUTH_STREAM_WATCHER)
+    if (legacyRaw) return { twitch: JSON.parse(legacyRaw) as ProviderAuthState }
+    return { twitch: DEFAULT_PROVIDER_AUTH }
   } catch {
-    return { accessToken: null, username: null, displayName: null, scopes: [] }
+    return { twitch: DEFAULT_PROVIDER_AUTH }
   }
 }
 
@@ -66,7 +94,8 @@ export function saveAuth(auth: AuthState) {
 
 export function clearAuth() {
   localStorage.removeItem(AUTH_KEY)
-  localStorage.removeItem(LEGACY_AUTH)
+  localStorage.removeItem(LEGACY_AUTH_V1)
+  localStorage.removeItem(LEGACY_AUTH_STREAM_WATCHER)
 }
 
 export function createDefaultLayout(streams: StreamItem[]): GridLayout {
@@ -88,6 +117,14 @@ export function createDefaultLayout(streams: StreamItem[]): GridLayout {
       minH: 4,
     }
   })
+}
+
+/**
+ * Identifies a stream/pop-out by platform + channel so two platforms with
+ * the same channel name (e.g. a Kick and a Twitch "xqc") never collide.
+ */
+export function streamKey(platform: PlatformId, channel: string): string {
+  return `${platform}:${channel}`
 }
 
 export function normalizeChannel(input: string): string | null {

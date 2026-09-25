@@ -19,6 +19,10 @@ type Props = {
   onReconnectChat: () => void
   onRefreshPrime: () => void
   onShowTips: () => void
+  isLoggedIn: boolean
+  displayName: string | null
+  onLogin: () => void
+  onLogout: () => void
 }
 
 const FONT_OPTIONS: Array<{ id: ChatFont; label: string }> = [
@@ -41,6 +45,10 @@ export function SettingsModal({
   onReconnectChat,
   onRefreshPrime,
   onShowTips,
+  isLoggedIn,
+  displayName,
+  onLogin,
+  onLogout,
 }: Props) {
   const [draft, setDraft] = useState(settings)
   const [draftClientId, setDraftClientId] = useState(clientId)
@@ -81,6 +89,7 @@ export function SettingsModal({
               <Tabs.Trigger value="chat">{ui.chat}</Tabs.Trigger>
               <Tabs.Trigger value="hotkeys">{ui.hotkeys}</Tabs.Trigger>
               <Tabs.Trigger value="updates">{ui.updates}</Tabs.Trigger>
+              <Tabs.Trigger value="accounts">{ui.accounts}</Tabs.Trigger>
               <Tabs.Trigger value="advanced">{ui.advanced}</Tabs.Trigger>
               <Tabs.Trigger value="help">{ui.help}</Tabs.Trigger>
             </Tabs.List>
@@ -315,6 +324,31 @@ export function SettingsModal({
               {updateNote && <p className="muted">{updateNote}</p>}
             </Tabs.Content>
 
+            <Tabs.Content value="accounts" className="settings-pane">
+              <div className="settings-actions">
+                {isLoggedIn ? (
+                  <>
+                    <p>{ui.loggedInAs(displayName ?? '')}</p>
+                    <button type="button" className="text-btn" onClick={onLogout}>
+                      {ui.logout}
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" className="text-btn" onClick={onLogin}>
+                    {ui.loginToTwitch}
+                  </button>
+                )}
+              </div>
+              <label>
+                {ui.developerClientId}
+                <input
+                  value={draftClientId}
+                  onChange={(e) => setDraftClientId(e.target.value.trim())}
+                  placeholder={builtInTwitchClientId()}
+                />
+              </label>
+            </Tabs.Content>
+
             <Tabs.Content value="advanced" className="settings-pane">
               <button type="button" className="text-btn" onClick={onReconnectChat}>
                 {ui.reconnectChat}
@@ -325,14 +359,6 @@ export function SettingsModal({
               <button type="button" className="text-btn" onClick={() => void window.vesper?.openLogFolder()}>
                 {ui.openLogFolder}
               </button>
-              <label>
-                {ui.developerClientId}
-                <input
-                  value={draftClientId}
-                  onChange={(e) => setDraftClientId(e.target.value.trim())}
-                  placeholder={builtInTwitchClientId()}
-                />
-              </label>
             </Tabs.Content>
 
             <Tabs.Content value="help" className="settings-pane">

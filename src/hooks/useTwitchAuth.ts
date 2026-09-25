@@ -1,13 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import { log } from '../lib/log'
+import type { PlatformAuth } from '../lib/platforms/types'
 import { clearAuth, loadAuth, saveAuth } from '../lib/storage'
 import { CHAT_SCOPES, fetchTwitchUser } from '../lib/twitch'
-import type { AuthState } from '../types'
+import type { ProviderAuthState } from '../types'
 
 const DEFAULT_REDIRECT = 'http://localhost:5173/oauth/callback'
+const EMPTY_AUTH: ProviderAuthState = {
+  accessToken: null,
+  username: null,
+  displayName: null,
+  scopes: [],
+}
 
-export function useTwitchAuth(clientId: string) {
-  const [auth, setAuth] = useState<AuthState>(() => loadAuth())
+export function useTwitchAuth(clientId: string): PlatformAuth & {
+  loginForChat: () => Promise<void>
+  loginForPrime: () => Promise<void>
+  loginToTwitch: () => Promise<void>
+} {
+  const [auth, setAuth] = useState<ProviderAuthState>(() => loadAuth().twitch)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,13 +49,13 @@ export function useTwitchAuth(clientId: string) {
         return
       }
       const user = await fetchTwitchUser(clientId.trim(), result.accessToken)
-      const next: AuthState = {
+      const next: ProviderAuthState = {
         accessToken: result.accessToken,
         username: user.login,
         displayName: user.display_name,
         scopes: result.scope.split(/[\s+]+/).filter(Boolean),
       }
-      saveAuth(next)
+      saveAuth({ twitch: next })
       setAuth(next)
     } catch (err) {
       log.error('twitch login failed:', err)
@@ -69,7 +80,7 @@ export function useTwitchAuth(clientId: string) {
 
   const logout = useCallback(async () => {
     clearAuth()
-    setAuth({ accessToken: null, username: null, displayName: null, scopes: [] })
+    setAuth(EMPTY_AUTH)
     await window.vesper?.clearTwitchSession()
   }, [])
 
@@ -77,6 +88,7 @@ export function useTwitchAuth(clientId: string) {
     auth,
     busy,
     error,
+    login: loginToTwitch,
     loginForChat,
     loginForPrime,
     loginToTwitch,

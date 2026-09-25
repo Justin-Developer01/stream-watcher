@@ -1,15 +1,20 @@
 import type { Layout } from 'react-grid-layout'
 import type { HotkeyAction } from './lib/hotkeys'
 import { defaultHotkeys } from './lib/hotkeys'
+import type { PlatformId } from './lib/platformId'
+
+export type { PlatformId }
 
 export type StreamItem = {
   id: string
+  platform: PlatformId
   channel: string
   muted: boolean
   popped?: boolean
 }
 
 export type SavedStream = {
+  platform: PlatformId
   channel: string
   savedAt: number
 }
@@ -35,11 +40,15 @@ export type ChatFloatPosition = {
   height: number
 }
 
-export type AuthState = {
+export type ProviderAuthState = {
   accessToken: string | null
   username: string | null
   displayName: string | null
   scopes: string[]
+}
+
+export type AuthState = {
+  twitch: ProviderAuthState
 }
 
 export type LayoutTemplate = {
@@ -125,5 +134,6 @@ export type PopoutKind = 'stream' | 'chat'
 export type PopoutInfo = {
   channel: string
   kind: PopoutKind
+  platform: PlatformId
   alwaysOnTop: boolean
 }

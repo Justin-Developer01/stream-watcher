@@ -9,7 +9,6 @@ import {
   Gauge,
   PanelsTopLeft,
   LayoutGrid,
-  LogIn,
   Menu,
   MessageSquare,
   Minus,
@@ -25,7 +24,7 @@ import {
 import { memo, useEffect, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
 import { ui } from '../lib/uiLabels'
 import { usePortalThemeProps } from './ui/portalTheme'
-import type { ChromeEdge, LayoutTemplate, PopoutInfo, WatchMode } from '../types'
+import type { ChromeEdge, LayoutTemplate, PlatformId, PopoutInfo, WatchMode } from '../types'
 import { outwardSide, skipFocusReturnAfterPointer, Tip } from './ui/Tip'
 
 type Props = {
@@ -38,7 +37,7 @@ type Props = {
   onPreset: (preset: '1x1' | '1x2' | '2x2' | '1+3') => void
   popped: PopoutInfo[]
   onDockAll: () => void
-  onDock: (channel: string, kind: 'stream' | 'chat') => void
+  onDock: (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => void
   seeThrough: boolean
   onSeeThrough: (value: boolean) => void
   windowLocked: boolean
@@ -54,10 +53,7 @@ type Props = {
   onToggleChat: () => void
   onFullscreen: () => void
   onAddStream: (value: string) => { ok: boolean; error?: string }
-  onLogin: () => void
   onSettings: () => void
-  isLoggedIn: boolean
-  displayName: string | null
   searchRef: RefObject<HTMLInputElement | null>
   chromeEdge: ChromeEdge
   onMenuOpen: (open: boolean) => void
@@ -106,10 +102,7 @@ export const ChromeBar = memo(function ChromeBar({
   onToggleChat,
   onFullscreen,
   onAddStream,
-  onLogin,
   onSettings,
-  isLoggedIn,
-  displayName,
   searchRef,
   chromeEdge,
   onMenuOpen,
@@ -320,9 +313,9 @@ export const ChromeBar = memo(function ChromeBar({
                 <DropdownMenu.Separator className="menu__sep" />
                 {popped.map((item) => (
                   <DropdownMenu.Item
-                    key={`${item.kind}-${item.channel}`}
+                    key={`${item.kind}-${item.platform}-${item.channel}`}
                     className="menu__item"
-                    onSelect={() => onDock(item.channel, item.kind)}
+                    onSelect={() => onDock(item.channel, item.kind, item.platform)}
                   >
                     {ui.dockBack} #{item.channel}
                     {item.kind === 'chat' && <span className="muted"> · {ui.chat}</span>}
@@ -357,9 +350,6 @@ export const ChromeBar = memo(function ChromeBar({
           </Tip>
           <DropdownMenu.Portal>
             <DropdownMenu.Content {...menuProps}>
-              <DropdownMenu.Item className="menu__item" onSelect={onLogin}>
-                <LogIn size={13} /> {isLoggedIn ? displayName : ui.loginToTwitch}
-              </DropdownMenu.Item>
               <DropdownMenu.Item className="menu__item" onSelect={onSettings}>
                 <Settings size={13} /> {ui.settings}
               </DropdownMenu.Item>

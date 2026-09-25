@@ -62,6 +62,13 @@
 }
 .twitch-player.is-blocked { pointer-events: none; }
 
+.kick-player, .kick-player iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}
+.kick-player.is-blocked { pointer-events: none; }
+
 .empty-grid {
   height: 100%;
   display: grid;

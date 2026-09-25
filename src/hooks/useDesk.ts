@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
+import { matchChannelInput } from '../lib/platforms/registry'
 import {
   createDefaultLayout,
   loadState,
   newStreamId,
-  normalizeChannel,
   saveState,
+  streamKey,
 } from '../lib/storage'
-import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type PersistedState, type SavedStream, type StreamItem, type WatchMode } from '../types'
+import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type PersistedState, type PlatformId, type SavedStream, type StreamItem, type WatchMode } from '../types'
 
 const DEFAULT_STREAMS: StreamItem[] = [
-  { id: newStreamId(), channel: 'xqc', muted: false },
-  { id: newStreamId(), channel: 'shroud', muted: true },
+  { id: newStreamId(), platform: 'twitch', channel: 'xqc', muted: false },
+  { id: newStreamId(), platform: 'twitch', channel: 'shroud', muted: true },
 ]
 
 export function useDesk() {
@@ -110,18 +111,20 @@ export function useDesk() {
   const visibleStreams = useMemo(() => streams.filter((s) => !s.popped), [streams])
 
   const addStream = useCallback((raw: string) => {
-    const channel = normalizeChannel(raw)
-    if (!channel) return { ok: false as const, error: 'Enter a valid Twitch channel or URL' }
-    const existing = streams.find((s) => s.channel === channel)
+    const match = matchChannelInput(raw)
+    if (!match) return { ok: false as const, error: 'Enter a valid Twitch or Kick channel or URL' }
+    const { platform, channel } = match
+    const key = streamKey(platform, channel)
+    const existing = streams.find((s) => streamKey(s.platform, s.channel) === key)
     if (existing && !existing.popped) {
       return { ok: false as const, error: 'That channel is already open' }
     }
     if (existing?.popped) {
-      setStreams((prev) => prev.map((s) => (s.channel === channel ? { ...s, popped: false } : s)))
+      setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped: false } : s)))
       return { ok: true as const, channel }
     }
     const id = newStreamId()
-    setStreams((prev) => [...prev, { id, channel, muted: prev.length > 0 }])
+    setStreams((prev) => [...prev, { id, platform, channel, muted: prev.length > 0 }])
     setLayout((prev) => [
       ...prev,
       { i: id, x: (prev.length * 4) % 12, y: Infinity, w: 4, h: 8, minW: 3, minH: 4 },
@@ -140,18 +143,18 @@ export function useDesk() {
     })
   }, [])
 
-  const toggleSaveStream = useCallback((raw: string) => {
-    const channel = normalizeChannel(raw)
-    if (!channel) return
+  const toggleSaveStream = useCallback((platform: PlatformId, channel: string) => {
+    const key = streamKey(platform, channel)
     setSavedStreams((prev) =>
-      prev.some((s) => s.channel === channel)
-        ? prev.filter((s) => s.channel !== channel)
-        : [{ channel, savedAt: Date.now() }, ...prev],
+      prev.some((s) => streamKey(s.platform, s.channel) === key)
+        ? prev.filter((s) => streamKey(s.platform, s.channel) !== key)
+        : [{ platform, channel, savedAt: Date.now() }, ...prev],
     )
   }, [])
 
-  const unsaveStream = useCallback((channel: string) => {
-    setSavedStreams((prev) => prev.filter((s) => s.channel !== channel))
+  const unsaveStream = useCallback((platform: PlatformId, channel: string) => {
+    const key = streamKey(platform, channel)
+    setSavedStreams((prev) => prev.filter((s) => streamKey(s.platform, s.channel) !== key))
   }, [])
 
   const focusStream = useCallback((id: string) => {
@@ -242,11 +245,13 @@ export function useDesk() {
   }, [templates])
 
   const popStream = useCallback((channel: string) => {
-    setStreams((prev) => prev.map((s) => (s.channel === channel ? { ...s, popped: true } : s)))
+    const key = streamKey('twitch', channel)
+    setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped: true } : s)))
   }, [])
 
   const dockStream = useCallback((channel: string) => {
-    setStreams((prev) => prev.map((s) => (s.channel === channel ? { ...s, popped: false } : s)))
+    const key = streamKey('twitch', channel)
+    setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped: false } : s)))
   }, [])
 
   const applySettings = useCallback((next: AppSettings, nextClientId?: string) => {

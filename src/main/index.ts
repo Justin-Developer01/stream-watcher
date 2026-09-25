@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { log, logMemory, openLogFolder, setupLogging } from './logging'
 import { readPopoutStore, recordFromWindow, resolvePopoutBounds, writePopoutStore, type SavedPopout } from './popoutStore'
+import type { PlatformId } from '../lib/platformId'
 
 const moduleDir = dirname(fileURLToPath(import.meta.url))
 
@@ -14,6 +15,7 @@ type PopoutKind = 'stream' | 'chat'
 type PopoutRecord = {
   channel: string
   kind: PopoutKind
+  platform: PlatformId
   win: BrowserWindow
   alwaysOnTop: boolean
 }
@@ -25,8 +27,10 @@ let mainWindow: BrowserWindow | null = null
 let clickThrough = false
 let clickThroughLocked = false
 
-function popoutKey(kind: PopoutKind, channel: string) {
-  return `${kind}:${channel.toLowerCase()}`
+// Platform is part of the key so a Twitch and a Kick pop-out sharing a
+// channel name (e.g. both "xqc") never collide in this Map.
+function popoutKey(kind: PopoutKind, platform: PlatformId, channel: string) {
+  return `${kind}:${platform}:${channel.toLowerCase()}`
 }
 
 function preloadPath() {
@@ -61,6 +65,7 @@ function broadcastPopouts() {
   const payload = [...popouts.values()].map((p) => ({
     channel: p.channel,
     kind: p.kind,
+    platform: p.platform,
     alwaysOnTop: p.alwaysOnTop,
   }))
   mainWindow?.webContents.send('popouts:changed', payload)
@@ -147,8 +152,8 @@ function persistPopoutWindow(key: string) {
   rememberPopout(key, recordFromWindow(rec.win, rec.alwaysOnTop))
 }
 
-function openPopout(kind: PopoutKind, channel: string) {
-  const key = popoutKey(kind, channel)
+function openPopout(kind: PopoutKind, platform: PlatformId, channel: string) {
+  const key = popoutKey(kind, platform, channel)
   const existing = popouts.get(key)
   if (existing && !existing.win.isDestroyed()) {
     existing.win.focus()
@@ -180,22 +185,22 @@ function openPopout(kind: PopoutKind, channel: string) {
   const alwaysOnTop = Boolean(saved?.alwaysOnTop)
   if (alwaysOnTop) win.setAlwaysOnTop(true, 'floating')
 
-  const rec: PopoutRecord = { channel, kind, win, alwaysOnTop }
+  const rec: PopoutRecord = { channel, kind, platform, win, alwaysOnTop }
   popouts.set(key, rec)
 
   win.on('moved', () => persistPopoutWindow(key))
   win.on('resized', () => persistPopoutWindow(key))
   win.on('close', (event) => {
     event.preventDefault()
-    dockPopout(kind, channel)
+    dockPopout(kind, platform, channel)
   })
 
-  loadRenderer(win, `mode=${kind}&channel=${encodeURIComponent(channel)}`)
+  loadRenderer(win, `mode=${kind}&channel=${encodeURIComponent(channel)}&platform=${platform}`)
   broadcastPopouts()
 }
 
-function dockPopout(kind: PopoutKind, channel: string) {
-  const key = popoutKey(kind, channel)
+function dockPopout(kind: PopoutKind, platform: PlatformId, channel: string) {
+  const key = popoutKey(kind, platform, channel)
   const rec = popouts.get(key)
   if (!rec) return
   log.info(`pop-out dock ${key}`)
@@ -204,7 +209,11 @@ function dockPopout(kind: PopoutKind, channel: string) {
     rec.win.destroy()
   }
   popouts.delete(key)
-  mainWindow?.webContents.send('popouts:dock-request', { channel: rec.channel, kind: rec.kind })
+  mainWindow?.webContents.send('popouts:dock-request', {
+    channel: rec.channel,
+    kind: rec.kind,
+    platform: rec.platform,
+  })
   broadcastPopouts()
 }
 
@@ -392,21 +401,28 @@ app.whenReady().then(() => {
     mainWindow?.webContents.send('twitch-session-updated')
   })
 
-  ipcMain.handle('popout:open', (_e, payload: { kind: PopoutKind; channel: string }) => {
-    if (payload?.channel) openPopout(payload.kind, payload.channel.trim().toLowerCase())
-  })
-  ipcMain.handle('popout:dock', (_e, payload: { kind: PopoutKind; channel: string }) => {
-    if (payload?.channel) dockPopout(payload.kind, payload.channel.trim().toLowerCase())
-  })
+  ipcMain.handle(
+    'popout:open',
+    (_e, payload: { kind: PopoutKind; platform: PlatformId; channel: string }) => {
+      if (payload?.channel) openPopout(payload.kind, payload.platform, payload.channel.trim().toLowerCase())
+    },
+  )
+  ipcMain.handle(
+    'popout:dock',
+    (_e, payload: { kind: PopoutKind; platform: PlatformId; channel: string }) => {
+      if (payload?.channel) dockPopout(payload.kind, payload.platform, payload.channel.trim().toLowerCase())
+    },
+  )
   ipcMain.handle('popout:dock-all', () => {
     for (const rec of [...popouts.values()]) {
-      dockPopout(rec.kind, rec.channel)
+      dockPopout(rec.kind, rec.platform, rec.channel)
     }
   })
   ipcMain.handle('popout:list', () =>
     [...popouts.values()].map((p) => ({
       channel: p.channel,
       kind: p.kind,
+      platform: p.platform,
       alwaysOnTop: p.alwaysOnTop,
     })),
   )

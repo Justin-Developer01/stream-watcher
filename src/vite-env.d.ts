@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+import type { PlatformId } from './types'
+
 interface ImportMetaEnv {
   readonly VITE_TWITCH_CLIENT_ID?: string
 }
@@ -7,6 +9,7 @@ interface ImportMetaEnv {
 type VesperPopout = {
   channel: string
   kind: 'stream' | 'chat'
+  platform: PlatformId
   alwaysOnTop: boolean
 }
 
@@ -32,14 +35,14 @@ type VesperApi = {
   }) => Promise<{ accessToken: string; scope: string } | null>
   openLogFolder: () => Promise<string>
   clearTwitchSession: () => Promise<void>
-  openPopout: (kind: 'stream' | 'chat', channel: string) => Promise<void>
-  dockPopout: (kind: 'stream' | 'chat', channel: string) => Promise<void>
+  openPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) => Promise<void>
+  dockPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) => Promise<void>
   dockAllPopouts: () => Promise<void>
   listPopouts: () => Promise<VesperPopout[]>
   onTwitchSessionUpdated: (callback: () => void) => () => void
   onPopoutsChanged: (callback: (list: VesperPopout[]) => void) => () => void
   onDockRequest: (
-    callback: (payload: { channel: string; kind: 'stream' | 'chat' }) => void,
+    callback: (payload: { channel: string; kind: 'stream' | 'chat'; platform: PlatformId }) => void,
   ) => () => void
   onFullscreenChange: (callback: (value: boolean) => void) => () => void
   onMinimizedChange?: (callback: (value: boolean) => void) => () => void
