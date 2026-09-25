@@ -30,7 +30,8 @@ let clickThroughLocked = false
 // Platform is part of the key so a Twitch and a Kick pop-out sharing a
 // channel name (e.g. both "xqc") never collide in this Map.
 function popoutKey(kind: PopoutKind, platform: PlatformId, channel: string) {
-  return `${kind}:${platform}:${channel.toLowerCase()}`
+  // YouTube video ids are case-sensitive; channel names are not.
+  return `${kind}:${platform}:${platform === 'youtube' ? channel : channel.toLowerCase()}`
 }
 
 function preloadPath() {
@@ -430,13 +431,13 @@ app.whenReady().then(() => {
   ipcMain.handle(
     'popout:open',
     (_e, payload: { kind: PopoutKind; platform: PlatformId; channel: string }) => {
-      if (payload?.channel) openPopout(payload.kind, payload.platform, payload.channel.trim().toLowerCase())
+      if (payload?.channel) openPopout(payload.kind, payload.platform, payload.channel.trim())
     },
   )
   ipcMain.handle(
     'popout:dock',
     (_e, payload: { kind: PopoutKind; platform: PlatformId; channel: string }) => {
-      if (payload?.channel) dockPopout(payload.kind, payload.platform, payload.channel.trim().toLowerCase())
+      if (payload?.channel) dockPopout(payload.kind, payload.platform, payload.channel.trim())
     },
   )
   ipcMain.handle('popout:dock-all', () => {

@@ -9,7 +9,7 @@ import { useDesk } from './hooks/useDesk'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { resolveTwitchClientId } from './lib/twitchClientId'
 import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
-import { getPlatform } from './lib/platforms/registry'
+import { getPlatform, platforms } from './lib/platforms/registry'
 import { chatFontFamily, streamKey } from './lib/storage'
 import type { AppSettings, PlatformId, PopoutInfo } from './types'
 
@@ -47,10 +47,8 @@ function DeskApp() {
     [popped],
   )
   const drawerChannels = channels.filter((channel) => !poppedChat.has(channel.toLowerCase()))
-  const drawerActive =
-    desk.chatChannel && !poppedChat.has(desk.chatChannel.toLowerCase())
-      ? desk.chatChannel
-      : (drawerChannels[0] ?? null)
+  const activeLower = desk.chatChannel?.toLowerCase()
+  const drawerActive = drawerChannels.find((c) => c.toLowerCase() === activeLower) ?? drawerChannels[0] ?? null
   const [chatNonce, setChatNonce] = useState(0)
 
   const autoHideChrome =
@@ -106,11 +104,9 @@ function DeskApp() {
   const suppressChatReopenRef = useRef(false)
 
   useEffect(() => {
-    return window.vesper?.onDockRequest(({ channel, kind }) => {
-      // platform isn't needed here yet: desk.dockStream/setChatChannel are
-      // Twitch-only internally until later phases thread it through too.
+    return window.vesper?.onDockRequest(({ channel, kind, platform }) => {
       if (kind === 'stream') {
-        desk.dockStream(channel)
+        desk.dockStream(platform, channel)
         return
       }
       // Dock back on a chat pop-out returns it to the drawer (pre.17). Dock all stays quiet.
@@ -146,7 +142,7 @@ function DeskApp() {
   }
 
   const popoutStream = async (channel: string, platform: PlatformId) => {
-    desk.popStream(channel)
+    desk.popStream(platform, channel)
     await window.vesper?.openPopout('stream', channel, platform)
   }
 
@@ -168,7 +164,7 @@ function DeskApp() {
 
   const dockPop = async (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => {
     await window.vesper?.dockPopout(kind, channel, platform)
-    if (kind === 'stream') desk.dockStream(channel)
+    if (kind === 'stream') desk.dockStream(platform, channel)
   }
 
   const dockAll = async () => {
@@ -178,7 +174,7 @@ function DeskApp() {
     } finally {
       suppressChatReopenRef.current = false
     }
-    popped.filter((p) => p.kind === 'stream').forEach((p) => desk.dockStream(p.channel))
+    popped.filter((p) => p.kind === 'stream').forEach((p) => desk.dockStream(p.platform, p.channel))
   }
 
   const runHotkey = useCallback(
@@ -444,7 +440,8 @@ export default function App() {
   const params = new URLSearchParams(window.location.search)
   const mode = params.get('mode')
   const channel = params.get('channel') ?? ''
-  const platform: PlatformId = params.get('platform') === 'kick' ? 'kick' : 'twitch'
+  const rawPlatform = params.get('platform') ?? ''
+  const platform: PlatformId = Object.hasOwn(platforms, rawPlatform) ? (rawPlatform as PlatformId) : 'twitch'
 
   return (
     <Tooltip.Provider delayDuration={250} skipDelayDuration={80}>

@@ -127,13 +127,18 @@ export function streamKey(platform: PlatformId, channel: string): string {
   return `${platform}:${channel}`
 }
 
+// twitch.tv pages that share the /<name> shape but are not channels.
+const TWITCH_RESERVED = new Set([
+  'bits', 'directory', 'downloads', 'drops', 'following', 'friends', 'inventory', 'jobs', 'login',
+  'messages', 'moderator', 'popout', 'prime', 'products', 'search', 'settings', 'signup', 'store',
+  'subscriptions', 'turbo', 'videos', 'wallet',
+])
+
 export function normalizeChannel(input: string): string | null {
   const trimmed = input.trim().toLowerCase()
   if (!trimmed) return null
-  const urlMatch = trimmed.match(
-    /(?:https?:\/\/)?(?:www\.)?twitch\.tv\/([a-z0-9_]{3,25})/i,
-  )
-  if (urlMatch?.[1]) return urlMatch[1].toLowerCase()
+  const url = /^(?:https?:\/\/)?(?:www\.|m\.)?twitch\.tv\/([a-z0-9_]{3,25})(?:[/?#]|$)/.exec(trimmed)
+  if (url) return TWITCH_RESERVED.has(url[1]) ? null : url[1]
   const bare = trimmed.replace(/^@/, '')
   if (/^[a-z0-9_]{3,25}$/.test(bare)) return bare
   return null

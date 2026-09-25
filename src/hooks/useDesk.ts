@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
-import { matchChannelInput } from '../lib/platforms/registry'
+import { getPlatform, matchChannelInput } from '../lib/platforms/registry'
 import {
   createDefaultLayout,
   loadState,
@@ -131,26 +131,24 @@ export function useDesk() {
       { i: id, x: (prev.length * 4) % 12, y: Infinity, w: 4, h: 8, minW: 3, minH: 4 },
     ])
     setFocusedId((current) => current ?? id)
-    setChatChannel((current) => current ?? channel)
+    if (getPlatform(platform).hasChat) setChatChannel((current) => current ?? channel)
     return { state: 'created' as const, channel }
   }, [streams])
 
   const addStream = useCallback((raw: string) => {
     const match = matchChannelInput(raw)
-    if (!match) return { ok: false as const, error: 'Enter a valid Twitch or Kick channel or URL' }
+    if (!match) return { ok: false as const, error: 'Enter a Twitch or Kick channel, or a YouTube video link' }
     const result = resolveStreamAdd(match.platform, match.channel)
     if (result.state === 'visible') return { ok: false as const, error: 'That channel is already open' }
     return { ok: true as const, channel: result.channel }
   }, [resolveStreamAdd])
 
   const removeStream = useCallback((id: string) => {
-    setStreams((prev) => {
-      const next = prev.filter((s) => s.id !== id)
-      setLayout((layoutPrev) => layoutPrev.filter((l) => l.i !== id))
-      setFocusedId((current) => (current === id ? next.find((s) => !s.popped)?.id ?? null : current))
-      return next
-    })
-  }, [])
+    const next = streams.filter((s) => s.id !== id)
+    setStreams(next)
+    setLayout((prev) => prev.filter((l) => l.i !== id))
+    setFocusedId((current) => (current === id ? next.find((s) => !s.popped)?.id ?? null : current))
+  }, [streams])
 
   const toggleSaveStream = useCallback((platform: PlatformId, channel: string) => {
     const key = streamKey(platform, channel)
@@ -170,7 +168,7 @@ export function useDesk() {
     setFocusedId(id)
     setStreams((prev) => prev.map((s) => ({ ...s, muted: s.id !== id })))
     const stream = streams.find((s) => s.id === id)
-    if (stream) setChatChannel(stream.channel)
+    if (stream && getPlatform(stream.platform).hasChat) setChatChannel(stream.channel)
   }, [streams])
 
   const openSaved = useCallback((platform: PlatformId, channel: string) => {
@@ -258,15 +256,13 @@ export function useDesk() {
     setMode('standard')
   }, [templates])
 
-  const popStream = useCallback((channel: string) => {
-    const key = streamKey('twitch', channel)
-    setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped: true } : s)))
+  const setPopped = useCallback((platform: PlatformId, channel: string, popped: boolean) => {
+    const key = streamKey(platform, channel)
+    setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped } : s)))
   }, [])
 
-  const dockStream = useCallback((channel: string) => {
-    const key = streamKey('twitch', channel)
-    setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped: false } : s)))
-  }, [])
+  const popStream = useCallback((platform: PlatformId, channel: string) => setPopped(platform, channel, true), [setPopped])
+  const dockStream = useCallback((platform: PlatformId, channel: string) => setPopped(platform, channel, false), [setPopped])
 
   const applySettings = useCallback((next: AppSettings, nextClientId?: string) => {
     setSettings(next)

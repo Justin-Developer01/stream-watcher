@@ -566,6 +566,106 @@ await step('youtube: remove drops the tile', async () => {
   return { ok: after === before - 1, detail: `tiles=${before}→${after}` }
 })
 
+// ---------- Kick / YouTube pop-outs ----------
+// Playwright's own .click() intermittently hangs this deep into a long Xvfb run even on a
+// visible, correctly hit-tested element (confirmed via elementFromPoint diagnostics) — a known
+// environment quirk, not a product bug. Dispatch through Electron's own input events instead,
+// which stays reliable (same fix already proven for the quit test's race).
+async function electronClick(pwPage, loc) {
+  // react-grid-layout can still be reflowing a tile right after it mounts/remounts (e.g. right
+  // after docking back), so a boundingBox() taken too early goes stale before the click lands.
+  // Poll until two reads agree before sending the click.
+  let box = await loc.boundingBox()
+  for (let i = 0; i < 10; i++) {
+    if (!box) { await sleep(150); box = await loc.boundingBox(); continue }
+    await sleep(150)
+    const next = await loc.boundingBox()
+    if (next && box && Math.abs(next.x - box.x) < 1 && Math.abs(next.y - box.y) < 1) { box = next; break }
+    box = next
+  }
+  if (!box) throw new Error('electronClick: element has no bounding box')
+  const url = pwPage.url()
+  const x = Math.round(box.x + box.width / 2)
+  const y = Math.round(box.y + box.height / 2)
+  await app.evaluate(({ BrowserWindow }, { url, x, y }) => {
+    const win = BrowserWindow.getAllWindows().find((w) => !w.isDestroyed() && w.webContents.getURL() === url)
+    if (!win) throw new Error(`electronClick: no window for ${url}`)
+    win.webContents.sendInputEvent({ type: 'mouseDown', x, y, button: 'left', clickCount: 1 })
+    win.webContents.sendInputEvent({ type: 'mouseUp', x, y, button: 'left', clickCount: 1 })
+  }, { url, x, y })
+}
+async function popOutAndDock(url, label) {
+  await page.locator('.chrome-search input').fill(url)
+  await page.locator('.chrome-search input').press('Enter')
+  await sleep(500)
+  const tile = page.locator('.stream-grid__item', { hasText: label })
+  const before = await page.locator('.stream-grid__item').count()
+  const winP = app.waitForEvent('window', { timeout: 15000 })
+  await electronClick(page, tile.locator('.stream-tile__actions .icon-btn').nth(2))
+  const pop = await winP
+  await pop.waitForSelector('.popout-root', { timeout: 10000 })
+  await sleep(500)
+  const during = await page.locator('.stream-grid__item').count()
+  const popUrl = pop.url()
+  const players = {
+    kick: await pop.locator('.kick-player').count(),
+    youtube: await pop.locator('.youtube-player').count(),
+    twitch: await pop.locator('.twitch-player').count(),
+  }
+  const iframeSrc = await pop.locator('iframe').first().getAttribute('src', { timeout: 10000 }).catch(() => null)
+  await electronClick(pop, pop.locator('.popout-bar .text-btn', { hasText: 'Dock back' })).catch((e) => {
+    if (!/closed|no window/i.test(String(e?.message))) throw e
+  })
+  await sleep(800)
+  const after = await page.locator('.stream-grid__item').count()
+  const docked = await tile.count()
+  // Clean up: retry the remove click, since a click landing during a re-render can be a no-op.
+  for (let i = 0; i < 3 && (await tile.count()) > 0; i++) {
+    await electronClick(page, tile.locator('.stream-tile__actions .icon-btn.danger'))
+    await sleep(400)
+  }
+  const removed = (await tile.count()) === 0
+  return { before, during, after, docked, removed, closed: pop.isClosed(), popUrl, players, iframeSrc }
+}
+await step('pop-out: a Kick tile leaves the desk, opens a Kick player, and docks back', async () => {
+  const r = await popOutAndDock('https://kick.com/spreen', 'spreen')
+  return {
+    ok: r.during === r.before - 1 && r.after === r.before && r.docked === 1 && r.closed && r.removed &&
+      /platform=kick/.test(r.popUrl) && r.players.kick === 1 && r.players.twitch === 0 &&
+      /player\.kick\.com\/spreen/.test(r.iframeSrc ?? ''),
+    detail: `tiles ${r.before}→${r.during}→${r.after} players=${JSON.stringify(r.players)} src=${r.iframeSrc}`,
+  }
+})
+await step('pop-out: a YouTube tile keeps its case-sensitive id, opens a YouTube player, and docks back', async () => {
+  const r = await popOutAndDock('https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'dQw4w9WgXcQ')
+  return {
+    ok: r.during === r.before - 1 && r.after === r.before && r.docked === 1 && r.closed && r.removed &&
+      /platform=youtube/.test(r.popUrl) && /channel=dQw4w9WgXcQ/.test(r.popUrl) &&
+      r.players.youtube === 1 && r.players.twitch === 0,
+    detail: `tiles ${r.before}→${r.during}→${r.after} players=${JSON.stringify(r.players)} url=${r.popUrl.split('?')[1]} iframe(informational, network-dependent)=${r.iframeSrc?.slice(0, 60)}`,
+  }
+})
+
+await step('chat: focusing a Kick tile named like a Twitch channel leaves the chat drawer alone', async () => {
+  await page.locator('.chrome-search input').fill('https://kick.com/xqc')
+  await page.locator('.chrome-search input').press('Enter')
+  await sleep(500)
+  const shroud = page.locator('.stream-grid__item', { hasText: 'shroud' })
+  await electronClick(page, shroud.locator('.stream-tile__actions .icon-btn').nth(2))
+  await sleep(500)
+  const chip = () => page.locator('.chat-chips .chip.is-on').textContent().catch(() => null)
+  const before = await chip()
+  const kickTile = page.locator('.stream-grid__item').filter({ has: page.locator('.kick-player') })
+  await electronClick(page, kickTile.locator('.stream-tile__channel'))
+  await sleep(500)
+  const after = await chip()
+  await page.keyboard.press('Escape')
+  await sleep(300)
+  await electronClick(page, kickTile.locator('.stream-tile__actions .icon-btn.danger'))
+  await sleep(300)
+  return { ok: before === '#shroud' && after === '#shroud', detail: `active chat ${before} → ${after} after focusing Kick "xqc"` }
+})
+
 // ---------- Saved menu: save, remove from desk, reopen, unsave ----------
 // Uses a different Kick channel than the "kick:" block above, which stars (and never
 // unsaves) 'adinross' — reusing it here would toggle that residual save back off.
@@ -583,12 +683,12 @@ await step('saved: starring Kick + YouTube tiles and removing them keeps them in
   }
   for (const text of ['xqcow', 'dQw4w9WgXcQ']) {
     const tile = page.locator('.stream-grid__item', { hasText: text })
-    await tile.locator('.stream-tile__actions .icon-btn').first().click()
+    await electronClick(page, tile.locator('.stream-tile__actions .icon-btn').first())
     await sleep(150)
-    await tile.locator('.stream-tile__actions .icon-btn.danger').click()
+    await electronClick(page, tile.locator('.stream-tile__actions .icon-btn.danger'))
     await sleep(200)
   }
-  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await electronClick(page, page.locator('.chrome-bar button[aria-label="Saved"]'))
   await sleep(200)
   const rows = await page.locator('.menu__item--saved').allInnerTexts()
   const hasKick = rows.some((t) => t.includes('Kick') && t.includes('xqcow'))
