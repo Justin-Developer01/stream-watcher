@@ -1,9 +1,10 @@
 import type { Layout } from 'react-grid-layout'
+import type { AuthState, ProviderAuthState } from './lib/authState'
 import type { HotkeyAction } from './lib/hotkeys'
 import { defaultHotkeys } from './lib/hotkeys'
 import type { PlatformId } from './lib/platformId'
 
-export type { PlatformId }
+export type { AuthState, PlatformId, ProviderAuthState }
 
 export type StreamItem = {
   id: string
@@ -38,17 +39,6 @@ export type ChatFloatPosition = {
   y: number
   width: number
   height: number
-}
-
-export type ProviderAuthState = {
-  accessToken: string | null
-  username: string | null
-  displayName: string | null
-  scopes: string[]
-}
-
-export type AuthState = {
-  twitch: ProviderAuthState
 }
 
 export type LayoutTemplate = {

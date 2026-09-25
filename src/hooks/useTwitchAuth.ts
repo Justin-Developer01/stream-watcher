@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { log } from '../lib/log'
 import type { PlatformAuth } from '../lib/platforms/types'
-import { clearAuth, loadAuth, saveAuth } from '../lib/storage'
-import { CHAT_SCOPES, fetchTwitchUser } from '../lib/twitch'
+import { clearAuth, loadAuth, loadSecureAuth, saveSecureAuth } from '../lib/storage'
+import { CHAT_SCOPES, fetchTwitchUser, revokeTwitchToken, validateTwitchToken } from '../lib/twitch'
 import type { ProviderAuthState } from '../types'
 
 const DEFAULT_REDIRECT = 'http://localhost:5173/oauth/callback'
@@ -12,15 +12,41 @@ const EMPTY_AUTH: ProviderAuthState = {
   displayName: null,
   scopes: [],
 }
+const VALIDATE_INTERVAL_MS = 60 * 60 * 1000
 
 export function useTwitchAuth(clientId: string): PlatformAuth & {
   loginForChat: () => Promise<void>
   loginForPrime: () => Promise<void>
   loginToTwitch: () => Promise<void>
 } {
-  const [auth, setAuth] = useState<ProviderAuthState>(() => loadAuth().twitch)
+  const [auth, setAuth] = useState<ProviderAuthState>(EMPTY_AUTH)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const clientIdRef = useRef(clientId)
+  clientIdRef.current = clientId
+
+  // Load from main-process safeStorage on launch; migrate a pre-existing
+  // localStorage auth entry into it once, then drop the localStorage copy.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const stored = await loadSecureAuth()
+      if (cancelled) return
+      if (stored?.twitch.accessToken) {
+        setAuth(stored.twitch)
+        return
+      }
+      const legacy = loadAuth().twitch
+      if (legacy.accessToken) {
+        await saveSecureAuth({ twitch: legacy })
+        clearAuth()
+        if (!cancelled) setAuth(legacy)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const loginForChat = useCallback(async () => {
     if (!clientId.trim()) {
@@ -51,7 +77,7 @@ export function useTwitchAuth(clientId: string): PlatformAuth & {
         displayName: user.display_name,
         scopes: result.scope.split(/[\s+]+/).filter(Boolean),
       }
-      saveAuth({ twitch: next })
+      await saveSecureAuth({ twitch: next })
       setAuth(next)
     } catch (err) {
       log.error('twitch login failed:', err)
@@ -75,10 +101,40 @@ export function useTwitchAuth(clientId: string): PlatformAuth & {
   const loginToTwitch = loginForChat
 
   const logout = useCallback(async () => {
+    if (auth.accessToken && clientIdRef.current.trim()) {
+      await revokeTwitchToken(clientIdRef.current.trim(), auth.accessToken)
+    }
+    await saveSecureAuth({ twitch: EMPTY_AUTH })
     clearAuth()
     setAuth(EMPTY_AUTH)
     await window.vesper?.clearTwitchSession()
-  }, [])
+  }, [auth.accessToken])
+
+  // Validate on launch and hourly. An expired/revoked token (401) is cleared
+  // locally so the UI drops back to logged-out and prompts a fresh login —
+  // this never calls Twitch's revoke endpoint, since the token is already dead.
+  useEffect(() => {
+    const token = auth.accessToken
+    if (!token) return
+    let cancelled = false
+    const check = async () => {
+      const ok = await validateTwitchToken(token).catch(() => true)
+      if (cancelled || ok) return
+      log.warn('twitch token no longer valid; signing out')
+      await saveSecureAuth({ twitch: EMPTY_AUTH })
+      clearAuth()
+      if (!cancelled) {
+        setAuth(EMPTY_AUTH)
+        setError('Your Twitch session expired — log in again.')
+      }
+    }
+    void check()
+    const id = setInterval(check, VALIDATE_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [auth.accessToken])
 
   return {
     auth,

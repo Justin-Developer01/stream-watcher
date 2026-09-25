@@ -160,6 +160,11 @@ await ctx.addInitScript((table) => {
   window.__helixHits = []
   window.fetch = async (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input.url)
+    // useTwitchAuth() validates/revokes the mock token against id.twitch.tv on launch and on
+    // logout — fake it as always-valid so the fake "tok" session doesn't get signed out mid-test.
+    if (url.host === 'id.twitch.tv' && (url.pathname === '/oauth2/validate' || url.pathname === '/oauth2/revoke')) {
+      return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
+    }
     if (url.host !== 'api.twitch.tv') return nativeFetch(input, init)
     const auth = new Headers(init?.headers).get('authorization')
     window.__helixHits.push(url.pathname + url.search + ' auth=' + auth)
