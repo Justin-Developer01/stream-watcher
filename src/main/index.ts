@@ -74,6 +74,8 @@ function broadcastPopouts() {
   }
 }
 
+const YOUTUBE_REFERER = 'https://com.justin.vesperdesk/'
+
 const isWebUrl = (url: string) => /^https?:\/\//i.test(url)
 
 // These windows expose the preload API: embeds may only open http(s) links in the browser, never navigate the app.
@@ -330,6 +332,16 @@ app.whenReady().then(() => {
       delete headers['Content-Security-Policy']
       delete headers['content-security-policy']
       callback({ responseHeaders: headers })
+    },
+  )
+
+  // YouTube rejects embeds with no Referer (Error 153) and file:// sends none; identify as the app id instead.
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['https://www.youtube.com/embed/*', 'https://www.youtube-nocookie.com/embed/*'] },
+    (details, callback) => {
+      const headers = { ...details.requestHeaders }
+      if (!headers.Referer && !headers.referer) headers.Referer = YOUTUBE_REFERER
+      callback({ requestHeaders: headers })
     },
   )
 
