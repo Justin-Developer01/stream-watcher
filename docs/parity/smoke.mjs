@@ -29,6 +29,15 @@ const step = async (name, fn) => {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+// CSP refusals raised by the app's own file:// documents (not by third-party embeds' own policies).
+const cspViolations = []
+const watchCsp = (p) =>
+  p.on('console', (m) => {
+    if (/Content Security Policy/i.test(m.text()) && /^file:/.test(m.location()?.url ?? '')) {
+      cspViolations.push(m.text().split('\n')[0].slice(0, 200))
+    }
+  })
+
 async function launch() {
   const app = await electron.launch({
     executablePath: process.env.VD_EXEC || join(repo, 'node_modules/electron/dist/electron'),
@@ -37,6 +46,8 @@ async function launch() {
     cwd: repo,
   })
   const page = await app.firstWindow()
+  watchCsp(page)
+  app.on('window', watchCsp)
   await page.waitForSelector('.desk', { timeout: 20000 })
   await sleep(600)
   return { app, page }
@@ -335,7 +346,10 @@ await step('chat: Pop out chat opens a separate window and closes the drawer', a
 })
 await step('chat: Dock back closes the pop-out and reopens the drawer on that channel', async () => {
   const pop = globalThis.__pop
-  await pop.locator('.popout-bar .text-btn', { hasText: 'Dock back' }).click()
+  // The click destroys the pop-out itself, so Playwright may see its page close mid-click.
+  await pop.locator('.popout-bar .text-btn', { hasText: 'Dock back' }).click().catch((e) => {
+    if (!/closed/i.test(String(e?.message))) throw e
+  })
   await sleep(800)
   const windows = app.windows().filter((w) => !w.isClosed()).length
   const drawer = await page.locator('.chat-drawer').count()
@@ -658,12 +672,19 @@ await step('log: main.log records startup, windows, and warnings with tokens red
   }
 })
 
+// ---------- Content Security Policy ----------
+await step('csp: no window refused a script or frame (Twitch, Kick, YouTube embeds allowed)', async () => ({
+  ok: cspViolations.length === 0,
+  detail: cspViolations.length ? `${cspViolations.length}: ${cspViolations.slice(0, 3).join(' | ')}` : 'none',
+}))
+
 // ---------- Quit with pop-outs open ----------
 await step('quit: Ctrl+Q exits even with a stream pop-out open', async () => {
   await page.keyboard.press('Escape')
-  const winP = app.waitForEvent('window', { timeout: 5000 })
-  await page.locator('.stream-grid__item').first().locator('.stream-tile__actions .icon-btn').nth(4).click()
-  const pop = await winP
+  const [pop] = await Promise.all([
+    app.waitForEvent('window', { timeout: 15000 }),
+    page.locator('.stream-grid__item').first().locator('.stream-tile__actions .icon-btn').nth(4).click(),
+  ])
   await pop.waitForSelector('.popout-root', { timeout: 10000 })
   await pop.screenshot({ path: join(shots, `${label}-stream-popout.png`) })
   const proc = app.process()
@@ -674,6 +695,40 @@ await step('quit: Ctrl+Q exits even with a stream pop-out open', async () => {
   if (!ok) proc.kill('SIGKILL')
   return { ok, detail: `${winsBefore} windows open; ` + (ok ? 'process exited' : 'process still running after 6s (killed)') }
 })
+
+// ---------- Window hardening (own launch: Playwright never settles after a cancelled navigation) ----------
+;({ app, page } = await launch())
+await sleep(6000)
+await step('security: embeds hand only http(s) to the browser, and the desk never navigates away', async () => {
+  await app.evaluate(({ shell }) => {
+    globalThis.__opened = []
+    shell.openExternal = async (url) => { globalThis.__opened.push(url) }
+  })
+  const winsBefore = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)
+  const embed = page.frames().find((f) => /player\.twitch\.tv/.test(f.url()))
+  const from = embed ?? page.mainFrame()
+  await from.evaluate(() => {
+    window.open('file:///etc/hosts')
+    window.open('ms-settings:privacy')
+    window.open('https://example.com/from-embed')
+  })
+  await sleep(500)
+  const nav = await app.evaluate(async ({ BrowserWindow }) => {
+    const wc = BrowserWindow.getAllWindows().find((w) => !w.getParentWindow()).webContents
+    const startUrl = wc.getURL()
+    wc.executeJavaScript(`location.href = 'https://example.com/hijack'`).catch(() => undefined)
+    await new Promise((r) => setTimeout(r, 1500))
+    const desk = await wc.executeJavaScript(`document.querySelectorAll('.desk').length`)
+    return { stayed: wc.getURL() === startUrl && desk === 1 }
+  })
+  const opened = await app.evaluate(() => globalThis.__opened)
+  const winsAfter = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)
+  return {
+    ok: opened.length === 1 && opened[0] === 'https://example.com/from-embed' && winsAfter === winsBefore && nav.stayed,
+    detail: `from=${embed ? 'twitch embed' : 'desk'} opened=${JSON.stringify(opened)} windows=${winsBefore}→${winsAfter} stayedOnDesk=${nav.stayed}`,
+  }
+})
+await app.close().catch(() => undefined)
 
 console.log(`\n${results.filter((r) => r.ok).length}/${results.length} passed`)
 await import('node:fs').then((fs) => fs.writeFileSync(join(shots, `${label}-results.json`), JSON.stringify(results, null, 2)))

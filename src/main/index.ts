@@ -74,6 +74,21 @@ function broadcastPopouts() {
   }
 }
 
+const YOUTUBE_REFERER = 'https://com.justin.vesperdesk/'
+
+const isWebUrl = (url: string) => /^https?:\/\//i.test(url)
+
+// These windows expose the preload API: embeds may only open http(s) links in the browser, never navigate the app.
+function hardenWindow(win: BrowserWindow) {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isWebUrl(url)) void shell.openExternal(url)
+    return { action: 'deny' }
+  })
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url !== win.webContents.getURL()) event.preventDefault()
+  })
+}
+
 function clickThroughActive() {
   return clickThrough && !clickThroughLocked
 }
@@ -133,11 +148,7 @@ function createMainWindow() {
     app.quit()
   })
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url)
-    return { action: 'deny' }
-  })
-
+  hardenWindow(mainWindow)
   loadRenderer(mainWindow)
 }
 
@@ -188,6 +199,7 @@ function openPopout(kind: PopoutKind, platform: PlatformId, channel: string) {
   const rec: PopoutRecord = { channel, kind, platform, win, alwaysOnTop }
   popouts.set(key, rec)
 
+  hardenWindow(win)
   win.on('moved', () => persistPopoutWindow(key))
   win.on('resized', () => persistPopoutWindow(key))
   win.on('close', (event) => {
@@ -312,12 +324,26 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
 }
 
 app.whenReady().then(() => {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const headers = { ...details.responseHeaders }
-    delete headers['Content-Security-Policy']
-    delete headers['content-security-policy']
-    callback({ responseHeaders: headers })
-  })
+  // Twitch's player rejects a file:// parent via frame-ancestors; strip CSP there only, not on login/OAuth pages.
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls: ['https://player.twitch.tv/*', 'https://embed.twitch.tv/*'] },
+    (details, callback) => {
+      const headers = { ...details.responseHeaders }
+      delete headers['Content-Security-Policy']
+      delete headers['content-security-policy']
+      callback({ responseHeaders: headers })
+    },
+  )
+
+  // YouTube rejects embeds with no Referer (Error 153) and file:// sends none; identify as the app id instead.
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['https://www.youtube.com/embed/*', 'https://www.youtube-nocookie.com/embed/*'] },
+    (details, callback) => {
+      const headers = { ...details.requestHeaders }
+      if (!headers.Referer && !headers.referer) headers.Referer = YOUTUBE_REFERER
+      callback({ requestHeaders: headers })
+    },
+  )
 
   ipcMain.handle('window:minimize', (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize()
@@ -386,7 +412,7 @@ app.whenReady().then(() => {
     return BrowserWindow.fromWebContents(event.sender)?.isAlwaysOnTop() ?? false
   })
   ipcMain.handle('window:open-external', (_e, url: string) => {
-    if (typeof url === 'string' && /^https?:\/\//.test(url)) void shell.openExternal(url)
+    if (typeof url === 'string' && isWebUrl(url)) void shell.openExternal(url)
   })
 
   ipcMain.handle('twitch:open-login', () => openTwitchLogin())

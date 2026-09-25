@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import type { ChromeEdge } from '../types'
 
 const CHROME_BAND = 48
+const PASSING_CLASS = 'is-passing-clicks'
 
 function nearChrome(edge: ChromeEdge, x: number, y: number) {
   switch (edge) {
@@ -31,6 +32,8 @@ export function useClickThrough(enabled: boolean, chromeEdge: ChromeEdge) {
     const setIgnore = (next: boolean) => {
       if (ignoring === next) return
       ignoring = next
+      // Embed iframes swallow mousemove; while clicks pass through anyway, let the desk see the pointer.
+      document.documentElement.classList.toggle(PASSING_CLASS, next)
       void api.setIgnoreMouseEvents(next)
     }
 
@@ -47,6 +50,7 @@ export function useClickThrough(enabled: boolean, chromeEdge: ChromeEdge) {
     window.addEventListener('mousemove', onMove)
     return () => {
       window.removeEventListener('mousemove', onMove)
+      document.documentElement.classList.remove(PASSING_CLASS)
       void api.setIgnoreMouseEvents(false)
     }
   }, [enabled, chromeEdge])
