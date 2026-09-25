@@ -76,19 +76,6 @@
 }
 .youtube-player.is-blocked { pointer-events: none; }
 
-.is-passing-clicks iframe { pointer-events: none !important; }
-
-.player-error {
-  height: 100%;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 0.5rem;
-  color: var(--muted);
-  text-align: center;
-}
-.player-error p { margin: 0; }
-
 .empty-grid {
   height: 100%;
   display: grid;

@@ -1,7 +1,6 @@
 import { memo } from 'react'
 import { MessageSquare, PictureInPicture2, Star, Volume2, VolumeX, X } from 'lucide-react'
 import { Tip } from './ui/Tip'
-import { PlayerErrorBoundary } from './PlayerErrorBoundary'
 import { StreamPlayer } from './StreamPlayer'
 import { getPlatform } from '../lib/platforms/registry'
 import { ui } from '../lib/uiLabels'
@@ -84,16 +83,14 @@ function StreamTileImpl({
         </div>
       </header>
       <div className="stream-tile__player" onDoubleClick={onFocus}>
-        <PlayerErrorBoundary label={`${stream.platform}:${stream.channel}`}>
-          <StreamPlayer
-            platform={stream.platform}
-            channel={stream.channel}
-            muted={stream.muted || low}
-            interactive={interactive}
-            paused={low}
-            lowQuality={low}
-          />
-        </PlayerErrorBoundary>
+        <StreamPlayer
+          platform={stream.platform}
+          channel={stream.channel}
+          muted={stream.muted || low}
+          interactive={interactive}
+          paused={low}
+          lowQuality={low}
+        />
       </div>
     </article>
   )

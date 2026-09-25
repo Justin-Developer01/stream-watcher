@@ -46,12 +46,9 @@ export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality 
   const playerRef = useRef<InstanceType<NonNullable<typeof window.YT>['Player']> | null>(null)
   const live = useRef({ muted, paused, lowQuality })
   live.current = { muted, paused, lowQuality }
-  // YT.Player has no mute/play methods until onReady; calls before that throw.
-  const ready = useRef(false)
 
   useEffect(() => {
     let disposed = false
-    ready.current = false
     loadYouTubeApi().then(() => {
       const YT = window.YT
       if (disposed || !containerRef.current || !YT) return
@@ -71,25 +68,12 @@ export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality 
           playsinline: 1,
           controls: 1,
         },
-        events: {
-          onReady: () => {
-            const player = playerRef.current
-            if (disposed || !player) return
-            ready.current = true
-            // Props may have changed while the player loaded.
-            if (live.current.muted) player.mute()
-            else player.unMute()
-            if (live.current.paused) player.pauseVideo()
-            else player.playVideo()
-          },
-        },
       })
     }, (err: unknown) => {
       if (!disposed) log.warn(`youtube:${channel} player not started:`, err)
     })
     return () => {
       disposed = true
-      ready.current = false
       playerRef.current?.destroy?.()
       playerRef.current = null
       if (containerRef.current) containerRef.current.innerHTML = ''
@@ -99,20 +83,20 @@ export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality 
 
   useEffect(() => {
     const player = playerRef.current
-    if (!player || !ready.current) return
+    if (!player) return
     if (muted) player.mute()
     else player.unMute()
   }, [muted])
 
   useEffect(() => {
     const player = playerRef.current
-    if (!player || !ready.current) return
+    if (!player) return
     if (paused) player.pauseVideo()
     else player.playVideo()
   }, [paused])
 
   useEffect(() => {
-    if (ready.current) playerRef.current?.setPlaybackQuality?.(lowQuality ? 'small' : 'default')
+    playerRef.current?.setPlaybackQuality?.(lowQuality ? 'small' : 'default')
   }, [lowQuality])
 
   return <div className={`youtube-player${interactive ? '' : ' is-blocked'}`} ref={containerRef} />

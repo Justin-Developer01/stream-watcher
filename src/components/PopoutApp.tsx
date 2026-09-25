@@ -2,7 +2,6 @@ import { Pin, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { ChatDrawer } from './ChatDrawer'
 import { PortalThemeProvider, themeVars } from './ui/portalTheme'
-import { PlayerErrorBoundary } from './PlayerErrorBoundary'
 import { StreamPlayer } from './StreamPlayer'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { chatFontFamily, loadState } from '../lib/storage'
@@ -69,9 +68,7 @@ export function PopoutApp({
       </header>
       {mode === 'stream' ? (
         <div className="popout-player" data-hit>
-          <PlayerErrorBoundary label={`${platform}:${channel}`}>
-            <StreamPlayer platform={platform} channel={channel} muted={false} interactive />
-          </PlayerErrorBoundary>
+          <StreamPlayer platform={platform} channel={channel} muted={false} interactive />
         </div>
       ) : (
         <ChatDrawer
