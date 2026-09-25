@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { AuthState } from '../lib/authState'
 import type { PlatformId } from '../lib/platformId'
 
 export type TwitchOAuthResult = {
@@ -38,6 +39,8 @@ const api = {
     ipcRenderer.invoke('twitch:oauth', payload) as Promise<TwitchOAuthResult | null>,
   openLogFolder: () => ipcRenderer.invoke('log:open-folder') as Promise<string>,
   clearTwitchSession: () => ipcRenderer.invoke('twitch:clear-session') as Promise<void>,
+  loadTwitchAuth: () => ipcRenderer.invoke('auth:load-twitch') as Promise<AuthState | null>,
+  saveTwitchAuth: (auth: AuthState) => ipcRenderer.invoke('auth:save-twitch', auth) as Promise<void>,
   openPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) =>
     ipcRenderer.invoke('popout:open', { kind, channel, platform }) as Promise<void>,
   dockPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) =>

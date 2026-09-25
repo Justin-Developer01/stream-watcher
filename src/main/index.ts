@@ -1,9 +1,11 @@
-import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, safeStorage, session, shell } from 'electron'
 import { existsSync } from 'node:fs'
+import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { log, logMemory, openLogFolder, setupLogging } from './logging'
 import { readPopoutStore, recordFromWindow, resolvePopoutBounds, writePopoutStore, type SavedPopout } from './popoutStore'
+import type { AuthState } from '../lib/authState'
 import type { PlatformId } from '../lib/platformId'
 
 const moduleDir = dirname(fileURLToPath(import.meta.url))
@@ -324,6 +326,36 @@ async function openTwitchOAuth(clientId: string, redirectUri: string, scopes: st
   })
 }
 
+function authFilePath() {
+  return join(app.getPath('userData'), 'twitch-auth.bin')
+}
+
+/**
+ * The stored file is a 1-byte marker (1 = safeStorage-encrypted, 0 = plain
+ * JSON) followed by the payload. safeStorage needs an OS keychain (DPAPI on
+ * Windows, always available; some headless Linux setups have none) — the
+ * plain fallback keeps auth working there instead of failing to persist.
+ */
+async function loadTwitchAuthFile(): Promise<AuthState | null> {
+  try {
+    const buf = await readFile(authFilePath())
+    const marker = buf[0]
+    const body = buf.subarray(1)
+    const json = marker === 1 ? safeStorage.decryptString(body) : body.toString('utf8')
+    return JSON.parse(json) as AuthState
+  } catch {
+    return null
+  }
+}
+
+async function saveTwitchAuthFile(auth: AuthState): Promise<void> {
+  const json = JSON.stringify(auth)
+  const encrypt = safeStorage.isEncryptionAvailable()
+  if (!encrypt) log.warn('safeStorage encryption unavailable; storing Twitch auth unencrypted')
+  const body = encrypt ? safeStorage.encryptString(json) : Buffer.from(json, 'utf8')
+  await writeFile(authFilePath(), Buffer.concat([Buffer.from([encrypt ? 1 : 0]), body]))
+}
+
 app.whenReady().then(() => {
   // Twitch's player rejects a file:// parent via frame-ancestors; strip CSP there only, not on login/OAuth pages.
   session.defaultSession.webRequest.onHeadersReceived(
@@ -427,6 +459,8 @@ app.whenReady().then(() => {
     await session.defaultSession.clearStorageData({ storages: ['cookies'] })
     mainWindow?.webContents.send('twitch-session-updated')
   })
+  ipcMain.handle('auth:load-twitch', () => loadTwitchAuthFile())
+  ipcMain.handle('auth:save-twitch', (_e, auth: AuthState) => saveTwitchAuthFile(auth))
 
   ipcMain.handle(
     'popout:open',
