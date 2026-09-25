@@ -18,12 +18,14 @@ import {
   Shrink,
   Square,
   Maximize2,
+  Pencil,
   Star,
   Undo2,
   X,
 } from 'lucide-react'
-import { memo, useEffect, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
+import { memo, useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
 import { getPlatform } from '../lib/platforms/registry'
+import { SAVED_NAME_MAX } from '../lib/storage'
 import { ui } from '../lib/uiLabels'
 import { usePortalThemeProps } from './ui/portalTheme'
 import type { ChromeEdge, LayoutTemplate, PlatformId, PopoutInfo, SavedStream, WatchMode } from '../types'
@@ -43,6 +45,8 @@ type Props = {
   savedStreams: SavedStream[]
   onOpenSaved: (platform: PlatformId, channel: string) => void
   onUnsaveStream: (platform: PlatformId, channel: string) => void
+  /** Empty or undefined `name` restores the default `Platform · channel` label. */
+  onRenameSaved: (platform: PlatformId, channel: string, name?: string) => void
   seeThrough: boolean
   onSeeThrough: (value: boolean) => void
   windowLocked: boolean
@@ -72,6 +76,13 @@ const PRESETS: Array<['1x1' | '1x2' | '2x2' | '1+3', string]> = [
   ['1+3', '1+3'],
 ]
 
+// A pointer click on a Saved row waits this long before opening, so a second click can rename
+// it instead. Keyboard Enter/Space opens immediately.
+const SAVED_DOUBLE_CLICK_MS = 300
+
+const savedKey = (item: SavedStream) => `${item.platform}:${item.channel}`
+const savedDefaultLabel = (item: SavedStream) => `${getPlatform(item.platform).label} · ${item.channel}`
+
 const MODES: Array<{ value: WatchMode; label: string; icon: ReactNode }> = [
   { value: 'standard', label: ui.standard, icon: <LayoutGrid size={14} /> },
   { value: 'focus', label: ui.focus, icon: <Focus size={14} /> },
@@ -96,6 +107,7 @@ export const ChromeBar = memo(function ChromeBar({
   savedStreams,
   onOpenSaved,
   onUnsaveStream,
+  onRenameSaved,
   seeThrough,
   onSeeThrough,
   windowLocked,
@@ -121,6 +133,13 @@ export const ChromeBar = memo(function ChromeBar({
   const [maximized, setMaximized] = useState(true)
   const [layoutName, setLayoutName] = useState('')
   const [savedMenuOpen, setSavedMenuOpen] = useState(false)
+  const [renaming, setRenaming] = useState<{ key: string; draft: string } | null>(null)
+  // Mirrors `renaming` but is cleared synchronously, so a blur fired while the field unmounts
+  // (after Esc, ×, or a save) can never commit a stale draft a second time.
+  const renamingRef = useRef(renaming)
+  renamingRef.current = renaming
+  const savedOpenTimer = useRef(0)
+  const savedClickCount = useRef(0)
   const vertical = chromeEdge === 'left' || chromeEdge === 'right'
   const flyoutSide = outwardSide(chromeEdge)
   const portal = usePortalThemeProps()
@@ -133,6 +152,32 @@ export const ChromeBar = memo(function ChromeBar({
     collisionPadding: 12,
     onCloseAutoFocus: skipFocusReturnAfterPointer,
   }
+
+  const startRename = (item: SavedStream) => {
+    window.clearTimeout(savedOpenTimer.current)
+    setRenaming({ key: savedKey(item), draft: item.name ?? '' })
+  }
+
+  const endRename = (save: boolean) => {
+    const current = renamingRef.current
+    renamingRef.current = null
+    if (!current) return
+    const item = savedStreams.find((s) => savedKey(s) === current.key)
+    if (save && item) onRenameSaved(item.platform, item.channel, current.draft)
+    setRenaming(null)
+  }
+
+  const setSavedOpen = (open: boolean) => {
+    // Closing (click away, trigger, or opening a stream) keeps whatever was typed, like a blur.
+    if (!open) {
+      endRename(true)
+      window.clearTimeout(savedOpenTimer.current)
+    }
+    setSavedMenuOpen(open)
+    onMenuOpen(open)
+  }
+
+  useEffect(() => () => window.clearTimeout(savedOpenTimer.current), [])
 
   useEffect(() => {
     // Keep the Maximize/Restore icon honest after OS snaps and double-clicks on the bar.
@@ -336,13 +381,7 @@ export const ChromeBar = memo(function ChromeBar({
         )}
 
         {savedStreams.length > 0 && (
-          <DropdownMenu.Root
-            open={savedMenuOpen}
-            onOpenChange={(open) => {
-              setSavedMenuOpen(open)
-              onMenuOpen(open)
-            }}
-          >
+          <DropdownMenu.Root open={savedMenuOpen} onOpenChange={setSavedOpen}>
             <Tip label={ui.saved} side={flyoutSide}>
               <DropdownMenu.Trigger asChild>
                 <button type="button" className={vertical ? 'icon-btn' : 'text-btn'} aria-label={ui.saved}>
@@ -352,30 +391,123 @@ export const ChromeBar = memo(function ChromeBar({
               </DropdownMenu.Trigger>
             </Tip>
             <DropdownMenu.Portal>
-              <DropdownMenu.Content {...menuProps}>
-                {savedStreams.map((item) => (
-                  <DropdownMenu.Item
-                    key={`${item.platform}-${item.channel}`}
-                    className="menu__item menu__item--saved"
-                    onSelect={() => onOpenSaved(item.platform, item.channel)}
-                  >
-                    <span>
-                      {getPlatform(item.platform).label} · {item.channel}
-                    </span>
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      aria-label={ui.removeSaved}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onUnsaveStream(item.platform, item.channel)
-                        setSavedMenuOpen(false)
+              <DropdownMenu.Content
+                {...menuProps}
+                onEscapeKeyDown={(event) => {
+                  // Esc cancels an open rename without closing the whole menu.
+                  if (!renamingRef.current) return
+                  event.preventDefault()
+                  endRename(false)
+                }}
+              >
+                {savedStreams.map((item) => {
+                  const key = savedKey(item)
+                  const fallback = savedDefaultLabel(item)
+                  if (renaming?.key === key) {
+                    return (
+                      // A plain row, not a menu item: Radix must not select it or eat its keystrokes.
+                      <div
+                        key={key}
+                        className="menu-inline menu__saved-edit"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          autoFocus
+                          value={renaming.draft}
+                          maxLength={SAVED_NAME_MAX}
+                          placeholder={fallback}
+                          aria-label={`${ui.renameSaved} ${fallback}`}
+                          onChange={(e) => setRenaming({ key, draft: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              endRename(true)
+                            }
+                          }}
+                          onBlur={() => endRename(true)}
+                        />
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          aria-label={ui.clearSavedName}
+                          // Keep focus in the field, so its blur doesn't save the draft before this clears it.
+                          onPointerDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            renamingRef.current = null
+                            onRenameSaved(item.platform, item.channel, undefined)
+                            setRenaming(null)
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )
+                  }
+                  return (
+                    <DropdownMenu.Item
+                      key={key}
+                      className="menu__item menu__item--saved"
+                      // While a row is being renamed, hovering the others must not pull focus out of its field.
+                      onPointerMove={(e) => renaming && e.preventDefault()}
+                      onPointerLeave={(e) => renaming && e.preventDefault()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'F2') {
+                          e.preventDefault()
+                          startRename(item)
+                        }
+                      }}
+                      onClick={(e) => {
+                        savedClickCount.current = e.detail
+                      }}
+                      onSelect={(event) => {
+                        // detail 0 = keyboard Enter/Space: open now. A mouse click waits briefly so a
+                        // second click (detail 2) renames the row instead of opening the stream.
+                        if (savedClickCount.current === 0) {
+                          onOpenSaved(item.platform, item.channel)
+                          return
+                        }
+                        event.preventDefault()
+                        window.clearTimeout(savedOpenTimer.current)
+                        if (savedClickCount.current >= 2) {
+                          startRename(item)
+                          return
+                        }
+                        savedOpenTimer.current = window.setTimeout(() => {
+                          onOpenSaved(item.platform, item.channel)
+                          setSavedOpen(false)
+                        }, SAVED_DOUBLE_CLICK_MS)
                       }}
                     >
-                      <X size={12} />
-                    </button>
-                  </DropdownMenu.Item>
-                ))}
+                      <span className="menu__saved-name">{item.name ?? fallback}</span>
+                      <span className="menu__saved-actions">
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          aria-label={`${ui.renameSaved} ${fallback}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            startRename(item)
+                          }}
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          aria-label={ui.removeSaved}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onUnsaveStream(item.platform, item.channel)
+                            setSavedOpen(false)
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    </DropdownMenu.Item>
+                  )
+                })}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>

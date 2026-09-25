@@ -353,6 +353,7 @@ function DeskApp() {
         savedStreams={desk.savedStreams}
         onOpenSaved={desk.openSaved}
         onUnsaveStream={desk.unsaveStream}
+        onRenameSaved={desk.renameSavedStream}
         seeThrough={desk.settings.seeThrough}
         onSeeThrough={(value) => desk.applySettings({ ...desk.settings, seeThrough: value })}
         windowLocked={desk.windowLocked}

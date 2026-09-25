@@ -47,7 +47,15 @@
 }
 .menu__sep { height: 1px; background: var(--line); margin: 0.25rem 0; }
 .menu__item--saved { justify-content: space-between; gap: 0.75rem; }
+.menu__saved-name { min-width: 0; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu__saved-actions { display: inline-flex; flex: 0 0 auto; gap: 2px; }
 .menu-inline { display: flex; gap: 0.3rem; padding: 0.3rem; }
+/* Rename field: the frosted .menu-inline input, with an accent edge while it has focus. Same height
+   and right edge as a .menu__item row, with the typed text lined up under the other labels. */
+.menu__saved-edit { align-items: center; padding: 0.35rem 0.45rem 0.35rem 0; }
+/* Fill the menu's current width instead of setting it, so opening the field doesn't resize the menu. */
+.menu__saved-edit input { flex: 1 1 auto; width: 0; min-width: 0; }
+.menu .menu__saved-edit input:focus { border-color: var(--accent); }
 
 .modal-overlay {
   position: fixed;

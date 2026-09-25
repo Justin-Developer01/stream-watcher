@@ -737,6 +737,81 @@ await step('saved: reopening from the menu restores the tile; reopening again fo
     detail: `tiles ${before}→${afterReopen}→${afterReopenAgain} (last two should match: focus, not duplicate)`,
   }
 })
+await step('saved: rename shows a custom name; Esc cancels; double-click edits; × restores; re-star keeps it', async () => {
+  const ID = 'dQw4w9WgXcQ'
+  const savedEntry = async () => (await state(page)).savedStreams.find((s) => s.channel === ID)
+  const rowText = () => page.locator('.menu__item--saved', { hasText: ID }).or(page.locator('.menu__item--saved', { hasText: 'Rick' })).first().innerText()
+  const field = page.locator('.menu__saved-edit input')
+  const out = {}
+
+  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await sleep(200)
+  await page.locator('.menu__item--saved', { hasText: ID }).locator('button[aria-label^="Rename"]').click()
+  await sleep(150)
+  out.fieldFocused = await field.evaluate((el) => el === document.activeElement)
+  out.placeholder = await field.getAttribute('placeholder')
+  await field.fill('Rick')
+  await field.press('Enter')
+  await sleep(400)
+  out.renamedRow = (await rowText()).trim()
+  out.menuStillOpen = (await page.locator('.menu__item--saved').count()) > 0
+  const renamed = await savedEntry()
+  out.stored = `${renamed?.name}|${renamed?.channel}`
+
+  await page.locator('.menu__item--saved', { hasText: 'Rick' }).dblclick()
+  await sleep(200)
+  out.dblclickEdits = (await field.count()) === 1 && (await field.inputValue()) === 'Rick'
+  await field.fill('Should not stick')
+  await page.keyboard.press('Escape')
+  await sleep(400)
+  out.escCancels = (await field.count()) === 0 && (await page.locator('.menu__item--saved').count()) > 0 && (await savedEntry())?.name === 'Rick'
+
+  await page.locator('.menu__item--saved', { hasText: 'Rick' }).locator('button[aria-label^="Rename"]').click()
+  await sleep(150)
+  await page.locator('.menu__saved-edit button[aria-label="Clear name"]').click()
+  await sleep(400)
+  out.clearedRow = (await rowText()).trim()
+  out.clearedHasNoNameKey = !('name' in ((await savedEntry()) ?? { name: 'missing entry' }))
+
+  // Name it again, then unstar and re-star from the tile: the custom name comes back.
+  await page.locator('.menu__item--saved', { hasText: ID }).locator('button[aria-label^="Rename"]').click()
+  await sleep(150)
+  await field.fill('Rick')
+  await field.press('Enter')
+  await sleep(200)
+  // A single click on a renamed row still opens the real channel, once the double-click window passes.
+  await page.locator('.menu__item--saved', { hasText: 'Rick' }).click()
+  await sleep(700)
+  out.menuClosedAfterOpen = (await page.locator('.menu__item--saved').count()) === 0
+  const tile = page.locator('.stream-grid__item', { hasText: ID })
+  out.opensRealSlug = (await tile.count()) === 1 && !(await tile.innerText()).includes('Rick')
+  const star = tile.locator('.stream-tile__actions .icon-btn').first()
+  await electronClick(page, star)
+  await sleep(300)
+  out.unstarred = (await savedEntry()) === undefined
+  await electronClick(page, star)
+  await sleep(400)
+  out.restarredName = (await savedEntry())?.name
+
+  // Leave the row as the next step expects it: default label.
+  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await sleep(200)
+  await page.locator('.menu__item--saved', { hasText: 'Rick' }).locator('button[aria-label^="Rename"]').click()
+  await sleep(150)
+  await page.locator('.menu__saved-edit button[aria-label="Clear name"]').click()
+  await sleep(200)
+  await page.keyboard.press('Escape')
+  await sleep(200)
+
+  return {
+    ok:
+      out.fieldFocused && out.placeholder === `YouTube · ${ID}` && out.renamedRow === 'Rick' && out.menuStillOpen &&
+      out.stored === `Rick|${ID}` && out.dblclickEdits && out.escCancels &&
+      out.clearedRow === `YouTube · ${ID}` && out.clearedHasNoNameKey && out.menuClosedAfterOpen && out.opensRealSlug &&
+      out.unstarred && out.restarredName === 'Rick',
+    detail: JSON.stringify(out),
+  }
+})
 await step('saved: removing from the menu drops it from Saved, closes the menu, and doesn\'t touch the desk', async () => {
   const tilesBefore = await page.locator('.stream-grid__item').count()
   await page.locator('.chrome-bar button[aria-label="Saved"]').click()

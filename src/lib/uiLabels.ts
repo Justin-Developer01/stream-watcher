@@ -76,6 +76,8 @@ export const ui = {
   unmute: 'Unmute',
   saved: 'Saved',
   removeSaved: 'Remove from Saved',
+  renameSaved: 'Rename',
+  clearSavedName: 'Clear name',
   playerStopped: 'This player stopped.',
   reloadPlayer: 'Reload player',
   low: 'Low',
