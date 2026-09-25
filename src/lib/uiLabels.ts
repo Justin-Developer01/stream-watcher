@@ -75,6 +75,7 @@ export const ui = {
   mute: 'Mute',
   unmute: 'Unmute',
   saved: 'Saved',
+  removeSaved: 'Remove from Saved',
   low: 'Low',
   emotes: 'Emotes',
   send: 'Send',

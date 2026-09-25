@@ -18,13 +18,15 @@ import {
   Shrink,
   Square,
   Maximize2,
+  Star,
   Undo2,
   X,
 } from 'lucide-react'
 import { memo, useEffect, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
+import { getPlatform } from '../lib/platforms/registry'
 import { ui } from '../lib/uiLabels'
 import { usePortalThemeProps } from './ui/portalTheme'
-import type { ChromeEdge, LayoutTemplate, PlatformId, PopoutInfo, WatchMode } from '../types'
+import type { ChromeEdge, LayoutTemplate, PlatformId, PopoutInfo, SavedStream, WatchMode } from '../types'
 import { outwardSide, skipFocusReturnAfterPointer, Tip } from './ui/Tip'
 
 type Props = {
@@ -38,6 +40,9 @@ type Props = {
   popped: PopoutInfo[]
   onDockAll: () => void
   onDock: (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => void
+  savedStreams: SavedStream[]
+  onOpenSaved: (platform: PlatformId, channel: string) => void
+  onUnsaveStream: (platform: PlatformId, channel: string) => void
   seeThrough: boolean
   onSeeThrough: (value: boolean) => void
   windowLocked: boolean
@@ -88,6 +93,9 @@ export const ChromeBar = memo(function ChromeBar({
   popped,
   onDockAll,
   onDock,
+  savedStreams,
+  onOpenSaved,
+  onUnsaveStream,
   seeThrough,
   onSeeThrough,
   windowLocked,
@@ -112,6 +120,7 @@ export const ChromeBar = memo(function ChromeBar({
   const [error, setError] = useState<string | null>(null)
   const [maximized, setMaximized] = useState(true)
   const [layoutName, setLayoutName] = useState('')
+  const [savedMenuOpen, setSavedMenuOpen] = useState(false)
   const vertical = chromeEdge === 'left' || chromeEdge === 'right'
   const flyoutSide = outwardSide(chromeEdge)
   const portal = usePortalThemeProps()
@@ -319,6 +328,52 @@ export const ChromeBar = memo(function ChromeBar({
                   >
                     {ui.dockBack} #{item.channel}
                     {item.kind === 'chat' && <span className="muted"> · {ui.chat}</span>}
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        )}
+
+        {savedStreams.length > 0 && (
+          <DropdownMenu.Root
+            open={savedMenuOpen}
+            onOpenChange={(open) => {
+              setSavedMenuOpen(open)
+              onMenuOpen(open)
+            }}
+          >
+            <Tip label={ui.saved} side={flyoutSide}>
+              <DropdownMenu.Trigger asChild>
+                <button type="button" className={vertical ? 'icon-btn' : 'text-btn'} aria-label={ui.saved}>
+                  <Star size={13} />
+                  {!vertical && ui.saved} <span className="badge">{savedStreams.length}</span>
+                </button>
+              </DropdownMenu.Trigger>
+            </Tip>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content {...menuProps}>
+                {savedStreams.map((item) => (
+                  <DropdownMenu.Item
+                    key={`${item.platform}-${item.channel}`}
+                    className="menu__item menu__item--saved"
+                    onSelect={() => onOpenSaved(item.platform, item.channel)}
+                  >
+                    <span>
+                      {getPlatform(item.platform).label} · {item.channel}
+                    </span>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label={ui.removeSaved}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onUnsaveStream(item.platform, item.channel)
+                        setSavedMenuOpen(false)
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.Content>

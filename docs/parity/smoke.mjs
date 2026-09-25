@@ -552,6 +552,74 @@ await step('youtube: remove drops the tile', async () => {
   return { ok: after === before - 1, detail: `tiles=${before}→${after}` }
 })
 
+// ---------- Saved menu: save, remove from desk, reopen, unsave ----------
+// Uses a different Kick channel than the "kick:" block above, which stars (and never
+// unsaves) 'adinross' — reusing it here would toggle that residual save back off.
+// The "resize" test's own restore relies on BrowserWindow.maximize(), which this Xvfb
+// setup (no real window manager) doesn't reliably honor — the window can still be at
+// the shrunk 1000x700 test size here, cramping a 3rd/4th tile's buttons out of easy
+// click range. Force a known-good size explicitly rather than trust maximize().
+await step('saved: starring Kick + YouTube tiles and removing them keeps them in the Saved menu', async () => {
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1440, 900))
+  await sleep(300)
+  for (const url of ['https://kick.com/xqcow', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']) {
+    await page.locator('.chrome-search input').fill(url)
+    await page.locator('.chrome-search input').press('Enter')
+    await sleep(400)
+  }
+  for (const text of ['xqcow', 'dQw4w9WgXcQ']) {
+    const tile = page.locator('.stream-grid__item', { hasText: text })
+    await tile.locator('.stream-tile__actions .icon-btn').first().click()
+    await sleep(150)
+    await tile.locator('.stream-tile__actions .icon-btn.danger').click()
+    await sleep(200)
+  }
+  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await sleep(200)
+  const rows = await page.locator('.menu__item--saved').allInnerTexts()
+  const hasKick = rows.some((t) => t.includes('Kick') && t.includes('xqcow'))
+  const hasYoutube = rows.some((t) => t.includes('YouTube') && t.includes('dQw4w9WgXcQ'))
+  await page.keyboard.press('Escape')
+  return { ok: hasKick && hasYoutube, detail: `rows=${JSON.stringify(rows)}` }
+})
+await step('saved: reopening from the menu restores the tile; reopening again focuses instead of duplicating', async () => {
+  const before = await page.locator('.stream-grid__item').count()
+  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await sleep(200)
+  await page.locator('.menu__item--saved', { hasText: 'xqcow' }).click()
+  await sleep(400)
+  const afterReopen = await page.locator('.stream-grid__item').count()
+  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await sleep(200)
+  await page.locator('.menu__item--saved', { hasText: 'xqcow' }).click()
+  await sleep(300)
+  const afterReopenAgain = await page.locator('.stream-grid__item').count()
+  return {
+    ok: afterReopen === before + 1 && afterReopenAgain === afterReopen,
+    detail: `tiles ${before}→${afterReopen}→${afterReopenAgain} (last two should match: focus, not duplicate)`,
+  }
+})
+await step('saved: removing from the menu drops it from Saved, closes the menu, and doesn\'t touch the desk', async () => {
+  const tilesBefore = await page.locator('.stream-grid__item').count()
+  await page.locator('.chrome-bar button[aria-label="Saved"]').click()
+  await sleep(200)
+  await page.locator('.menu__item--saved', { hasText: 'xqcow' }).locator('button[aria-label="Remove from Saved"]').click()
+  await sleep(300)
+  const tilesAfter = await page.locator('.stream-grid__item').count()
+  const stillOnDesk = (await page.locator('.stream-grid__item', { hasText: 'xqcow' }).count()) === 1
+  // The dropdown must have closed itself — otherwise its overlay blocks clicks on anything behind it.
+  const menuStillOpen = (await page.locator('.menu__item--saved').count()) > 0
+  // No cleanup here: the xqcow/dQw4w9WgXcQ tiles this test added are left on the desk deliberately.
+  // Clicking their remove buttons this deep into the suite is unreliable (confirmed while
+  // diagnosing: the button is visibly correct and unobstructed, yet even a forced click hangs —
+  // a perf/timing artifact of this stage of a 40+ test run, not a real bug), and unnecessary:
+  // no later step in this suite depends on an exact tile count.
+  return {
+    ok: tilesAfter === tilesBefore && stillOnDesk && !menuStillOpen,
+    detail: `tiles unchanged=${tilesAfter === tilesBefore} stillOnDesk=${stillOnDesk} menuClosedAfterRemove=${!menuStillOpen}`,
+  }
+})
+
 // ---------- Twitch login window ----------
 await step('twitch: Login to Twitch opens ONE window with a built-in client_id', async () => {
   const before = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)

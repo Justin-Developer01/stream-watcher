@@ -110,18 +110,19 @@ export function useDesk() {
 
   const visibleStreams = useMemo(() => streams.filter((s) => !s.popped), [streams])
 
-  const addStream = useCallback((raw: string) => {
-    const match = matchChannelInput(raw)
-    if (!match) return { ok: false as const, error: 'Enter a valid Twitch or Kick channel or URL' }
-    const { platform, channel } = match
+  // Shared by addStream (after text matching) and openSaved (platform+channel already
+  // known): brings a channel onto the desk, reactivating a popped tile or creating a new
+  // one. Leaves the "already visible" case to the caller — addStream treats it as an
+  // error (there's a text input to show one in), openSaved instead focuses the tile.
+  const resolveStreamAdd = useCallback((platform: PlatformId, channel: string) => {
     const key = streamKey(platform, channel)
     const existing = streams.find((s) => streamKey(s.platform, s.channel) === key)
     if (existing && !existing.popped) {
-      return { ok: false as const, error: 'That channel is already open' }
+      return { state: 'visible' as const, id: existing.id }
     }
     if (existing?.popped) {
       setStreams((prev) => prev.map((s) => (streamKey(s.platform, s.channel) === key ? { ...s, popped: false } : s)))
-      return { ok: true as const, channel }
+      return { state: 'reactivated' as const, channel }
     }
     const id = newStreamId()
     setStreams((prev) => [...prev, { id, platform, channel, muted: prev.length > 0 }])
@@ -131,8 +132,16 @@ export function useDesk() {
     ])
     setFocusedId((current) => current ?? id)
     setChatChannel((current) => current ?? channel)
-    return { ok: true as const, channel }
+    return { state: 'created' as const, channel }
   }, [streams])
+
+  const addStream = useCallback((raw: string) => {
+    const match = matchChannelInput(raw)
+    if (!match) return { ok: false as const, error: 'Enter a valid Twitch or Kick channel or URL' }
+    const result = resolveStreamAdd(match.platform, match.channel)
+    if (result.state === 'visible') return { ok: false as const, error: 'That channel is already open' }
+    return { ok: true as const, channel: result.channel }
+  }, [resolveStreamAdd])
 
   const removeStream = useCallback((id: string) => {
     setStreams((prev) => {
@@ -163,6 +172,11 @@ export function useDesk() {
     const stream = streams.find((s) => s.id === id)
     if (stream) setChatChannel(stream.channel)
   }, [streams])
+
+  const openSaved = useCallback((platform: PlatformId, channel: string) => {
+    const result = resolveStreamAdd(platform, channel)
+    if (result.state === 'visible') focusStream(result.id)
+  }, [resolveStreamAdd, focusStream])
 
   const toggleMute = useCallback((id: string) => {
     setStreams((prev) => prev.map((s) => (s.id === id ? { ...s, muted: !s.muted } : s)))
@@ -297,6 +311,7 @@ export function useDesk() {
     toolbarForced,
     setToolbarForced,
     addStream,
+    openSaved,
     removeStream,
     toggleSaveStream,
     unsaveStream,
