@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { AuthState, PlatformId } from './types'
+import type { PlatformId, ProviderAuthState, PublicAuthState } from './types'
 
 interface ImportMetaEnv {
   readonly VITE_TWITCH_CLIENT_ID?: string
@@ -12,6 +12,8 @@ type VesperPopout = {
   platform: PlatformId
   alwaysOnTop: boolean
 }
+
+type VesperChatCredentials = { username: string; accessToken: string }
 
 type VesperApi = {
   minimize: () => Promise<void>
@@ -34,9 +36,12 @@ type VesperApi = {
     scopes: string[]
   }) => Promise<{ accessToken: string; scope: string } | null>
   openLogFolder: () => Promise<string>
-  clearTwitchSession: () => Promise<void>
-  loadTwitchAuth: () => Promise<AuthState | null>
-  saveTwitchAuth: (auth: AuthState) => Promise<void>
+  getAuthSession: () => Promise<PublicAuthState>
+  getChatCredentials: () => Promise<VesperChatCredentials | null>
+  migrateLegacyAuth: (legacy: ProviderAuthState) => Promise<void>
+  loginTwitchSession: (session: ProviderAuthState) => Promise<void>
+  logoutTwitch: (clientId: string) => Promise<void>
+  onAuthChanged: (callback: (session: PublicAuthState) => void) => () => void
   openPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) => Promise<void>
   dockPopout: (kind: 'stream' | 'chat', channel: string, platform: PlatformId) => Promise<void>
   dockAllPopouts: () => Promise<void>

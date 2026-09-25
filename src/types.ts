@@ -1,10 +1,10 @@
 import type { Layout } from 'react-grid-layout'
-import type { AuthState, ProviderAuthState } from './lib/authState'
+import type { AuthState, ProviderAuthState, PublicAuthState } from './lib/authState'
 import type { HotkeyAction } from './lib/hotkeys'
 import { defaultHotkeys } from './lib/hotkeys'
 import type { PlatformId } from './lib/platformId'
 
-export type { AuthState, PlatformId, ProviderAuthState }
+export type { AuthState, PlatformId, ProviderAuthState, PublicAuthState }
 
 export type StreamItem = {
   id: string

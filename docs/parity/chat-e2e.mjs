@@ -141,7 +141,12 @@ const cfg = mkdtempSync(join(tmpdir(), 'vd-chat-'))
 const app = await electron.launch({
   executablePath: process.env.VD_EXEC || join(repo, 'node_modules/electron/dist/electron'),
   args: process.env.VD_EXEC ? ['--no-sandbox'] : ['--no-sandbox', join(repo, 'out/main/index.js')],
-  env: { ...process.env, XDG_CONFIG_HOME: cfg },
+  // Twitch token validate/revoke is main-process-only now (Node's own fetch, not
+  // Chromium's — Playwright's page/context routing can't reach or mock it), so the
+  // harness's fake seeded token would otherwise get correctly flagged invalid by a
+  // real 401 and signed back out mid-test. This flag is main's own documented,
+  // narrow test-only escape hatch (see runValidation in src/main/index.ts).
+  env: { ...process.env, XDG_CONFIG_HOME: cfg, VD_E2E_SKIP_TWITCH_VALIDATE: '1' },
 })
 const ctx = app.context()
 await ctx.route(/static-cdn\.jtvnw\.net|cloudfront\.net|embed\.twitch\.tv/, (route) =>
@@ -160,11 +165,6 @@ await ctx.addInitScript((table) => {
   window.__helixHits = []
   window.fetch = async (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input.url)
-    // useTwitchAuth() validates/revokes the mock token against id.twitch.tv on launch and on
-    // logout — fake it as always-valid so the fake "tok" session doesn't get signed out mid-test.
-    if (url.host === 'id.twitch.tv' && (url.pathname === '/oauth2/validate' || url.pathname === '/oauth2/revoke')) {
-      return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
-    }
     if (url.host !== 'api.twitch.tv') return nativeFetch(input, init)
     const auth = new Headers(init?.headers).get('authorization')
     window.__helixHits.push(url.pathname + url.search + ' auth=' + auth)

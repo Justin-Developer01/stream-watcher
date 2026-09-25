@@ -1,12 +1,13 @@
-import { app, BrowserWindow, ipcMain, safeStorage, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, safeStorage, session, shell, type IpcMainInvokeEvent } from 'electron'
 import { existsSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { log, logMemory, openLogFolder, setupLogging } from './logging'
 import { readPopoutStore, recordFromWindow, resolvePopoutBounds, writePopoutStore, type SavedPopout } from './popoutStore'
-import type { AuthState } from '../lib/authState'
+import { EMPTY_PROVIDER_AUTH, toPublicAuthState, type AuthState, type ProviderAuthState, type PublicAuthState } from '../lib/authState'
 import type { PlatformId } from '../lib/platformId'
+import { revokeTwitchToken, validateTwitchToken } from '../lib/twitchAuthApi'
 
 const moduleDir = dirname(fileURLToPath(import.meta.url))
 
@@ -28,6 +29,17 @@ let popoutDisk: Record<string, SavedPopout> = {}
 let mainWindow: BrowserWindow | null = null
 let clickThrough = false
 let clickThroughLocked = false
+
+// Main is the sole owner of the Twitch session: the one place that reads/writes
+// twitch-auth.bin, the one validation timer, the one thing that can clear it.
+// Renderers only ever see a sanitized PublicAuthState (auth:get-session,
+// auth:changed) or, if they're the desk or a chat pop-out, the raw token via
+// auth:get-chat-credentials — never through a generic load/save bridge a
+// window could call unprompted.
+let currentAuth: AuthState = { twitch: EMPTY_PROVIDER_AUTH }
+let authWriteChain: Promise<void> = Promise.resolve()
+let validateTimer: NodeJS.Timeout | null = null
+const VALIDATE_INTERVAL_MS = 60 * 60 * 1000
 
 // Platform is part of the key so a Twitch and a Kick pop-out sharing a
 // channel name (e.g. both "xqc") never collide in this Map.
@@ -356,6 +368,89 @@ async function saveTwitchAuthFile(auth: AuthState): Promise<void> {
   await writeFile(authFilePath(), Buffer.concat([Buffer.from([encrypt ? 1 : 0]), body]))
 }
 
+function isMainWindowSender(event: IpcMainInvokeEvent): boolean {
+  return BrowserWindow.fromWebContents(event.sender) === mainWindow
+}
+
+/** The pop-out kind hosted by this sender's window, or null (desk, or not a pop-out at all). */
+function popoutKindForSender(event: IpcMainInvokeEvent): PopoutKind | null {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  for (const rec of popouts.values()) {
+    if (rec.win === win) return rec.kind
+  }
+  return null
+}
+
+function publicAuthState(): PublicAuthState {
+  return toPublicAuthState(currentAuth.twitch)
+}
+
+function broadcastAuthChanged() {
+  const payload = publicAuthState()
+  mainWindow?.webContents.send('auth:changed', payload)
+  for (const rec of popouts.values()) {
+    if (!rec.win.isDestroyed()) rec.win.webContents.send('auth:changed', payload)
+  }
+}
+
+/** The only place that writes twitch-auth.bin — serialized so a migrate/login/logout
+ * race can't interleave two writes or broadcast a stale intermediate state. */
+function persistAuth(next: AuthState): Promise<void> {
+  currentAuth = next
+  authWriteChain = authWriteChain
+    .then(() => saveTwitchAuthFile(next))
+    .catch((err: unknown) => log.error('failed to write twitch-auth.bin:', err))
+  const result = authWriteChain
+  broadcastAuthChanged()
+  scheduleValidation()
+  return result
+}
+
+function scheduleValidation() {
+  if (validateTimer) {
+    clearInterval(validateTimer)
+    validateTimer = null
+  }
+  if (!currentAuth.twitch.accessToken) return
+  void runValidation()
+  validateTimer = setInterval(() => void runValidation(), VALIDATE_INTERVAL_MS)
+}
+
+async function runValidation() {
+  const token = currentAuth.twitch.accessToken
+  if (!token) return
+  // Test-only escape hatch: the e2e harness seeds a fake token to exercise the
+  // migrate/chat-credentials path without a real Twitch session, and Node's
+  // own fetch (not Chromium's, so it's not proxy-mockable from Playwright) would
+  // otherwise correctly — but unhelpfully, for a test — flag it invalid.
+  if (process.env.VD_E2E_SKIP_TWITCH_VALIDATE === '1') return
+  const result = await validateTwitchToken(token)
+  if (result !== 'invalid') return
+  if (currentAuth.twitch.accessToken !== token) return // already changed under us
+  log.warn('twitch token no longer valid (401); signing out')
+  await persistAuth({ twitch: EMPTY_PROVIDER_AUTH })
+}
+
+/** Adopts a pre-safeStorage localStorage blob only if nothing is stored yet, so a
+ * pop-out's stale read of an old key can never clobber a newer, main-owned session. */
+async function migrateLegacyAuth(legacy: ProviderAuthState): Promise<void> {
+  if (currentAuth.twitch.accessToken || !legacy?.accessToken) return
+  await persistAuth({ twitch: legacy })
+}
+
+async function loginWithSession(session_: ProviderAuthState): Promise<void> {
+  await persistAuth({ twitch: session_ })
+}
+
+async function logoutTwitch(clientId: string): Promise<void> {
+  const token = currentAuth.twitch.accessToken
+  if (token && clientId?.trim()) {
+    await revokeTwitchToken(clientId.trim(), token)
+  }
+  await persistAuth({ twitch: EMPTY_PROVIDER_AUTH })
+  await session.defaultSession.clearStorageData({ storages: ['cookies'] })
+}
+
 app.whenReady().then(() => {
   // Twitch's player rejects a file:// parent via frame-ancestors; strip CSP there only, not on login/OAuth pages.
   session.defaultSession.webRequest.onHeadersReceived(
@@ -448,19 +543,37 @@ app.whenReady().then(() => {
     if (typeof url === 'string' && isWebUrl(url)) void shell.openExternal(url)
   })
 
-  ipcMain.handle('twitch:open-login', () => openTwitchLogin())
+  // Login/logout/save are desk-only: a pop-out has no login UI and must not be able
+  // to trigger or blindly overwrite the session (see the auth ownership comment above).
+  ipcMain.handle('twitch:open-login', (event) => {
+    if (isMainWindowSender(event)) openTwitchLogin()
+  })
   ipcMain.handle(
     'twitch:oauth',
-    async (_e, payload: { clientId: string; redirectUri: string; scopes: string[] }) =>
-      openTwitchOAuth(payload.clientId, payload.redirectUri, payload.scopes),
+    async (event, payload: { clientId: string; redirectUri: string; scopes: string[] }) =>
+      isMainWindowSender(event)
+        ? openTwitchOAuth(payload.clientId, payload.redirectUri, payload.scopes)
+        : null,
   )
-  ipcMain.handle('twitch:clear-session', async () => {
-    // Cookies only. Renderer localStorage holds the desk layout and must survive logout.
-    await session.defaultSession.clearStorageData({ storages: ['cookies'] })
-    mainWindow?.webContents.send('twitch-session-updated')
+  ipcMain.handle('auth:get-session', () => publicAuthState())
+  // Any window may call this: it's read-only, and only adopts a legacy blob when main
+  // has nothing stored yet, so a pop-out calling it can never clobber a live session.
+  ipcMain.handle('auth:migrate-legacy', (_e, legacy: ProviderAuthState) => migrateLegacyAuth(legacy))
+  ipcMain.handle('auth:login', (event, session_: ProviderAuthState) =>
+    isMainWindowSender(event) ? loginWithSession(session_) : undefined,
+  )
+  ipcMain.handle('auth:logout', (event, clientId: string) =>
+    isMainWindowSender(event) ? logoutTwitch(clientId) : undefined,
+  )
+  // The raw token only ever goes to the desk or a chat pop-out (tmi.js needs it for
+  // IRC login) — never a video pop-out, which hosts Twitch/Kick/YouTube player scripts
+  // and has no reason to hold a credential it doesn't use.
+  ipcMain.handle('auth:get-chat-credentials', (event) => {
+    const isChatWindow = isMainWindowSender(event) || popoutKindForSender(event) === 'chat'
+    if (!isChatWindow) return null
+    const { accessToken, username } = currentAuth.twitch
+    return accessToken && username ? { username, accessToken } : null
   })
-  ipcMain.handle('auth:load-twitch', () => loadTwitchAuthFile())
-  ipcMain.handle('auth:save-twitch', (_e, auth: AuthState) => saveTwitchAuthFile(auth))
 
   ipcMain.handle(
     'popout:open',
@@ -495,6 +608,10 @@ app.whenReady().then(() => {
   })
 
   popoutDisk = readPopoutStore()
+  void loadTwitchAuthFile().then((stored) => {
+    currentAuth = stored ?? { twitch: EMPTY_PROVIDER_AUTH }
+    scheduleValidation()
+  })
   createMainWindow()
   setTimeout(() => logMemory('startup'), 60_000)
   setInterval(() => logMemory('periodic'), 10 * 60_000)
