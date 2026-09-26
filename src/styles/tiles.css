@@ -1,6 +1,7 @@
 /* The stage, stream grid, Focus layout, stream tiles, and players. */
 
 .desk-stage {
+  position: relative;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -8,7 +9,7 @@
   flex-direction: column;
 }
 
-.stream-grid-measure { flex: 1 1 auto; min-width: 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; }
+.stream-grid-measure { position: relative; flex: 1 1 auto; min-width: 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; }
 .stream-grid, .focus-stage { min-height: 0; width: 100%; }
 .stream-grid { height: 100%; }
 /* Standard/Performance and Focus are different DOM trees (react-grid-layout vs. a CSS grid — see
@@ -52,9 +53,13 @@
      needing to know its own rendered width. */
   container-type: inline-size;
   container-name: stream-tile;
-  /* Eases the focus ring and the Performance dim, which toggle on an already-mounted tile
-     (a Standard <-> Performance switch, or a Focus promote, never remount .stream-tile itself). */
-  transition: border-color var(--stage-transition, 220ms) ease, filter var(--stage-transition, 220ms) ease;
+  /* Eases the focus ring, the Performance dim, and the Edit Desk dim, which all toggle on an
+     already-mounted tile (a mode switch, a Focus promote, or entering/leaving Edit Desk never
+     remounts .stream-tile itself). */
+  transition:
+    border-color var(--stage-transition, 220ms) ease,
+    filter var(--stage-transition, 220ms) ease,
+    opacity var(--stage-transition, 220ms) ease;
 }
 .stream-tile.is-focused { border-color: var(--accent); }
 .stream-tile.is-low { filter: saturate(0.7); }
@@ -210,3 +215,54 @@
 .react-grid-item > .react-resizable-handle::after {
   border-color: var(--accent) !important;
 }
+
+/* Edit Desk (Phase D). The hit box (20x20, react-grid-layout's own) is unchanged — this only
+   makes the corner easier to *see*: the default triangle marker is a barely-visible 5px corner. */
+.desk--edit .react-grid-item > .react-resizable-handle::after {
+  width: 9px;
+  height: 9px;
+  opacity: 1;
+}
+/* Streams dim slightly so the overlay grid and tile outlines read clearly, but stay watchable —
+   Focus never reaches this (Edit Desk is disabled there), so it's scoped to the RGL grid only. */
+.desk--edit .stream-grid__item .stream-tile { opacity: 0.92; }
+/* Decorative only (see the overlay div's own comment in StreamGrid.tsx) — the real 12-column grid
+   plus the current row height, in the same restrained accent used by the drag/resize placeholder
+   above and the focused-tile ring, not a full-grid glow. Reuses the Phase B stage-enter fade so it
+   settles in instead of popping, and collapses to instant under reduced motion via the same token. */
+.edit-grid-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: stage-enter var(--stage-transition, 220ms) ease;
+  background-image:
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--accent) 30%, transparent) 0 1px, transparent 1px calc(100% / 12)),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--accent) 30%, transparent) 0 1px, transparent 1px var(--edit-row-h, 80px));
+}
+
+/* The compact Edit Desk bar: a floating frosted pill over the top of the stage (not a chrome grid
+   row, so it needs no changes to desk.css's chrome/stage/drawer areas for every edge/dock combo),
+   same blur+surface-mix language as .chrome-bar. Not a modal — nothing behind it is blocked. */
+.edit-desk-bar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: stage-enter var(--stage-transition, 220ms) ease;
+}
+.edit-desk-bar__label { font-weight: 600; font-size: 12px; color: var(--btn-fg); white-space: nowrap; }
+.edit-desk-bar__spacing { display: flex; align-items: center; gap: 0.4rem; font-size: 12px; color: var(--muted); }
+.edit-desk-bar__spacing-slider { width: 90px; height: 18px; }
+.edit-desk-bar__spacing-value { min-width: 2.5em; color: var(--btn-fg); }
+.edit-desk-bar__done { flex: 0 0 auto; }

@@ -94,6 +94,12 @@ export type PersistedState = {
   windowLocked: boolean
   /** Stream Sync (Phase C): opt-in, off by default. Old saves missing this load as false. */
   syncEnabled: boolean
+  /** Edit Desk (Phase D): pixel gap between tiles, tunable via the Spacing control. Old saves
+   * missing this load at 8, matching the grid's own hardcoded default before Edit Desk existed. */
+  editDeskSpacing: number
+  /** Edit Desk (Phase D): true = Snap (auto-compacting grid, today's default), false = Drag (free
+   * placement, no auto-compaction). Old saves missing this load as true — today's behavior. */
+  editDeskSnap: boolean
 }
 
 export const DEFAULT_CHAT_FLOAT: ChatFloatPosition = {

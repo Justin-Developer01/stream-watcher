@@ -2,6 +2,7 @@ import * as Tooltip from '@radix-ui/react-tooltip'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PortalThemeProvider, themeVars } from './components/ui/portalTheme'
 import { ChromeBar } from './components/ChromeBar'
+import { EditDeskBar } from './components/EditDeskBar'
 import { FirstRunTips } from './components/FirstRunTips'
 import { StreamGrid } from './components/StreamGrid'
 import { useChatCredentials } from './hooks/useChatCredentials'
@@ -209,6 +210,13 @@ function DeskApp() {
     // Sync OFF just stops this interval — it never forces anyone back to any position.
   }, [desk.syncEnabled, desk.focusedId])
 
+  // Edit Desk (Phase D) only ever governs the Standard/Performance grid (react-grid-layout);
+  // Focus renders a completely different DOM tree with no grid to edit, so the bar/overlay must
+  // never be reachable there — auto-exit instead of leaving a stale toggle with nothing to show.
+  useEffect(() => {
+    if (desk.mode === 'focus' && desk.editDeskOn) desk.setEditDeskOn(false)
+  }, [desk.mode, desk.editDeskOn, desk.setEditDeskOn])
+
   const dockPop = async (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => {
     await window.vesper?.dockPopout(kind, channel, platform)
     if (kind === 'stream') desk.dockStream(platform, channel)
@@ -293,6 +301,10 @@ function DeskApp() {
           setSettingsOpen(false)
           return
         }
+        if (desk.editDeskOn) {
+          desk.setEditDeskOn(false)
+          return
+        }
         if (fullscreen) {
           void window.vesper?.setFullscreen(false)
           if (!window.vesper?.setFullscreen && document.fullscreenElement) void document.exitFullscreen()
@@ -314,7 +326,7 @@ function DeskApp() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [desk.chatOpen, desk.settings.hotkeys, fullscreen, runHotkey, settingsOpen])
+  }, [desk.chatOpen, desk.editDeskOn, desk.settings.hotkeys, fullscreen, runHotkey, settingsOpen])
 
   const saveSettings = (next: AppSettings, clientId: string) => {
     desk.applySettings(next, clientId)
@@ -374,6 +386,7 @@ function DeskApp() {
         desk.chatOpen && desk.chatDock !== 'float' ? `desk--chat-${desk.chatDock}` : '',
         desk.settings.seeThrough ? 'desk--see-through' : '',
         desk.mode === 'performance' ? 'desk--performance' : '',
+        desk.editDeskOn ? 'desk--edit' : '',
         chromeHidden ? 'desk--ghost' : '',
         fullscreen ? 'desk--fullscreen' : '',
       ]
@@ -388,6 +401,8 @@ function DeskApp() {
         onMode={desk.setMode}
         syncEnabled={desk.syncEnabled}
         onToggleSync={desk.setSyncEnabled}
+        editDeskOn={desk.editDeskOn}
+        onToggleEditDesk={desk.setEditDeskOn}
         templates={desk.templates}
         onApplyTemplate={desk.applyTemplate}
         onSaveTemplate={desk.saveTemplate}
@@ -425,6 +440,15 @@ function DeskApp() {
       {chatEl}
 
       <main className="desk-stage">
+        {desk.editDeskOn && (
+          <EditDeskBar
+            spacing={desk.editDeskSpacing}
+            onSpacing={desk.setEditDeskSpacing}
+            snap={desk.editDeskSnap}
+            onSnap={desk.setEditDeskSnap}
+            onDone={() => desk.setEditDeskOn(false)}
+          />
+        )}
         <StreamGrid
           streams={desk.visibleStreams}
           layout={desk.layout}
@@ -445,6 +469,9 @@ function DeskApp() {
           onVolume={desk.setStreamVolume}
           onTimeApi={registerTimeApi}
           onSwitchFocus={desk.switchFocus}
+          editDeskOn={desk.editDeskOn}
+          editDeskSpacing={desk.editDeskSpacing}
+          editDeskSnap={desk.editDeskSnap}
         />
         <FirstRunTips
           dismissed={desk.settings.dismissedTips}

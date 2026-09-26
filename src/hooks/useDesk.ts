@@ -6,6 +6,7 @@ import {
   createDefaultLayout,
   loadState,
   newStreamId,
+  normalizeEditDeskSpacing,
   savedStream,
   saveState,
   streamKey,
@@ -49,6 +50,8 @@ export function useDesk() {
       settings: saved?.settings ?? DEFAULT_SETTINGS,
       windowLocked: saved?.windowLocked === true,
       syncEnabled: saved?.syncEnabled === true,
+      editDeskSpacing: normalizeEditDeskSpacing(saved?.editDeskSpacing),
+      editDeskSnap: saved?.editDeskSnap !== false,
     }
   }, [])
 
@@ -67,6 +70,11 @@ export function useDesk() {
   const [isDragging, setIsDragging] = useState(false)
   const [windowLocked, setWindowLocked] = useState(initial.windowLocked)
   const [syncEnabled, setSyncEnabled] = useState(initial.syncEnabled)
+  const [editDeskSpacing, setEditDeskSpacing] = useState(initial.editDeskSpacing)
+  const [editDeskSnap, setEditDeskSnap] = useState(initial.editDeskSnap)
+  // Whether the Edit Desk overlay/bar is currently shown — a session UI state like isDragging,
+  // not persisted: re-launching the app should never come back up already in edit mode.
+  const [editDeskOn, setEditDeskOn] = useState(false)
   const [toolbarForced, setToolbarForced] = useState(false)
   const snapshotRef = useRef<PersistedState | null>(null)
 
@@ -86,6 +94,8 @@ export function useDesk() {
       settings,
       windowLocked,
       syncEnabled,
+      editDeskSpacing,
+      editDeskSnap,
     }),
     [
       streams,
@@ -102,6 +112,8 @@ export function useDesk() {
       settings,
       windowLocked,
       syncEnabled,
+      editDeskSpacing,
+      editDeskSnap,
     ],
   )
   snapshotRef.current = snapshot
@@ -350,6 +362,12 @@ export function useDesk() {
     setWindowLocked,
     syncEnabled,
     setSyncEnabled,
+    editDeskSpacing,
+    setEditDeskSpacing,
+    editDeskSnap,
+    setEditDeskSnap,
+    editDeskOn,
+    setEditDeskOn,
     toolbarForced,
     setToolbarForced,
     addStream,
