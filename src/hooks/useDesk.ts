@@ -13,8 +13,8 @@ import {
 import { DEFAULT_CHAT_FLOAT, DEFAULT_SETTINGS, type AppSettings, type ChatDock, type LayoutTemplate, type PersistedState, type PlatformId, type SavedStream, type StreamItem, type WatchMode } from '../types'
 
 const DEFAULT_STREAMS: StreamItem[] = [
-  { id: newStreamId(), platform: 'twitch', channel: 'xqc', muted: false },
-  { id: newStreamId(), platform: 'twitch', channel: 'shroud', muted: true },
+  { id: newStreamId(), platform: 'twitch', channel: 'xqc', muted: false, volume: 1 },
+  { id: newStreamId(), platform: 'twitch', channel: 'shroud', muted: true, volume: 1 },
 ]
 
 /** Removes a saved stream, remembering its custom name in `names` for a later re-star. */
@@ -134,7 +134,7 @@ export function useDesk() {
       return { state: 'reactivated' as const, channel }
     }
     const id = newStreamId()
-    setStreams((prev) => [...prev, { id, platform, channel, muted: prev.length > 0 }])
+    setStreams((prev) => [...prev, { id, platform, channel, muted: prev.length > 0, volume: 1 }])
     setLayout((prev) => [
       ...prev,
       { i: id, x: (prev.length * 4) % 12, y: Infinity, w: 4, h: 8, minW: 3, minH: 4 },
@@ -200,6 +200,19 @@ export function useDesk() {
 
   const toggleMute = useCallback((id: string) => {
     setStreams((prev) => prev.map((s) => (s.id === id ? { ...s, muted: !s.muted } : s)))
+  }, [])
+
+  // The volume slider: 0 mutes and keeps the last level (so unmuting brings sound back);
+  // any level above 0 unmutes at that level. Mute/unmute paths above and below never touch volume.
+  const setStreamVolume = useCallback((id: string, volume: number) => {
+    const level = Math.min(1, Math.max(0, volume))
+    setStreams((prev) =>
+      prev.map((s) => {
+        if (s.id !== id) return s
+        if (level === 0) return s.muted ? s : { ...s, muted: true }
+        return !s.muted && s.volume === level ? s : { ...s, muted: false, volume: level }
+      }),
+    )
   }, [])
 
   const muteAll = useCallback(() => {
@@ -341,6 +354,7 @@ export function useDesk() {
     renameSavedStream,
     focusStream,
     toggleMute,
+    setStreamVolume,
     muteAll,
     unmuteAll,
     muteFocus,

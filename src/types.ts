@@ -11,6 +11,8 @@ export type StreamItem = {
   platform: PlatformId
   channel: string
   muted: boolean
+  /** Level 0..1, kept separately from `muted` so unmuting restores it. Never stored as 0. */
+  volume: number
   popped?: boolean
 }
 

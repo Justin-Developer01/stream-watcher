@@ -5,6 +5,8 @@ import type { ChatEvent, RoomState } from '../chat/types'
 export type StreamPlayerProps = {
   channel: string
   muted: boolean
+  /** Level 0..1 while unmuted; players that can't change it in place (Kick) ignore it. */
+  volume?: number
   interactive: boolean
   paused?: boolean
   lowQuality?: boolean

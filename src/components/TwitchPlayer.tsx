@@ -7,6 +7,7 @@ import { getEmbedParent } from '../lib/twitch'
 type Props = {
   channel: string
   muted: boolean
+  volume?: number
   interactive: boolean
   paused?: boolean
   lowQuality?: boolean
@@ -42,12 +43,12 @@ function loadTwitchScript() {
 
 const RESIZE_SETTLE_MS = 800
 
-export function TwitchPlayer({ channel, muted, interactive, paused, lowQuality }: Props) {
+export function TwitchPlayer({ channel, muted, volume = 1, interactive, paused, lowQuality }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<InstanceType<NonNullable<typeof window.Twitch>['Player']> | null>(null)
   const parent = useMemo(() => getEmbedParent(), [])
-  const live = useRef({ muted, paused, lowQuality })
-  live.current = { muted, paused, lowQuality }
+  const live = useRef({ muted, volume, paused, lowQuality })
+  live.current = { muted, volume, paused, lowQuality }
   const appliedQuality = useRef<string | null>(null)
   const hiddenPause = useRef(false)
 
@@ -84,6 +85,8 @@ export function TwitchPlayer({ channel, muted, interactive, paused, lowQuality }
         autoplay: !live.current.paused,
       })
       playerRef.current = player
+      // Twitch remembers one volume for every embed, so each tile sets its own level once ready.
+      if (Player.READY) player.addEventListener?.(Player.READY, () => player.setVolume?.(live.current.volume))
       // Qualities are only known once the stream plays.
       if (Player.PLAYING) player.addEventListener?.(Player.PLAYING, applyQuality)
     }, (err: unknown) => {
@@ -94,12 +97,16 @@ export function TwitchPlayer({ channel, muted, interactive, paused, lowQuality }
       playerRef.current = null
       if (containerRef.current) containerRef.current.innerHTML = ''
     }
-    // A new player only for a new channel; mute, pause, and quality are applied by the effects below.
+    // A new player only for a new channel; mute, volume, pause, and quality are applied by the effects below.
   }, [channel, parent])
 
   useEffect(() => {
     playerRef.current?.setMuted(muted)
   }, [muted])
+
+  useEffect(() => {
+    playerRef.current?.setVolume?.(volume)
+  }, [volume])
 
   useEffect(() => {
     if (!playerRef.current) return

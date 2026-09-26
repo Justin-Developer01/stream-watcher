@@ -36,7 +36,16 @@ function mergeSettings(raw: Partial<AppSettings> | undefined): AppSettings {
   }
 }
 
-type LegacyStreamItem = Omit<StreamItem, 'platform'> & { platform?: PlatformId }
+type LegacyStreamItem = Omit<StreamItem, 'platform' | 'volume'> & { platform?: PlatformId; volume?: unknown }
+
+/**
+ * A stream volume in (0, 1]. Missing, malformed, or non-positive values load as full volume:
+ * 0 is never stored (dragging to 0 mutes and keeps the last level), so a 0 here isn't intentional.
+ */
+export function normalizeVolume(volume: unknown): number {
+  if (typeof volume !== 'number' || !Number.isFinite(volume) || volume <= 0) return 1
+  return Math.min(1, volume)
+}
 type LegacySavedStream = Omit<SavedStream, 'platform'> & { platform?: PlatformId }
 
 export function loadState(): PersistedState | null {
@@ -51,7 +60,8 @@ export function loadState(): PersistedState | null {
     }
     return {
       // Streams saved before the platform field existed are all Twitch.
-      streams: (parsed.streams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch' })),
+      // Streams saved before per-tile volume existed load at full volume.
+      streams: (parsed.streams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch', volume: normalizeVolume(s.volume) })),
       layout: parsed.layout ?? [],
       focusedId: parsed.focusedId ?? null,
       chatChannel: parsed.chatChannel ?? null,

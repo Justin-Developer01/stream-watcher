@@ -38,9 +38,78 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
+  /* Lets the volume band hide itself on a narrow tile (see @container below) without the tile
+     needing to know its own rendered width. */
+  container-type: inline-size;
+  container-name: stream-tile;
 }
 .stream-tile.is-focused { border-color: var(--accent); }
 .stream-tile.is-low { filter: saturate(0.7); }
+/* Level only — mute stays the binary toggle in .stream-tile__actions. In-flow above the header
+   (not overlaid on it, so it never eats a header click) and not in Settings, so it's reachable
+   per-tile without a detour. 18px hit area over a slim 3px visual track, frosted like the rest
+   of the chrome; idle it fades low, hover/focus-within/dragging bring it to full. */
+.stream-tile__volume {
+  flex: none;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.4rem;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border-bottom: 1px solid var(--line);
+  opacity: 0.35;
+  transition: opacity 0.15s ease;
+}
+.stream-tile:hover .stream-tile__volume,
+.stream-tile:focus-within .stream-tile__volume,
+.react-draggable-dragging .stream-tile__volume {
+  opacity: 1;
+}
+.volume-slider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.volume-slider__track {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--line);
+}
+.volume-slider__range {
+  position: absolute;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--muted);
+}
+.volume-slider:hover .volume-slider__range,
+.volume-slider:focus-within .volume-slider__range { background: var(--accent); }
+.volume-slider__thumb {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--btn-fg);
+  border: 1px solid var(--line);
+}
+.volume-slider__thumb:hover,
+.volume-slider__thumb:focus-visible,
+.volume-slider__thumb[data-active] {
+  background: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+/* Under a narrow Focus-strip tile the band has no room for a usable drag target; mute (in the
+   header, unaffected by this) stays the only control. 140px matches where the strip column
+   (minmax(0, 28%) of the stage) gets tight enough that the slider's own hit area would overlap
+   the channel name and actions. */
+@container stream-tile (max-width: 140px) {
+  .stream-tile__volume { display: none; }
+}
 .stream-tile__bar {
   height: 28px;
   display: flex;
