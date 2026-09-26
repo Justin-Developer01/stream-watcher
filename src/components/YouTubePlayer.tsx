@@ -4,6 +4,7 @@ import { log } from '../lib/log'
 type Props = {
   channel: string
   muted: boolean
+  volume?: number
   interactive: boolean
   paused?: boolean
   lowQuality?: boolean
@@ -41,11 +42,16 @@ function loadYouTubeApi(): Promise<void> {
   return youtubeApiPromise
 }
 
-export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality }: Props) {
+/** Desk volume is 0..1; the IFrame API takes a whole number 0..100. */
+function toYouTubeVolume(volume: number) {
+  return Math.round(Math.min(1, Math.max(0, volume)) * 100)
+}
+
+export function YouTubePlayer({ channel, muted, volume = 1, interactive, paused, lowQuality }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<InstanceType<NonNullable<typeof window.YT>['Player']> | null>(null)
-  const live = useRef({ muted, paused, lowQuality })
-  live.current = { muted, paused, lowQuality }
+  const live = useRef({ muted, volume, paused, lowQuality })
+  live.current = { muted, volume, paused, lowQuality }
   // YT.Player has no mute/play methods until onReady; calls before that throw.
   const ready = useRef(false)
 
@@ -79,6 +85,7 @@ export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality 
             // Props may have changed while the player loaded.
             if (live.current.muted) player.mute()
             else player.unMute()
+            player.setVolume?.(toYouTubeVolume(live.current.volume))
             if (live.current.paused) player.pauseVideo()
             else player.playVideo()
           },
@@ -94,7 +101,7 @@ export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality 
       playerRef.current = null
       if (containerRef.current) containerRef.current.innerHTML = ''
     }
-    // A new player only for a new video; mute, pause, and quality are applied by the effects below.
+    // A new player only for a new video; mute, volume, pause, and quality are applied by the effects below.
   }, [channel])
 
   useEffect(() => {
@@ -103,6 +110,10 @@ export function YouTubePlayer({ channel, muted, interactive, paused, lowQuality 
     if (muted) player.mute()
     else player.unMute()
   }, [muted])
+
+  useEffect(() => {
+    if (ready.current) playerRef.current?.setVolume?.(toYouTubeVolume(volume))
+  }, [volume])
 
   useEffect(() => {
     const player = playerRef.current

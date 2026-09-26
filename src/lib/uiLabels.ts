@@ -74,6 +74,7 @@ export const ui = {
   layoutName: 'Layout name',
   mute: 'Mute',
   unmute: 'Unmute',
+  volume: 'Volume',
   saved: 'Saved',
   removeSaved: 'Remove from Saved',
   renameSaved: 'Rename',

@@ -78,6 +78,8 @@ declare global {
           unMute: () => void
           playVideo: () => void
           pauseVideo: () => void
+          /** 0..100; only after onReady. */
+          setVolume?: (volume: number) => void
           setPlaybackQuality?: (quality: string) => void
           destroy?: () => void
         }
@@ -98,6 +100,8 @@ declare global {
         ): {
           setChannel: (channel: string) => void
           setMuted: (muted: boolean) => void
+          /** 0..1 */
+          setVolume?: (volume: number) => void
           play: () => void
           pause: () => void
           setQuality?: (quality: string) => void

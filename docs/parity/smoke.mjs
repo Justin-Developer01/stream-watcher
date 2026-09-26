@@ -269,6 +269,74 @@ await step('tiles: tile + player boxes never overlap', async () => {
     }
   return `${boxes.length} tiles, no overlap`
 })
+await step('tiles: volume strip moves level without remounting or touching mute; Home mutes, End unmutes; mute/unmute and mute-all/unmute-all keep the level', async () => {
+  // The first default stream (xqc) is Twitch, unmuted, volume 1 — tag its iframe so a remount is
+  // detectable the same way the Focus-promote test detects one.
+  await page.waitForFunction(() => document.querySelectorAll('.stream-grid iframe').length >= 1, null, { timeout: 8000 })
+  await page.evaluate(() => {
+    document.querySelectorAll('.stream-grid iframe').forEach((f, i) => (f.dataset.smokeVol = String(i)))
+  })
+  const tile = page.locator('.stream-grid__item').first()
+  const thumb = tile.locator('.volume-slider__thumb')
+  const muteBtnEarly = tile.locator('.stream-tile__actions .icon-btn').nth(1)
+  // An earlier step may have left this tile muted; start from a known unmuted, full-volume state.
+  if ((await state(page)).streams[0].muted) {
+    await muteBtnEarly.click()
+    await sleep(200)
+  }
+  await thumb.focus()
+  await page.keyboard.press('ArrowLeft')
+  await page.keyboard.press('ArrowLeft')
+  await sleep(200)
+  const afterLower = (await state(page)).streams[0]
+
+  await page.keyboard.press('Home')
+  await sleep(200)
+  const afterHome = (await state(page)).streams[0]
+
+  await page.keyboard.press('End')
+  await sleep(200)
+  const afterEnd = (await state(page)).streams[0]
+
+  const muteBtn = muteBtnEarly
+  await muteBtn.click()
+  await sleep(200)
+  const afterMuteClick = (await state(page)).streams[0]
+  await muteBtn.click()
+  await sleep(200)
+  const afterUnmuteClick = (await state(page)).streams[0]
+
+  const volumesBefore = (await state(page)).streams.map((s) => s.volume)
+  await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined))
+  await page.keyboard.press('Control+Shift+M')
+  await sleep(300)
+  const volumesAfterMuteAll = (await state(page)).streams.map((s) => s.volume)
+  await page.keyboard.press('Control+Alt+M')
+  await sleep(300)
+  const volumesAfterUnmuteAll = (await state(page)).streams.map((s) => s.volume)
+
+  const r = await page.evaluate(() => {
+    const frames = [...document.querySelectorAll('.stream-grid iframe')]
+    return { total: frames.length, kept: frames.filter((f) => f.dataset.smokeVol).length }
+  })
+
+  return {
+    ok:
+      afterLower.volume < 1 && afterLower.muted === false &&
+      afterHome.muted === true && afterHome.volume === afterLower.volume &&
+      afterEnd.muted === false && afterEnd.volume === 1 &&
+      afterMuteClick.muted === true && afterMuteClick.volume === 1 &&
+      afterUnmuteClick.muted === false && afterUnmuteClick.volume === 1 &&
+      JSON.stringify(volumesAfterMuteAll) === JSON.stringify(volumesBefore) &&
+      JSON.stringify(volumesAfterUnmuteAll) === JSON.stringify(volumesBefore) &&
+      r.total >= 1 && r.kept === r.total,
+    detail:
+      `lower=${JSON.stringify(afterLower)} home=${JSON.stringify(afterHome)} end=${JSON.stringify(afterEnd)} ` +
+      `muteClick=${JSON.stringify(afterMuteClick)} unmuteClick=${JSON.stringify(afterUnmuteClick)} ` +
+      `volumes before=${JSON.stringify(volumesBefore)} afterMuteAll=${JSON.stringify(volumesAfterMuteAll)} afterUnmuteAll=${JSON.stringify(volumesAfterUnmuteAll)} ` +
+      `iframes total=${r.total} same-element=${r.kept}`,
+  }
+})
 
 // ---------- Focus mode ----------
 await step('focus: no drag handle; strip click promotes; strip action click does not', async () => {

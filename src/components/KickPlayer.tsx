@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 type Props = {
   channel: string
   muted: boolean
+  volume?: number
   interactive: boolean
   paused?: boolean
   lowQuality?: boolean
@@ -14,7 +15,9 @@ type Props = {
  * afterward, and no quality parameter at all. So unlike TwitchPlayer's in-place
  * setMuted/setQuality, toggling `muted` here remounts the iframe with a fresh src (a brief
  * rebuffer), `paused` unmounts it entirely rather than pausing in place, and `lowQuality`
- * has no Kick equivalent to apply.
+ * has no Kick equivalent to apply. `volume` has no embed param either, so it's kept on the
+ * stream (and applies again if Kick ever adds one) but never changes the src: only the mute
+ * boolean remounts, never a slider move.
  */
 export function KickPlayer({ channel, muted, interactive, paused }: Props) {
   const src = useMemo(() => {

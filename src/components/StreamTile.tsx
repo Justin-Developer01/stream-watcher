@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import * as Slider from '@radix-ui/react-slider'
 import { MessageSquare, PictureInPicture2, Star, Volume2, VolumeX, X } from 'lucide-react'
 import { Tip } from './ui/Tip'
 import { PlayerErrorBoundary } from './PlayerErrorBoundary'
@@ -20,6 +21,7 @@ type Props = {
   onPopoutChat: () => void
   onPopoutStream: () => void
   onToggleSave: () => void
+  onVolume: (volume: number) => void
 }
 
 function StreamTileImpl({
@@ -35,12 +37,30 @@ function StreamTileImpl({
   onPopoutChat,
   onPopoutStream,
   onToggleSave,
+  onVolume,
 }: Props) {
   const low = mode === 'performance' && !focused
   const hasChat = getPlatform(stream.platform).hasChat
 
   return (
     <article className={`stream-tile${focused ? ' is-focused' : ''}${low ? ' is-low' : ''}`} data-hit>
+      {/* Level only, sits above the header (not next to mute) so it reads as the tile's own
+          strip rather than a Settings control; the header stays the binary mute toggle. */}
+      <div className="stream-tile__volume" data-hit onClick={(event) => event.stopPropagation()}>
+        <Slider.Root
+          className="volume-slider"
+          min={0}
+          max={1}
+          step={0.05}
+          value={[stream.muted ? 0 : stream.volume]}
+          onValueChange={([value]) => onVolume(value)}
+        >
+          <Slider.Track className="volume-slider__track">
+            <Slider.Range className="volume-slider__range" />
+          </Slider.Track>
+          <Slider.Thumb className="volume-slider__thumb" aria-label={ui.volume} />
+        </Slider.Root>
+      </div>
       <header className={`stream-tile__bar${mode === 'focus' ? '' : ' stream-drag-handle'}`} data-hit>
         <button type="button" className="stream-tile__channel" onClick={onFocus}>
           {stream.channel}
@@ -89,6 +109,7 @@ function StreamTileImpl({
             platform={stream.platform}
             channel={stream.channel}
             muted={stream.muted || low}
+            volume={stream.volume}
             interactive={interactive}
             paused={low}
             lowQuality={low}

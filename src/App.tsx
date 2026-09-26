@@ -399,6 +399,7 @@ function DeskApp() {
           onPopoutChat={onTilePopoutChat}
           onPopoutStream={onTilePopoutStream}
           onToggleSave={desk.toggleSaveStream}
+          onVolume={desk.setStreamVolume}
           onSwitchFocus={desk.switchFocus}
         />
         <FirstRunTips

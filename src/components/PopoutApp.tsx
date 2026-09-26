@@ -22,6 +22,9 @@ export function PopoutApp({
   const saved = useMemo(() => loadState(), [])
   const settings = saved?.settings ?? DEFAULT_SETTINGS
   const clientId = resolveTwitchClientId(saved?.clientId)
+  // Carries the tile's saved level into the pop-out. Pop-outs have their own header, not the
+  // desk tile's chrome, so there's no volume strip here yet — follow-up once/if that's shared.
+  const volume = saved?.streams.find((s) => s.platform === platform && s.channel === channel)?.volume ?? 1
   // Only a chat pop-out asks for the raw token at all (main refuses a video
   // pop-out's request — see auth:get-chat-credentials) — this pop-out never
   // runs a login/logout/validate cycle of its own either way.
@@ -73,7 +76,7 @@ export function PopoutApp({
       {mode === 'stream' ? (
         <div className="popout-player" data-hit>
           <PlayerErrorBoundary label={`${platform}:${channel}`}>
-            <StreamPlayer platform={platform} channel={channel} muted={false} interactive />
+            <StreamPlayer platform={platform} channel={channel} muted={false} volume={volume} interactive />
           </PlayerErrorBoundary>
         </div>
       ) : (

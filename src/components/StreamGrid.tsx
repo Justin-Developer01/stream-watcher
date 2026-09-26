@@ -61,6 +61,7 @@ type Props = {
   onPopoutChat: (channel: string, platform: PlatformId) => void
   onPopoutStream: (channel: string, platform: PlatformId) => void
   onToggleSave: (platform: PlatformId, channel: string) => void
+  onVolume: (id: string, volume: number) => void
   onSwitchFocus: () => void
 }
 
@@ -81,12 +82,13 @@ export const StreamGrid = memo(function StreamGrid({
   onPopoutChat,
   onPopoutStream,
   onToggleSave,
+  onVolume,
   onSwitchFocus,
 }: Props) {
   // Tiles are memoized and keep the closures from their last render; route them through a ref so
   // they always call the grid's current handlers (focusStream depends on the stream list).
-  const handlers = useRef({ onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave })
-  handlers.current = { onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave }
+  const handlers = useRef({ onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume })
+  handlers.current = { onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume }
 
   if (!streams.length) {
     return (
@@ -115,6 +117,7 @@ export const StreamGrid = memo(function StreamGrid({
       onPopoutChat={() => handlers.current.onPopoutChat(stream.channel, stream.platform)}
       onPopoutStream={() => handlers.current.onPopoutStream(stream.channel, stream.platform)}
       onToggleSave={() => handlers.current.onToggleSave(stream.platform, stream.channel)}
+      onVolume={(volume) => handlers.current.onVolume(stream.id, volume)}
     />
   )
 
@@ -221,7 +224,7 @@ function MeasuredGrid({
           margin={GRID_MARGIN}
           containerPadding={GRID_PADDING}
           draggableHandle=".stream-drag-handle"
-          draggableCancel=".stream-tile__actions, .stream-tile__actions *, .icon-btn"
+          draggableCancel=".stream-tile__actions, .stream-tile__actions *, .icon-btn, .stream-tile__volume, .stream-tile__volume *"
           isDraggable
           isResizable
           onLayoutChange={emitLayout}

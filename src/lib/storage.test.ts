@@ -1,5 +1,47 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanSavedName, loadState, normalizeChannel, SAVED_NAME_MAX, savedStream } from './storage'
+import { cleanSavedName, loadState, normalizeChannel, normalizeVolume, SAVED_NAME_MAX, savedStream } from './storage'
+
+describe('normalizeVolume', () => {
+  it('keeps a level in (0, 1]', () => {
+    expect(normalizeVolume(0.35)).toBe(0.35)
+    expect(normalizeVolume(1)).toBe(1)
+  })
+
+  it('caps above 1', () => {
+    expect(normalizeVolume(3)).toBe(1)
+  })
+
+  it('loads missing, malformed, or non-positive values at full volume', () => {
+    for (const bad of [undefined, null, '0.5', Number.NaN, Number.POSITIVE_INFINITY, 0, -0.2]) {
+      expect(normalizeVolume(bad)).toBe(1)
+    }
+  })
+})
+
+describe('loadState streams', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('gives pre-volume streams full volume and keeps a stored level and mute separately', () => {
+    const store = new Map([
+      [
+        'vesper-desk:v1',
+        JSON.stringify({
+          streams: [
+            { id: 'a', channel: 'xqc', muted: false },
+            { id: 'b', platform: 'kick', channel: 'xqcow', muted: true, volume: 0.4 },
+            { id: 'c', platform: 'twitch', channel: 'shroud', muted: false, volume: 'loud' },
+          ],
+        }),
+      ],
+    ])
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null })
+    expect(loadState()?.streams).toEqual([
+      { id: 'a', platform: 'twitch', channel: 'xqc', muted: false, volume: 1 },
+      { id: 'b', platform: 'kick', channel: 'xqcow', muted: true, volume: 0.4 },
+      { id: 'c', platform: 'twitch', channel: 'shroud', muted: false, volume: 1 },
+    ])
+  })
+})
 
 describe('cleanSavedName', () => {
   it('trims and keeps a real name', () => {
