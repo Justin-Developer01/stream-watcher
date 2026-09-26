@@ -56,7 +56,7 @@ export function loadState(): PersistedState | null {
       focusedId: parsed.focusedId ?? null,
       chatChannel: parsed.chatChannel ?? null,
       clientId: parsed.clientId ?? '',
-      savedStreams: (parsed.savedStreams ?? []).map((s) => ({ ...s, platform: s.platform ?? 'twitch' })),
+      savedStreams: (parsed.savedStreams ?? []).map((s) => savedStream(s.platform ?? 'twitch', s.channel, s.savedAt, s.name)),
       chatOpen: parsed.chatOpen ?? parsed.chatSidebarOpen ?? false,
       chatDock: parsed.chatDock ?? 'right',
       chatFloat: parsed.chatFloat ?? { x: 72, y: 56, width: 320, height: 440 },
@@ -100,6 +100,21 @@ export function clearAuth() {
 // desk's useTwitchAuth() on first launch, to hand main any pre-existing
 // vesper-desk:auth:v1/v2 localStorage entry and then drop it — the renderer
 // never reads or writes the live session itself anymore.
+
+export const SAVED_NAME_MAX = 40
+
+/** A trimmed, length-capped display name, or undefined when there is none worth keeping. */
+export function cleanSavedName(name: unknown): string | undefined {
+  if (typeof name !== 'string') return undefined
+  const trimmed = name.trim().slice(0, SAVED_NAME_MAX).trim()
+  return trimmed || undefined
+}
+
+/** Builds a SavedStream with `name` omitted entirely (not set to undefined) when it's empty. */
+export function savedStream(platform: PlatformId, channel: string, savedAt: number, name?: unknown): SavedStream {
+  const clean = cleanSavedName(name)
+  return clean ? { platform, channel, savedAt, name: clean } : { platform, channel, savedAt }
+}
 
 export function createDefaultLayout(streams: StreamItem[]): GridLayout {
   const visible = streams.filter((s) => !s.popped)

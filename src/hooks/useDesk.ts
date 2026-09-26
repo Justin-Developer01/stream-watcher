@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
 import { getPlatform, matchChannelInput } from '../lib/platforms/registry'
 import {
+  cleanSavedName,
   createDefaultLayout,
   loadState,
   newStreamId,
+  savedStream,
   saveState,
   streamKey,
 } from '../lib/storage'
@@ -14,6 +16,13 @@ const DEFAULT_STREAMS: StreamItem[] = [
   { id: newStreamId(), platform: 'twitch', channel: 'xqc', muted: false },
   { id: newStreamId(), platform: 'twitch', channel: 'shroud', muted: true },
 ]
+
+/** Removes a saved stream, remembering its custom name in `names` for a later re-star. */
+function dropSaved(prev: SavedStream[], key: string, names: Map<string, string>) {
+  const existing = prev.find((s) => streamKey(s.platform, s.channel) === key)
+  if (existing?.name) names.set(key, existing.name)
+  return prev.filter((s) => streamKey(s.platform, s.channel) !== key)
+}
 
 export function useDesk() {
   const initial = useMemo(() => {
@@ -150,18 +159,31 @@ export function useDesk() {
     setFocusedId((current) => (current === id ? next.find((s) => !s.popped)?.id ?? null : current))
   }, [streams])
 
+  // Custom names of streams unstarred this session, so starring the same platform+channel again
+  // brings its name back. Writes below are idempotent, so StrictMode's double updater call is safe.
+  const unstarredNames = useRef(new Map<string, string>())
+
   const toggleSaveStream = useCallback((platform: PlatformId, channel: string) => {
     const key = streamKey(platform, channel)
     setSavedStreams((prev) =>
       prev.some((s) => streamKey(s.platform, s.channel) === key)
-        ? prev.filter((s) => streamKey(s.platform, s.channel) !== key)
-        : [{ platform, channel, savedAt: Date.now() }, ...prev],
+        ? dropSaved(prev, key, unstarredNames.current)
+        : [savedStream(platform, channel, Date.now(), unstarredNames.current.get(key)), ...prev],
     )
   }, [])
 
   const unsaveStream = useCallback((platform: PlatformId, channel: string) => {
     const key = streamKey(platform, channel)
-    setSavedStreams((prev) => prev.filter((s) => streamKey(s.platform, s.channel) !== key))
+    setSavedStreams((prev) => dropSaved(prev, key, unstarredNames.current))
+  }, [])
+
+  /** Empty or missing `name` clears it, so the menu falls back to `Platform · channel`. */
+  const renameSavedStream = useCallback((platform: PlatformId, channel: string, name?: string) => {
+    const key = streamKey(platform, channel)
+    if (!cleanSavedName(name)) unstarredNames.current.delete(key)
+    setSavedStreams((prev) =>
+      prev.map((s) => (streamKey(s.platform, s.channel) === key ? savedStream(s.platform, s.channel, s.savedAt, name) : s)),
+    )
   }, [])
 
   const focusStream = useCallback((id: string) => {
@@ -311,6 +333,7 @@ export function useDesk() {
     removeStream,
     toggleSaveStream,
     unsaveStream,
+    renameSavedStream,
     focusStream,
     toggleMute,
     muteAll,

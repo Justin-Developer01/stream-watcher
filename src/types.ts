@@ -18,6 +18,8 @@ export type SavedStream = {
   platform: PlatformId
   channel: string
   savedAt: number
+  /** Display name for the Saved menu only; `channel` stays the real slug for embeds and chat. */
+  name?: string
 }
 
 export type ChatDock = 'right' | 'left' | 'bottom' | 'float'
