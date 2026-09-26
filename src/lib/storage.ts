@@ -46,6 +46,17 @@ export function normalizeVolume(volume: unknown): number {
   if (typeof volume !== 'number' || !Number.isFinite(volume) || volume <= 0) return 1
   return Math.min(1, volume)
 }
+
+export const DEFAULT_EDIT_DESK_SPACING = 8
+const EDIT_DESK_SPACING_MIN = 2
+const EDIT_DESK_SPACING_MAX = 32
+
+/** Edit Desk (Phase D) tile gap in px. Missing/malformed/out-of-range values load at the default,
+ * matching the grid's own hardcoded margin/padding before Edit Desk existed. */
+export function normalizeEditDeskSpacing(spacing: unknown): number {
+  if (typeof spacing !== 'number' || !Number.isFinite(spacing)) return DEFAULT_EDIT_DESK_SPACING
+  return Math.min(EDIT_DESK_SPACING_MAX, Math.max(EDIT_DESK_SPACING_MIN, Math.round(spacing)))
+}
 type LegacySavedStream = Omit<SavedStream, 'platform'> & { platform?: PlatformId }
 
 export function loadState(): PersistedState | null {
@@ -76,6 +87,9 @@ export function loadState(): PersistedState | null {
       windowLocked: parsed.windowLocked === true,
       // Opt-in, off by default — a save from before Stream Sync existed loads with it off.
       syncEnabled: parsed.syncEnabled === true,
+      // A save from before Edit Desk existed loads the same spacing/compaction the grid always used.
+      editDeskSpacing: normalizeEditDeskSpacing(parsed.editDeskSpacing),
+      editDeskSnap: parsed.editDeskSnap !== false,
     }
   } catch {
     return null

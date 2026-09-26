@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanSavedName, loadState, normalizeChannel, normalizeVolume, SAVED_NAME_MAX, savedStream } from './storage'
+import {
+  cleanSavedName,
+  DEFAULT_EDIT_DESK_SPACING,
+  loadState,
+  normalizeChannel,
+  normalizeEditDeskSpacing,
+  normalizeVolume,
+  SAVED_NAME_MAX,
+  savedStream,
+} from './storage'
 
 describe('normalizeVolume', () => {
   it('keeps a level in (0, 1]', () => {
@@ -59,6 +68,46 @@ describe('loadState syncEnabled', () => {
   it('keeps a stored true, and normalizes a malformed value to false', () => {
     expect(load({ streams: [], syncEnabled: true })).toBe(true)
     expect(load({ streams: [], syncEnabled: 'yes' })).toBe(false)
+  })
+})
+
+describe('normalizeEditDeskSpacing', () => {
+  it('keeps an in-range value, rounded', () => {
+    expect(normalizeEditDeskSpacing(12)).toBe(12)
+    expect(normalizeEditDeskSpacing(12.6)).toBe(13)
+  })
+
+  it('clamps to the [2, 32] range', () => {
+    expect(normalizeEditDeskSpacing(0)).toBe(2)
+    expect(normalizeEditDeskSpacing(100)).toBe(32)
+  })
+
+  it('loads missing or malformed values at the default (matches the grid\'s old hardcoded margin)', () => {
+    for (const bad of [undefined, null, '8', Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(normalizeEditDeskSpacing(bad)).toBe(DEFAULT_EDIT_DESK_SPACING)
+    }
+  })
+})
+
+describe('loadState editDesk', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  const load = (state: unknown) => {
+    const store = new Map([['vesper-desk:v1', JSON.stringify(state)]])
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null })
+    return loadState()
+  }
+
+  it('gives a save from before Edit Desk existed the old hardcoded spacing and Snap (today\'s behavior)', () => {
+    const state = load({ streams: [] })
+    expect(state?.editDeskSpacing).toBe(DEFAULT_EDIT_DESK_SPACING)
+    expect(state?.editDeskSnap).toBe(true)
+  })
+
+  it('keeps a stored spacing and an explicit Drag (false) choice', () => {
+    const state = load({ streams: [], editDeskSpacing: 16, editDeskSnap: false })
+    expect(state?.editDeskSpacing).toBe(16)
+    expect(state?.editDeskSnap).toBe(false)
   })
 })
 

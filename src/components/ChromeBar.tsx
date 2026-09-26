@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Menu,
   MessageSquare,
+  Grid2x2Plus,
   Minus,
   Pin,
   PinOff,
@@ -37,6 +38,8 @@ type Props = {
   onMode: (mode: WatchMode) => void
   syncEnabled: boolean
   onToggleSync: (value: boolean) => void
+  editDeskOn: boolean
+  onToggleEditDesk: (value: boolean) => void
   templates: LayoutTemplate[]
   onApplyTemplate: (id: string) => void
   onSaveTemplate: (name: string) => void
@@ -97,6 +100,8 @@ export const ChromeBar = memo(function ChromeBar({
   onMode,
   syncEnabled,
   onToggleSync,
+  editDeskOn,
+  onToggleEditDesk,
   templates,
   onApplyTemplate,
   onSaveTemplate,
@@ -263,6 +268,21 @@ export const ChromeBar = memo(function ChromeBar({
             onClick={() => onToggleSync(!syncEnabled)}
           >
             <RefreshCw size={14} />
+          </button>
+        </Tip>
+
+        {/* Same chip pattern as Sync above. Disabled (with an honest Tip, not silently) in Focus —
+            Edit Desk only ever governs the Standard/Performance RGL grid, which Focus doesn't render. */}
+        <Tip label={mode === 'focus' ? ui.editDeskUnavailableInFocus : ui.editDesk} side={flyoutSide}>
+          <button
+            type="button"
+            className={`icon-btn${editDeskOn ? ' is-on' : ''}`}
+            aria-label={ui.editDesk}
+            aria-pressed={editDeskOn}
+            disabled={mode === 'focus'}
+            onClick={() => onToggleEditDesk(!editDeskOn)}
+          >
+            <Grid2x2Plus size={14} />
           </button>
         </Tip>
 

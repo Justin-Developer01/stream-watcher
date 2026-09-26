@@ -9,8 +9,6 @@ import type { PlatformId, StreamItem, WatchMode } from '../types'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
-const GRID_MARGIN: [number, number] = [8, 8]
-const GRID_PADDING: [number, number] = [8, 8]
 const FOCUS_TRANSITION_MS = 220
 
 function prefersReducedMotion() {
@@ -70,6 +68,9 @@ type Props = {
   onVolume: (id: string, volume: number) => void
   onTimeApi: (id: string, api: PlayerTimeApi | null) => void
   onSwitchFocus: () => void
+  editDeskOn: boolean
+  editDeskSpacing: number
+  editDeskSnap: boolean
 }
 
 export const StreamGrid = memo(function StreamGrid({
@@ -92,6 +93,9 @@ export const StreamGrid = memo(function StreamGrid({
   onVolume,
   onTimeApi,
   onSwitchFocus,
+  editDeskOn,
+  editDeskSpacing,
+  editDeskSnap,
 }: Props) {
   // Tiles are memoized and keep the closures from their last render; route them through a ref so
   // they always call the grid's current handlers (focusStream depends on the stream list).
@@ -224,6 +228,9 @@ export const StreamGrid = memo(function StreamGrid({
       onDragState={onDragState}
       streams={streams}
       tile={tile}
+      editDeskOn={editDeskOn}
+      editDeskSpacing={editDeskSpacing}
+      editDeskSnap={editDeskSnap}
     />
   )
 })
@@ -234,12 +241,18 @@ function MeasuredGrid({
   onDragState,
   streams,
   tile,
+  editDeskOn,
+  editDeskSpacing,
+  editDeskSnap,
 }: {
   layout: Layout[]
   onLayoutChange: (layout: Layout[]) => void
   onDragState: (active: boolean) => void
   streams: StreamItem[]
   tile: (stream: StreamItem, promoteOnClick?: boolean) => ReactNode
+  editDeskOn: boolean
+  editDeskSpacing: number
+  editDeskSnap: boolean
 }) {
   const [ref, size] = useElementSize<HTMLDivElement>()
   const layoutRef = useRef(layout)
@@ -250,7 +263,11 @@ function MeasuredGrid({
   const visibleIds = useMemo(() => new Set(streams.map((s) => s.id)), [streams])
   const visibleLayout = useMemo(() => layout.filter((l) => visibleIds.has(l.i)), [layout, visibleIds])
   const rows = rowSpan(visibleLayout)
-  const vertical = GRID_PADDING[1] * 2 + GRID_MARGIN[1] * Math.max(rows - 1, 0)
+  // Edit Desk (Phase D): Spacing tunes this margin/padding directly (it's a real grid setting,
+  // not just an edit-mode preview) — the grid always used a hardcoded [8,8] before Edit Desk
+  // existed, so the default here matches that exactly.
+  const gridMargin: [number, number] = [editDeskSpacing, editDeskSpacing]
+  const vertical = editDeskSpacing * 2 + editDeskSpacing * Math.max(rows - 1, 0)
   const rowHeight = size.height > vertical ? (size.height - vertical) / rows : 40
   const emitLayout = useCallback((next: Layout[]) => {
     // next only covers currently-visible items; merge into the full layout so a popped
@@ -270,8 +287,8 @@ function MeasuredGrid({
           layout={visibleLayout}
           cols={12}
           rowHeight={rowHeight}
-          margin={GRID_MARGIN}
-          containerPadding={GRID_PADDING}
+          margin={gridMargin}
+          containerPadding={gridMargin}
           draggableHandle=".stream-drag-handle"
           draggableCancel=".stream-tile__actions, .stream-tile__actions *, .icon-btn, .stream-tile__volume, .stream-tile__volume *"
           isDraggable
@@ -281,7 +298,11 @@ function MeasuredGrid({
           onDragStop={() => onDragState(false)}
           onResizeStart={() => onDragState(true)}
           onResizeStop={() => onDragState(false)}
-          compactType="vertical"
+          // Snap (default): today's behavior — a move/resize auto-compacts the whole layout.
+          // Drag: nothing auto-rearranges; a tile stays exactly where it's dropped, just never
+          // allowed to overlap another (preventCollision), matching "free move, no snap compulsion".
+          compactType={editDeskSnap ? 'vertical' : null}
+          preventCollision={!editDeskSnap}
           useCSSTransforms
         >
           {streams.map((stream) => (
@@ -290,6 +311,15 @@ function MeasuredGrid({
             </div>
           ))}
         </GridLayout>
+      )}
+      {/* Decorative only (pointer-events: none) — shows the real 12-column/row-height grid RGL
+          snaps to, not a synthetic pixel grid at the Spacing value (that's just the tile gap). */}
+      {size.width > 0 && editDeskOn && (
+        <div
+          className="edit-grid-overlay"
+          aria-hidden
+          style={{ '--edit-row-h': `${rowHeight + editDeskSpacing}px` } as CSSProperties}
+        />
       )}
     </div>
   )
