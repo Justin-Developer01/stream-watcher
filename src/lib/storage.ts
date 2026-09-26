@@ -74,6 +74,8 @@ export function loadState(): PersistedState | null {
       templates: parsed.templates ?? [],
       settings: mergeSettings(parsed.settings),
       windowLocked: parsed.windowLocked === true,
+      // Opt-in, off by default — a save from before Stream Sync existed loads with it off.
+      syncEnabled: parsed.syncEnabled === true,
     }
   } catch {
     return null

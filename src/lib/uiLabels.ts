@@ -7,6 +7,8 @@ export const ui = {
   standard: 'Standard',
   focus: 'Focus',
   performance: 'Performance',
+  sync: 'Sync',
+  synced: 'Synced',
   dockAllPopouts: 'Dock all pop-outs',
   seeThroughWindows: 'See through windows',
   fullscreen: 'Fullscreen',

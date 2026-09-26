@@ -48,6 +48,7 @@ export function useDesk() {
       templates: saved?.templates ?? [],
       settings: saved?.settings ?? DEFAULT_SETTINGS,
       windowLocked: saved?.windowLocked === true,
+      syncEnabled: saved?.syncEnabled === true,
     }
   }, [])
 
@@ -65,6 +66,7 @@ export function useDesk() {
   const [settings, setSettings] = useState<AppSettings>(initial.settings)
   const [isDragging, setIsDragging] = useState(false)
   const [windowLocked, setWindowLocked] = useState(initial.windowLocked)
+  const [syncEnabled, setSyncEnabled] = useState(initial.syncEnabled)
   const [toolbarForced, setToolbarForced] = useState(false)
   const snapshotRef = useRef<PersistedState | null>(null)
 
@@ -83,6 +85,7 @@ export function useDesk() {
       templates,
       settings,
       windowLocked,
+      syncEnabled,
     }),
     [
       streams,
@@ -98,6 +101,7 @@ export function useDesk() {
       templates,
       settings,
       windowLocked,
+      syncEnabled,
     ],
   )
   snapshotRef.current = snapshot
@@ -344,6 +348,8 @@ export function useDesk() {
     setIsDragging,
     windowLocked,
     setWindowLocked,
+    syncEnabled,
+    setSyncEnabled,
     toolbarForced,
     setToolbarForced,
     addStream,
