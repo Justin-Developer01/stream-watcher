@@ -16,7 +16,15 @@
   --danger: #e26d6d;
   --radius: 8px;
   --font: 'IBM Plex Sans', system-ui, sans-serif;
+  /* Mode/hero transition duration (tiles.css): stage fade-in, focus-ring/dim easing, perf chip. */
+  --stage-transition: 220ms;
   color-scheme: dark;
+}
+
+/* Collapses every var(--stage-transition, …) reference above to effectively instant, and the
+   matching FLIP animation in StreamGrid.tsx skips itself the same way (see prefersReducedMotion). */
+@media (prefers-reduced-motion: reduce) {
+  :root { --stage-transition: 1ms; }
 }
 
 [data-theme='dim'] {

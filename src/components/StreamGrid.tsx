@@ -10,6 +10,11 @@ import 'react-resizable/css/styles.css'
 
 const GRID_MARGIN: [number, number] = [8, 8]
 const GRID_PADDING: [number, number] = [8, 8]
+const FOCUS_TRANSITION_MS = 220
+
+function prefersReducedMotion() {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+}
 
 function useElementSize<T extends HTMLElement>() {
   const ref = useRef<T>(null)
@@ -90,6 +95,45 @@ export const StreamGrid = memo(function StreamGrid({
   const handlers = useRef({ onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume })
   handlers.current = { onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume }
 
+  // FLIP for the Focus hero/strip swap: .focus-hero and .focus-strip__item are the same keyed DOM
+  // nodes before and after a promote (that's the #12 fix — no re-parenting), they just land in a
+  // new grid slot. CSS can't ease a grid-row/column change, so on the render where a promote moved
+  // a slot, invert it back to its last measured rect and transition to identity — the wrapper's
+  // transform animates, the player inside never re-renders.
+  const slotRefs = useRef(new Map<string, HTMLElement>())
+  const slotRects = useRef(new Map<string, DOMRect>())
+  const registerSlot = useCallback((id: string, el: HTMLElement | null) => {
+    if (el) slotRefs.current.set(id, el)
+    else slotRefs.current.delete(id)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (mode !== 'focus' || prefersReducedMotion()) {
+      slotRects.current.clear()
+      return
+    }
+    slotRefs.current.forEach((el, id) => {
+      const prev = slotRects.current.get(id)
+      const next = el.getBoundingClientRect()
+      if (prev && (prev.top !== next.top || prev.left !== next.left || prev.width !== next.width || prev.height !== next.height)) {
+        const dx = prev.left - next.left
+        const dy = prev.top - next.top
+        const sx = prev.width / next.width
+        const sy = prev.height / next.height
+        el.style.transformOrigin = 'top left'
+        el.style.transition = 'none'
+        el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+        void el.offsetWidth // force layout so the inverted transform paints before easing back
+        el.style.transition = `transform ${FOCUS_TRANSITION_MS}ms ease`
+        el.style.transform = ''
+        window.setTimeout(() => {
+          el.style.transition = ''
+        }, FOCUS_TRANSITION_MS)
+      }
+      slotRects.current.set(id, next)
+    })
+  })
+
   if (!streams.length) {
     return (
       <div className="empty-grid">
@@ -139,7 +183,7 @@ export const StreamGrid = memo(function StreamGrid({
         {streams.map((stream) => {
           if (stream.id === hero.id) {
             return (
-              <div key={stream.id} className="focus-hero">
+              <div key={stream.id} className="focus-hero" ref={(el) => registerSlot(stream.id, el)}>
                 {tile(stream)}
               </div>
             )
@@ -149,6 +193,7 @@ export const StreamGrid = memo(function StreamGrid({
               key={stream.id}
               className="focus-strip__item"
               style={{ '--focus-slot': strip.indexOf(stream) + 2 } as CSSProperties}
+              ref={(el) => registerSlot(stream.id, el)}
               role="button"
               tabIndex={0}
               onClick={() => onFocus(stream.id)}
