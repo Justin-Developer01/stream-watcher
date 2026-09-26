@@ -11,6 +11,16 @@
 .stream-grid-measure { flex: 1 1 auto; min-width: 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; }
 .stream-grid, .focus-stage { min-height: 0; width: 100%; }
 .stream-grid { height: 100%; }
+/* Standard/Performance and Focus are different DOM trees (react-grid-layout vs. a CSS grid — see
+   the comment below), so crossing that boundary still remounts every tile; Standard <-> Performance
+   never does, since both use .stream-grid-measure. This just fades in whichever tree mounts — the
+   hero/strip reflow *within* Focus is a separate FLIP transform (StreamGrid.tsx), since these two
+   elements themselves don't remount on a promote. */
+.stream-grid-measure, .focus-stage { animation: stage-enter var(--stage-transition, 220ms) ease; }
+@keyframes stage-enter {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
 /* Focus: the hero, Switch Focus, and strip tiles are all direct children of .focus-stage and are
    placed by grid slot (StreamGrid sets --focus-rows, --focus-span, --focus-slot), so a promote only
    moves a tile's slot and never re-parents its player. Hero: column 1 across every row. Strip:
@@ -42,6 +52,9 @@
      needing to know its own rendered width. */
   container-type: inline-size;
   container-name: stream-tile;
+  /* Eases the focus ring and the Performance dim, which toggle on an already-mounted tile
+     (a Standard <-> Performance switch, or a Focus promote, never remount .stream-tile itself). */
+  transition: border-color var(--stage-transition, 220ms) ease, filter var(--stage-transition, 220ms) ease;
 }
 .stream-tile.is-focused { border-color: var(--accent); }
 .stream-tile.is-low { filter: saturate(0.7); }
@@ -135,6 +148,13 @@
   color: var(--accent);
   border-radius: 99px;
   padding: 0 0.35rem;
+  /* Mounts/unmounts with `low`, right as the tile's own border/filter above are easing — fade
+     it in instead of popping in ahead of them. */
+  animation: chip-enter var(--stage-transition, 220ms) ease;
+}
+@keyframes chip-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .twitch-player, .twitch-player > div, .twitch-player iframe {
