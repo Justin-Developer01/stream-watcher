@@ -228,6 +228,9 @@ function DeskApp() {
         case 'muteAll':
           desk.muteAll()
           break
+        case 'unmuteAll':
+          desk.unmuteAll()
+          break
         case 'toggleToolbar':
           desk.applySettings({ ...desk.settings, pinToolbar: !desk.settings.pinToolbar })
           break

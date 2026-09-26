@@ -206,6 +206,11 @@ export function useDesk() {
     setStreams((prev) => prev.map((s) => ({ ...s, muted: true })))
   }, [])
 
+  // Same scope as muteAll: every stream on the desk, popped or not.
+  const unmuteAll = useCallback(() => {
+    setStreams((prev) => prev.map((s) => ({ ...s, muted: false })))
+  }, [])
+
   const muteFocus = useCallback(() => {
     if (!focusedId) return
     setStreams((prev) => prev.map((s) => (s.id === focusedId ? { ...s, muted: !s.muted } : s)))
@@ -337,6 +342,7 @@ export function useDesk() {
     focusStream,
     toggleMute,
     muteAll,
+    unmuteAll,
     muteFocus,
     cycleStreams,
     switchFocus,

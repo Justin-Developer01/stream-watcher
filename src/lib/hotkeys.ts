@@ -9,6 +9,7 @@ export const hotkeyActions = [
   'cycleStreams',
   'switchFocus',
   'muteAll',
+  'unmuteAll',
   'toggleToolbar',
   'quitApplication',
 ] as const
@@ -26,6 +27,7 @@ export const hotkeyLabels: Record<HotkeyAction, string> = {
   cycleStreams: 'Cycle streams',
   switchFocus: 'Switch Focus',
   muteAll: 'Mute all',
+  unmuteAll: 'Unmute all',
   toggleToolbar: 'Toggle toolbar',
   quitApplication: 'Quit application',
 }
@@ -41,6 +43,7 @@ export const defaultHotkeys: Record<HotkeyAction, string> = {
   cycleStreams: 'Ctrl+Tab',
   switchFocus: 'Ctrl+Shift+S',
   muteAll: 'Ctrl+Shift+M',
+  unmuteAll: 'Ctrl+Alt+M',
   toggleToolbar: 'Ctrl+\\',
   quitApplication: 'Ctrl+Q',
 }
