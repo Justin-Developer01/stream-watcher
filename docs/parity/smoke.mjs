@@ -865,6 +865,32 @@ await step('twitch: Login to Twitch opens ONE window with a built-in client_id',
   return { ok: opened === 1 && alive && clientOk, detail: `mainAliveAfterClosingAuth=${alive} newWindows=${opened} clientIdInUrl=${clientOk} toast=${toast} windows=${JSON.stringify(info.map((i) => i.title))}` }
 })
 
+// ---------- Hotkeys ----------
+await step('hotkeys: Ctrl+Alt+M unmutes every stream after Ctrl+Shift+M; Settings lists Unmute all with no conflict', async () => {
+  await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined))
+  await page.keyboard.press('Control+Shift+M')
+  await sleep(400)
+  const afterMuteAll = (await state(page)).streams.map((s) => s.muted)
+  await page.keyboard.press('Control+Alt+M')
+  await sleep(400)
+  const afterUnmuteAll = (await state(page)).streams.map((s) => s.muted)
+
+  await openSettings(page)
+  await page.getByRole('tab', { name: 'Hotkeys' }).click()
+  await sleep(150)
+  const row = page.locator('.hotkey-row', { hasText: 'Unmute all' })
+  const chord = (await row.locator('.hotkey-btn').innerText()).trim()
+  const conflicts = await page.locator('.hotkey-row .field-error').count()
+  await footer(page, 'Cancel')
+
+  return {
+    ok:
+      afterMuteAll.length > 0 && afterMuteAll.every(Boolean) && afterUnmuteAll.every((m) => m === false) &&
+      chord === 'Ctrl+Alt+M' && conflicts === 0,
+    detail: `muted after Ctrl+Shift+M=${JSON.stringify(afterMuteAll)} after Ctrl+Alt+M=${JSON.stringify(afterUnmuteAll)} settingsChord=${chord} conflicts=${conflicts}`,
+  }
+})
+
 // ---------- Error log ----------
 await step('log: main.log records startup, windows, and warnings with tokens redacted', async () => {
   await page.evaluate(() => { setTimeout(() => { throw new Error('smoke oauth:secret123') }, 0) })
