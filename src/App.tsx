@@ -11,10 +11,15 @@ import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { resolveTwitchClientId } from './lib/twitchClientId'
 import { formatHotkeyEvent, isEditableTarget, type HotkeyAction } from './lib/hotkeys'
 import { getPlatform, platforms } from './lib/platforms/registry'
+import type { PlayerTimeApi } from './lib/platforms/types'
 import { chatFontFamily, streamKey } from './lib/storage'
 import type { AppSettings, PlatformId, PopoutInfo } from './types'
 
 const CHROME_IDLE_MS = 2400
+// Stream Sync (Phase C): how far a follower's playback time may drift from the master's before
+// it gets pulled back in line, and how often the follow-leader loop checks.
+const SYNC_DRIFT_S = 1.5
+const SYNC_POLL_MS = 1500
 
 // Loaded on first use: chat (tmi.js, Helix, emote picker), Settings, and the pop-out window UI are
 // not needed to show the desk, so they stay out of the startup bundle.
@@ -167,6 +172,42 @@ function DeskApp() {
     [desk.savedStreams],
   )
   const poppedStreamCount = popped.filter((p) => p.kind === 'stream').length
+
+  // Stream Sync (Phase C): each seekable player (YouTube) registers an in-place time API here
+  // while mounted; Twitch/Kick never do (no seek API), so they're simply absent from the map and
+  // the follow-leader loop below leaves them alone — never a remount, never a fake seek.
+  const timeApisRef = useRef(new Map<string, PlayerTimeApi>())
+  const registerTimeApi = useCallback((id: string, api: PlayerTimeApi | null) => {
+    if (api) timeApisRef.current.set(id, api)
+    else timeApisRef.current.delete(id)
+  }, [])
+
+  // Read fresh every poll tick instead of restarting the effect on it, so a volume/mute change
+  // (which changes desk.visibleStreams' identity) never interrupts or re-triggers an alignment.
+  const syncStreamsRef = useRef(desk.visibleStreams)
+  syncStreamsRef.current = desk.visibleStreams
+
+  useEffect(() => {
+    if (!desk.syncEnabled) return
+    const align = () => {
+      const streams = syncStreamsRef.current
+      if (!streams.length) return
+      // Master = the focused stream if it's still on the desk, else the first tile.
+      const master = streams.find((s) => s.id === desk.focusedId) ?? streams[0]
+      const masterTime = timeApisRef.current.get(master.id)?.getCurrentTime()
+      if (masterTime == null) return // master isn't seekable (e.g. a live Twitch/Kick) — nothing to align to
+      for (const stream of streams) {
+        if (stream.id === master.id) continue
+        const api = timeApisRef.current.get(stream.id)
+        const t = api?.getCurrentTime()
+        if (api && t != null && Math.abs(t - masterTime) > SYNC_DRIFT_S) api.seekTo(masterTime)
+      }
+    }
+    align()
+    const timer = window.setInterval(align, SYNC_POLL_MS)
+    return () => window.clearInterval(timer)
+    // Sync OFF just stops this interval — it never forces anyone back to any position.
+  }, [desk.syncEnabled, desk.focusedId])
 
   const dockPop = async (channel: string, kind: 'stream' | 'chat', platform: PlatformId) => {
     await window.vesper?.dockPopout(kind, channel, platform)
@@ -345,6 +386,8 @@ function DeskApp() {
       <ChromeBar
         mode={desk.mode}
         onMode={desk.setMode}
+        syncEnabled={desk.syncEnabled}
+        onToggleSync={desk.setSyncEnabled}
         templates={desk.templates}
         onApplyTemplate={desk.applyTemplate}
         onSaveTemplate={desk.saveTemplate}
@@ -400,6 +443,7 @@ function DeskApp() {
           onPopoutStream={onTilePopoutStream}
           onToggleSave={desk.toggleSaveStream}
           onVolume={desk.setStreamVolume}
+          onTimeApi={registerTimeApi}
           onSwitchFocus={desk.switchFocus}
         />
         <FirstRunTips

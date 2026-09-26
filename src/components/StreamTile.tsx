@@ -5,6 +5,7 @@ import { Tip } from './ui/Tip'
 import { PlayerErrorBoundary } from './PlayerErrorBoundary'
 import { StreamPlayer } from './StreamPlayer'
 import { getPlatform } from '../lib/platforms/registry'
+import type { PlayerTimeApi } from '../lib/platforms/types'
 import { ui } from '../lib/uiLabels'
 import type { StreamItem, WatchMode } from '../types'
 
@@ -22,6 +23,7 @@ type Props = {
   onPopoutStream: () => void
   onToggleSave: () => void
   onVolume: (volume: number) => void
+  onTimeApi: (api: PlayerTimeApi | null) => void
 }
 
 function StreamTileImpl({
@@ -38,6 +40,7 @@ function StreamTileImpl({
   onPopoutStream,
   onToggleSave,
   onVolume,
+  onTimeApi,
 }: Props) {
   const low = mode === 'performance' && !focused
   const hasChat = getPlatform(stream.platform).hasChat
@@ -113,6 +116,7 @@ function StreamTileImpl({
             interactive={interactive}
             paused={low}
             lowQuality={low}
+            onTimeApi={onTimeApi}
           />
         </PlayerErrorBoundary>
       </div>

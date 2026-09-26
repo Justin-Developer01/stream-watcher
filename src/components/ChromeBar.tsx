@@ -14,6 +14,7 @@ import {
   Minus,
   Pin,
   PinOff,
+  RefreshCw,
   Settings,
   Shrink,
   Square,
@@ -34,6 +35,8 @@ import { outwardSide, skipFocusReturnAfterPointer, Tip } from './ui/Tip'
 type Props = {
   mode: WatchMode
   onMode: (mode: WatchMode) => void
+  syncEnabled: boolean
+  onToggleSync: (value: boolean) => void
   templates: LayoutTemplate[]
   onApplyTemplate: (id: string) => void
   onSaveTemplate: (name: string) => void
@@ -92,6 +95,8 @@ const MODES: Array<{ value: WatchMode; label: string; icon: ReactNode }> = [
 export const ChromeBar = memo(function ChromeBar({
   mode,
   onMode,
+  syncEnabled,
+  onToggleSync,
   templates,
   onApplyTemplate,
   onSaveTemplate,
@@ -246,6 +251,20 @@ export const ChromeBar = memo(function ChromeBar({
             </Tip>
           ))}
         </ToggleGroup.Root>
+
+        {/* Off = neutral chrome, On = soft cyan (.icon-btn.is-on) — same chip pattern as See
+            through/Fullscreen/Open chat below. No leader picker or frost popover this phase. */}
+        <Tip label={syncEnabled ? ui.synced : ui.sync} side={flyoutSide}>
+          <button
+            type="button"
+            className={`icon-btn${syncEnabled ? ' is-on' : ''}`}
+            aria-label={syncEnabled ? ui.synced : ui.sync}
+            aria-pressed={syncEnabled}
+            onClick={() => onToggleSync(!syncEnabled)}
+          >
+            <RefreshCw size={14} />
+          </button>
+        </Tip>
 
         <DropdownMenu.Root onOpenChange={onMenuOpen}>
           <Tip label={ui.changeLayout} side={flyoutSide}>

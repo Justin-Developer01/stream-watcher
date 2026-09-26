@@ -2,6 +2,14 @@ import type { ComponentType } from 'react'
 import type { PlatformId, ProviderAuthState } from '../../types'
 import type { ChatEvent, RoomState } from '../chat/types'
 
+/** In-place playback position control for Stream Sync (Phase C). Only a seekable platform
+ * (YouTube) ever calls this; a live platform with no seek API (Twitch, Kick) never does, so it
+ * simply never has an entry for Sync's follow-leader loop to find. */
+export type PlayerTimeApi = {
+  getCurrentTime: () => number | null
+  seekTo: (seconds: number) => void
+}
+
 export type StreamPlayerProps = {
   channel: string
   muted: boolean
@@ -10,6 +18,9 @@ export type StreamPlayerProps = {
   interactive: boolean
   paused?: boolean
   lowQuality?: boolean
+  /** Called with a live api once the player can seek in place, and with null on unmount/remount.
+   * Ignored by players with no such API (see PlayerTimeApi). */
+  onTimeApi?: (api: PlayerTimeApi | null) => void
 }
 
 export type StreamPlayerComponent = ComponentType<StreamPlayerProps>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { log } from '../lib/log'
+import type { PlayerTimeApi } from '../lib/platforms/types'
 
 type Props = {
   channel: string
@@ -8,6 +9,7 @@ type Props = {
   interactive: boolean
   paused?: boolean
   lowQuality?: boolean
+  onTimeApi?: (api: PlayerTimeApi | null) => void
 }
 
 let youtubeApiPromise: Promise<void> | null = null
@@ -47,11 +49,11 @@ function toYouTubeVolume(volume: number) {
   return Math.round(Math.min(1, Math.max(0, volume)) * 100)
 }
 
-export function YouTubePlayer({ channel, muted, volume = 1, interactive, paused, lowQuality }: Props) {
+export function YouTubePlayer({ channel, muted, volume = 1, interactive, paused, lowQuality, onTimeApi }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<InstanceType<NonNullable<typeof window.YT>['Player']> | null>(null)
-  const live = useRef({ muted, volume, paused, lowQuality })
-  live.current = { muted, volume, paused, lowQuality }
+  const live = useRef({ muted, volume, paused, lowQuality, onTimeApi })
+  live.current = { muted, volume, paused, lowQuality, onTimeApi }
   // YT.Player has no mute/play methods until onReady; calls before that throw.
   const ready = useRef(false)
 
@@ -88,6 +90,12 @@ export function YouTubePlayer({ channel, muted, volume = 1, interactive, paused,
             player.setVolume?.(toYouTubeVolume(live.current.volume))
             if (live.current.paused) player.pauseVideo()
             else player.playVideo()
+            // Stream Sync (Phase C) reads/writes playback position through this — in place,
+            // never a remount. Twitch/Kick have no equivalent and never call onTimeApi at all.
+            live.current.onTimeApi?.({
+              getCurrentTime: () => playerRef.current?.getCurrentTime?.() ?? null,
+              seekTo: (seconds) => playerRef.current?.seekTo?.(seconds, true),
+            })
           },
         },
       })
@@ -97,6 +105,7 @@ export function YouTubePlayer({ channel, muted, volume = 1, interactive, paused,
     return () => {
       disposed = true
       ready.current = false
+      live.current.onTimeApi?.(null)
       playerRef.current?.destroy?.()
       playerRef.current = null
       if (containerRef.current) containerRef.current.innerHTML = ''

@@ -81,6 +81,9 @@ declare global {
           /** 0..100; only after onReady. */
           setVolume?: (volume: number) => void
           setPlaybackQuality?: (quality: string) => void
+          /** Seconds; only after onReady (Stream Sync). */
+          getCurrentTime?: () => number
+          seekTo?: (seconds: number, allowSeekAhead: boolean) => void
           destroy?: () => void
         }
       }

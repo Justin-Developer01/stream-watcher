@@ -92,6 +92,8 @@ export type PersistedState = {
   templates: LayoutTemplate[]
   settings: AppSettings
   windowLocked: boolean
+  /** Stream Sync (Phase C): opt-in, off by default. Old saves missing this load as false. */
+  syncEnabled: boolean
 }
 
 export const DEFAULT_CHAT_FLOAT: ChatFloatPosition = {

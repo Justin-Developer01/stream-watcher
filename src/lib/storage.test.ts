@@ -43,6 +43,25 @@ describe('loadState streams', () => {
   })
 })
 
+describe('loadState syncEnabled', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  const load = (state: unknown) => {
+    const store = new Map([['vesper-desk:v1', JSON.stringify(state)]])
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null })
+    return loadState()?.syncEnabled
+  }
+
+  it('is opt-in: a save from before Stream Sync existed loads with it off', () => {
+    expect(load({ streams: [] })).toBe(false)
+  })
+
+  it('keeps a stored true, and normalizes a malformed value to false', () => {
+    expect(load({ streams: [], syncEnabled: true })).toBe(true)
+    expect(load({ streams: [], syncEnabled: 'yes' })).toBe(false)
+  })
+})
+
 describe('cleanSavedName', () => {
   it('trims and keeps a real name', () => {
     expect(cleanSavedName('  Main desk  ')).toBe('Main desk')

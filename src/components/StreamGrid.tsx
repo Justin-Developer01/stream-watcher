@@ -4,6 +4,7 @@ import type { Layout } from 'react-grid-layout'
 import { StreamTile } from './StreamTile'
 import { ui } from '../lib/uiLabels'
 import { streamKey } from '../lib/storage'
+import type { PlayerTimeApi } from '../lib/platforms/types'
 import type { PlatformId, StreamItem, WatchMode } from '../types'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -67,6 +68,7 @@ type Props = {
   onPopoutStream: (channel: string, platform: PlatformId) => void
   onToggleSave: (platform: PlatformId, channel: string) => void
   onVolume: (id: string, volume: number) => void
+  onTimeApi: (id: string, api: PlayerTimeApi | null) => void
   onSwitchFocus: () => void
 }
 
@@ -88,12 +90,13 @@ export const StreamGrid = memo(function StreamGrid({
   onPopoutStream,
   onToggleSave,
   onVolume,
+  onTimeApi,
   onSwitchFocus,
 }: Props) {
   // Tiles are memoized and keep the closures from their last render; route them through a ref so
   // they always call the grid's current handlers (focusStream depends on the stream list).
-  const handlers = useRef({ onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume })
-  handlers.current = { onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume }
+  const handlers = useRef({ onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume, onTimeApi })
+  handlers.current = { onFocus, onToggleMute, onRemove, onOpenChat, onPopoutChat, onPopoutStream, onToggleSave, onVolume, onTimeApi }
 
   // FLIP for the Focus hero/strip swap: .focus-hero and .focus-strip__item are the same keyed DOM
   // nodes before and after a promote (that's the #12 fix — no re-parenting), they just land in a
@@ -162,6 +165,7 @@ export const StreamGrid = memo(function StreamGrid({
       onPopoutStream={() => handlers.current.onPopoutStream(stream.channel, stream.platform)}
       onToggleSave={() => handlers.current.onToggleSave(stream.platform, stream.channel)}
       onVolume={(volume) => handlers.current.onVolume(stream.id, volume)}
+      onTimeApi={(api) => handlers.current.onTimeApi(stream.id, api)}
     />
   )
 
